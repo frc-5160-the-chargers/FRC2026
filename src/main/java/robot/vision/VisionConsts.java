@@ -11,7 +11,6 @@ import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.SimCameraProperties;
 import robot.vision.Structs.AprilTagCamConsts;
 import robot.subsystems.drive.TunerConstants;
-import robot.vision.Structs.CameraIntrinsics;
 import robot.vision.Structs.MLCamConsts;
 
 import java.util.Map;
