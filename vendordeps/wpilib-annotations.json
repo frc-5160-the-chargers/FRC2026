@@ -1,0 +1,19 @@
+{
+  // TODO: get rid of this for 2027
+  "fileName": "wpilib-annotations.json",
+  "name": "wpilib annotations",
+  "version": "1.0.0",
+  "uuid": "4443e3c8-b125-4940-9b7b-206c6b539ea8",
+  "frcYear": "2026beta",
+  "mavenUrls": ["https://frcmaven.wpi.edu/artifactory/release/"],
+  "jsonUrl": "",
+  "javaDependencies": [
+    {
+      "groupId": "org.wpilib",
+      "artifactId": "annotations-java",
+      "version": "2026.1.1-beta-1"
+    }
+  ],
+  "jniDependencies": [],
+  "cppDependencies": []
+}
