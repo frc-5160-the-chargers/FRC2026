@@ -59,25 +59,26 @@ public record SwerveConfig(
     /** Gets this drivetrain's config for maplesim. */
     public DriveTrainSimulationConfig mapleSimConfig() {
         var moduleCfg = moduleConsts[0];
+        var mapleSimModuleCfg = new SwerveModuleSimulationConfig(
+            DCMotor.getKrakenX60(1),
+            DCMotor.getKrakenX44(1),
+            moduleCfg.DriveMotorGearRatio,
+            moduleCfg.SteerMotorGearRatio,
+            Volts.of(moduleCfg.DriveFrictionVoltage),
+            Volts.of(moduleCfg.SteerFrictionVoltage),
+            Meters.of(moduleCfg.WheelRadius),
+            KilogramSquareMeters.of(moduleCfg.SteerInertia),
+            ChoreoVars.cof
+        );
         return DriveTrainSimulationConfig.Default()
             .withRobotMass(ChoreoVars.botMass)
             .withCustomModuleTranslations(moduleTranslations())
             .withGyro(COTS.ofPigeon2())
+            .withSwerveModule(mapleSimModuleCfg)
             .withBumperSize(
                 Meters.of(2 * (moduleCfg.LocationX + bumperThickness.in(Meters))),
                 Meters.of(2 * (moduleCfg.LocationY + bumperThickness.in(Meters)))
-            )
-            .withSwerveModule(new SwerveModuleSimulationConfig(
-                DCMotor.getKrakenX60(1),
-                DCMotor.getKrakenX44(1),
-                moduleCfg.DriveMotorGearRatio,
-                moduleCfg.SteerMotorGearRatio,
-                Volts.of(moduleCfg.DriveFrictionVoltage),
-                Volts.of(moduleCfg.SteerFrictionVoltage),
-                Meters.of(moduleCfg.WheelRadius),
-                KilogramSquareMeters.of(moduleCfg.SteerInertia),
-                ChoreoVars.cof
-            ));
+            );
     }
 
     /** The distance from the center of the robot to one of the modules. */

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A utility class that reduces boilerplate around refreshing {@link MotorDataAutoLogged}
+ * A utility class that reduces boilerplate around refreshing {@link MotorData}
  * for a group of REV spark max/spark flex motors moving the same mechanism.
  */
 @SuppressWarnings("StringConcatenationInLoop")
@@ -31,7 +31,7 @@ public class SparkSignals {
     }
 
     /**
-     * Refreshes a {@link MotorDataAutoLogged} object with data from the signals.
+     * Refreshes a {@link MotorData} object with data from the signals.
      * @param inputs the motor data to refresh.
      */
     public void refresh(MotorData inputs) {

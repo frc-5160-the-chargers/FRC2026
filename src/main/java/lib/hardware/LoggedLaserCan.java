@@ -23,6 +23,10 @@ public class LoggedLaserCan {
         public int budgetMs = -1;
         public boolean isLong = false;
         public int status = 0;
+
+        public boolean isValid() {
+            return status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT;
+        }
     }
     
     private final LaserCan laserCan;
@@ -34,7 +38,7 @@ public class LoggedLaserCan {
     public void refreshData(LaserCanDataAutoLogged inputs) {
         var measurement = laserCan.getMeasurement();
         if (measurement == null || measurement.status == -1) {
-            inputs.status = LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT;
+            inputs.status = -1;
             inputs.distance_mm = -1;
             inputs.ambient = -1;
             inputs.budgetMs = -1;

@@ -42,19 +42,14 @@ import static edu.wpi.first.units.Units.*;
  * one motor responsible for spinning the wheel, and another for changing the direction of the wheel.
  */
 public class SwerveDrive extends ChargerSubsystem {
-    private static final TunableNum
-        TEST_POSE_X = new TunableNum("Swerve/demoPose/x", 0),
-        TEST_POSE_Y = new TunableNum("Swerve/demoPose/y", 0),
-        TEST_POSE_HEADING_DEG = new TunableNum("Swerve/demoPose/headingDeg", 0),
-        TEST_OUTPUT = new TunableNum("Swerve/TestingOutput", 0),
-        TRANSLATION_KP = new TunableNum("PathFollowing/TranslationKP", 8),
-        ROTATION_KP = new TunableNum("PathFollowing/RotationKP", 8),
-        ROTATION_KD = new TunableNum("PathFollowing/RotationKD", 0.02);
-
-    private static final SwerveModulePosition[] EMPTY_POSITIONS = {
-        new SwerveModulePosition(), new SwerveModulePosition(),
-        new SwerveModulePosition(), new SwerveModulePosition()
-    };
+    private final TunableNum
+        testPoseX = new TunableNum(key("DemoPose/X"), 0),
+        testPoseY = new TunableNum(key("DemoPose/Y"), 0),
+        testPoseHeadingDeg = new TunableNum(key("DemoPose/HeadingDeg"), 0),
+        testOutput = new TunableNum(key("TestingOutput"), 0),
+        translationKP = new TunableNum(key("TranslationKP"), 8),
+        rotationKP = new TunableNum(key("RotationKP"), 8),
+        rotationKD = new TunableNum(key("RotationKD"), 0.02);
 
     private final SwerveConfig config;
     @Getter private final SwerveDriveSimulation mapleSim;
@@ -89,7 +84,7 @@ public class SwerveDrive extends ChargerSubsystem {
             : new SwerveHardware(config);
         replayPoseEst = new SwerveDrivePoseEstimator(
             new SwerveDriveKinematics(config.moduleTranslations()),
-            Rotation2d.kZero, EMPTY_POSITIONS, Pose2d.kZero,
+            Rotation2d.kZero, getModPositions(), Pose2d.kZero,
             config.encoderStdDevs(), VecBuilder.fill(0.6, 0.6, 0.6)
         );
         forceCalc = new WheelForceCalculator(
@@ -112,14 +107,19 @@ public class SwerveDrive extends ChargerSubsystem {
     }
 
     private SwerveModulePosition[] getModPositions() {
-        if (inputs.poseEstFrames.length == 0) return EMPTY_POSITIONS;
+        if (inputs.poseEstFrames.length == 0) {
+            return new SwerveModulePosition[]{
+                new SwerveModulePosition(), new SwerveModulePosition(),
+                new SwerveModulePosition(), new SwerveModulePosition()
+            };
+        }
         return inputs.poseEstFrames[inputs.poseEstFrames.length - 1].positions();
     }
 
     private void driveWithSample(SwerveSample sample, boolean deriveModuleForces) {
-        xPoseController.setP(TRANSLATION_KP.get());
-        yPoseController.setP(TRANSLATION_KP.get());
-        rotationController.setPID(ROTATION_KP.get(), 0, ROTATION_KD.get());
+        xPoseController.setP(translationKP.get());
+        yPoseController.setP(translationKP.get());
+        rotationController.setPID(rotationKP.get(), 0, rotationKD.get());
         var target = sample.getChassisSpeeds();
         target.vxMetersPerSecond += xPoseController.calculate(pose.getX(), sample.x);
         target.vyMetersPerSecond += yPoseController.calculate(pose.getY(), sample.y);
@@ -193,15 +193,15 @@ public class SwerveDrive extends ChargerSubsystem {
     /** Resets to the pose configured in the dashboard. */
     public void resetToDemoPose() {
         var pose = new Pose2d(
-            TEST_POSE_X.get(), TEST_POSE_Y.get(),
-            Rotation2d.fromDegrees(TEST_POSE_HEADING_DEG.get())
+            testPoseX.get(), testPoseY.get(),
+            Rotation2d.fromDegrees(testPoseHeadingDeg.get())
         );
         resetPose(pose);
     }
 
     /** A simple command to run the drive motors at an output specified in the dashboard. */
     public Command runDriveMotorsCmd() {
-        return this.run(() -> io.runDriveMotors(TEST_OUTPUT.get()))
+        return this.run(() -> io.runDriveMotors(testOutput.get()))
             .withName("Run Drive Motors");
     }
 

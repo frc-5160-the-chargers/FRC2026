@@ -1,6 +1,7 @@
 package lib.hardware;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.traits.CommonTalon;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.Convert;
@@ -10,15 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A utility class that reduces boilerplate around refreshing {@link MotorDataAutoLogged}
+ * A utility class that reduces boilerplate around refreshing {@link MotorData}
  * for a group of TalonFX/TalonFXS motors moving the same mechanism.
  */
-@SuppressWarnings("StringConcatenationInLoop")
 public class TalonSignals {
     public final BaseStatusSignal position, velocity, voltage;
-
     private final List<BaseStatusSignal>
-        all = new ArrayList<>(),
         motorTemp = new ArrayList<>(),
         supplyCurrent = new ArrayList<>(),
         torqueCurrent = new ArrayList<>();
@@ -28,21 +26,27 @@ public class TalonSignals {
      * <b>YOU MUST CALL SignalBatchRefresher.refreshAll() in robotPeriodic().</b>
      */
     public TalonSignals(CommonTalon leader, CommonTalon... followers) {
-        boolean isCanivore = leader.getNetwork().isNetworkFD();
         position = leader.getPosition();
         velocity = leader.getVelocity();
         voltage = leader.getMotorVoltage();
-        SignalBatchRefresher.register(isCanivore, position, velocity, voltage);
-        all.addAll(List.of(position, velocity, voltage));
-
-        addExtSignals(isCanivore, leader);
+        addExtSignals(leader);
         for (var follower: followers) {
-            addExtSignals(isCanivore, follower);
+            addExtSignals(follower);
         }
+
+        var signalList = new ArrayList<>(List.of(position, velocity, voltage));
+        signalList.addAll(motorTemp);
+        signalList.addAll(supplyCurrent);
+        signalList.addAll(torqueCurrent);
+        Retry.ctreConfig(
+            4, "Status signal frequency set failed",
+            () -> BaseStatusSignal.setUpdateFrequencyForAll(50, signalList)
+        );
+        SignalBatchRefresher.register((ParentDevice) leader, signalList);
     }
 
     /**
-     * Refreshes a {@link MotorDataAutoLogged} object with data from the signals.
+     * Refreshes a {@link MotorData} object with data from the signals.
      * @param inputs the motor data to refresh.
      */
     public void refresh(MotorData inputs) {
@@ -57,36 +61,17 @@ public class TalonSignals {
             inputs.tempCelsius[i] = motorTemp.get(i).getValueAsDouble();
             inputs.appliedAmps[i] = torqueCurrent.get(i).getValueAsDouble();
         }
-        for (var signal: all) {
-            if (signal.getStatus().isOK()) continue;
-            inputs.errorAsString += (signal.getStatus() + ",");
-        }
-        if (inputs.errorAsString.isEmpty() && inputs.tempCelsius[0] == 0) {
+        var tempStatus = motorTemp.get(0).getStatus();
+        if (!tempStatus.isOK()) {
+            inputs.errorAsString = tempStatus.toString();
+        } else if (inputs.tempCelsius[0] == 0) {
             DriverStation.reportError("You aren't calling SignalBatchRefresher.refreshAll() in robotPeriodic().", false);
         }
     }
 
-    /**
-     * Sets the update frequency of all signals.
-     * @param hz The target frequency
-     */
-    public void setUpdateFrequency(double hz) {
-        Retry.ctreConfig(
-            4, "Status signal frequency set failed",
-            () -> BaseStatusSignal.setUpdateFrequencyForAll(
-                hz, all.toArray(new BaseStatusSignal[0])
-            )
-        );
-    }
-
-    private void addExtSignals(boolean isCanivore, CommonTalon motor) {
-        BaseStatusSignal[] signals = {
-            motor.getDeviceTemp(), motor.getSupplyCurrent(), motor.getTorqueCurrent()
-        };
-        motorTemp.add(signals[0]);
-        supplyCurrent.add(signals[1]);
-        torqueCurrent.add(signals[2]);
-        SignalBatchRefresher.register(isCanivore, signals);
-        all.addAll(List.of(signals));
+    private void addExtSignals(CommonTalon motor) {
+        motorTemp.add(motor.getDeviceTemp());
+        supplyCurrent.add(motor.getSupplyCurrent());
+        torqueCurrent.add(motor.getTorqueCurrent());
     }
 }
