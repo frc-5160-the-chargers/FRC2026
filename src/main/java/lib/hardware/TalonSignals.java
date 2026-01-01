@@ -5,7 +5,6 @@ import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.traits.CommonTalon;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.Convert;
-import lib.Retry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,10 +37,7 @@ public class TalonSignals {
         signalList.addAll(motorTemp);
         signalList.addAll(supplyCurrent);
         signalList.addAll(torqueCurrent);
-        Retry.ctreConfig(
-            4, "Status signal frequency set failed",
-            () -> BaseStatusSignal.setUpdateFrequencyForAll(50, signalList)
-        );
+        BaseStatusSignal.setUpdateFrequencyForAll(50, signalList);
         SignalBatchRefresher.register((ParentDevice) leader, signalList);
     }
 

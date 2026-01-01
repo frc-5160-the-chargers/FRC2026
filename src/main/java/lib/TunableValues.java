@@ -1,7 +1,10 @@
 package lib;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.util.function.BooleanConsumer;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import lombok.Setter;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -137,5 +140,30 @@ public class TunableValues {
 		public M get() {
 			return value;
 		}
+	}
+
+	/**
+	 * An alternative to SmartDashboard.putData(Command) that works in replay mode.
+	 * Will appear under the "tuning" section.
+	 */
+	public static void registerCmd(Command toRun) {
+		var cmd = toRun.ignoringDisable(true).withName(toRun.getName());
+		var tunableHandle = new TunableBool(cmd.getName() + "/running", false) {
+			@Override
+			public void periodic() {
+				super.periodic();
+				if (tuningMode) set(cmd.isScheduled());
+			}
+		};
+		tunableHandle.onChange(enabled -> {
+			if (enabled) {
+				CommandScheduler.getInstance().schedule(cmd);
+			} else {
+				cmd.cancel();
+			}
+		});
+		var metadataTable = NetworkTableInstance.getDefault().getTable("Tuning/" + cmd.getName());
+		metadataTable.getStringTopic(".type").publish().set("Command");
+		metadataTable.getStringTopic(".name").publish().set(cmd.getName());
 	}
 }

@@ -3,10 +3,10 @@ package robot.vision;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import lib.Tracer;
+import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
 import robot.vision.Structs.CamPoseEstimate;
 import robot.vision.Structs.AprilTagCamConsts;
 import org.littletonrobotics.junction.Logger;
@@ -41,10 +41,6 @@ public class AprilTagCam {
             consts.robotCenterToCamera()
         );
     }
-
-    private boolean shouldLog() {
-        return !DriverStation.isFMSAttached();
-    }
     
     private String key(String path) {
         return "Cameras/" + consts.name() + "/" + path;
@@ -53,33 +49,38 @@ public class AprilTagCam {
     /**
      * Fetches the latest pose estimates from this camera,
      * using single-tag estimation if applicable.
+     * @param odoFrames Fetched through drive.getInputs().poseEstFrames.
      */
-    public List<CamPoseEstimate> update(Rotation2d heading, double headingTimestampSecs) {
+    public List<CamPoseEstimate> updateWithTrigSolve(OdometryFrame[] odoFrames) {
         poseEst.setMultiTagFallbackStrategy(
-            DriverStation.isDisabled()
+            DriverStation.isDisabled() || odoFrames.length == 0
                 ? PoseStrategy.LOWEST_AMBIGUITY
                 : PoseStrategy.PNP_DISTANCE_TRIG_SOLVE
         );
-        poseEst.addHeadingData(headingTimestampSecs, heading);
+        for (var frame: odoFrames) {
+            poseEst.addHeadingData(frame.timestampSecs(), frame.heading());
+        }
         return update();
     }
 
     /** Fetches the latest pose estimates from this camera. */
+    @SuppressWarnings("StringConcatenationInLoop")
     public List<CamPoseEstimate> update() {
         Tracer.startTrace("Vision Update (" + consts.name() + ")");
 
-        Tracer.startTrace("Poll Data");
-        io.refreshData(inputs);
-        Logger.processInputs(key(""), inputs);
-        Tracer.endTrace();
-
-        var poseEstimates = new ArrayList<CamPoseEstimate>();
+        Tracer.trace("Poll Data", () -> {
+            io.refreshData(inputs);
+            Logger.processInputs(key(""), inputs);
+        });
         if (RobotMode.get() == RobotMode.REAL && !inputs.connected) {
-            return poseEstimates;
+            return List.of();
         }
 
+        // process vision data into vision updates
+        var poseEstimates = new ArrayList<CamPoseEstimate>();
         int ambHighCount = 0;
         int errHighCount = 0;
+        String estimationStrat = "";
         fiducialIds.clear();
         poses.clear();
         for (var result: inputs.results) {
@@ -96,17 +97,17 @@ public class AprilTagCam {
                 ambiguityExceeded = ambiguityExceeded && target.poseAmbiguity > MAX_AMBIGUITY;
                 tagDistSum += target.bestCameraToTarget.getTranslation().getNorm();
                 tagAreaSum += target.area;
-                if (shouldLog()) fiducialIds.add(target.fiducialId);
+                fiducialIds.add(target.fiducialId);
             }
             if (ambiguityExceeded) {
                 ambHighCount++;
                 continue;
             }
-
             // updates the pose, and makes sure that the estimated pose
             // has a z coordinate near 0 and x and y coordinates within the field.
             var poseEstimate = poseEst.update(result);
             if (poseEstimate.isEmpty()) continue;
+            estimationStrat += (poseEstimate.get().strategy + ",");
             var pose = poseEstimate.get().estimatedPose;
             var timestamp = poseEstimate.get().timestampSeconds;
             if (Math.abs(pose.getZ()) > MAX_Z_ERROR.in(Meters)
@@ -117,7 +118,6 @@ public class AprilTagCam {
                 errHighCount++;
                 continue;
             }
-
             // Calculates standard deviations
             double areaSumMultiplier = Math.pow(result.targets.size() / Math.abs(tagAreaSum), 0.2);
             double stdDevMultiplier = Math.pow(tagDistSum / result.targets.size(), 2) / result.targets.size();
@@ -125,25 +125,26 @@ public class AprilTagCam {
             stdDevMultiplier *= Math.max(areaSumMultiplier, 1);
             if (result.targets.size() <= 1) stdDevMultiplier *= SINGLE_TAG_SCALAR;
             double linearStdDev = stdDevMultiplier * LINEAR_STD_DEV_BASELINE * consts.stdDevFactor();
-
-            if (shouldLog()) poses.add(pose);
+            poses.add(pose);
             var stdDevs = VecBuilder.fill(linearStdDev, linearStdDev, ANGULAR_STD_DEV);
             poseEstimates.add(new CamPoseEstimate(pose.toPose2d(), timestamp, stdDevs));
         }
-        Tracer.endTrace();
 
         // logs relevant data
-        if (shouldLog()) {
+        boolean shouldLog = !inputs.results.isEmpty() && !DriverStation.isFMSAttached();
+        if (RobotMode.get() == RobotMode.REPLAY || shouldLog) {
             int[] ids = new int[fiducialIds.size()];
             for (int i = 0; i < fiducialIds.size(); i++) {
                 ids[i] = fiducialIds.get(i);
             }
-            Logger.recordOutput(key("fiducialIds"), ids);
-            Logger.recordOutput(key("numAmbiguityExceeded"), ambHighCount);
-            Logger.recordOutput(key("numErrExceeded"), errHighCount);
-            Logger.recordOutput(key("poses"), poses.toArray(new Pose3d[0]));
+            Logger.recordOutput(key("AprilTagIds"), ids);
+            Logger.recordOutput(key("NumAmbiguityExceeded"), ambHighCount);
+            Logger.recordOutput(key("NumErrExceeded"), errHighCount);
+            Logger.recordOutput(key("Poses"), poses.toArray(new Pose3d[0]));
+            Logger.recordOutput(key("EstimationStrategy"), estimationStrat);
         }
 
+        Tracer.endTrace();
         return poseEstimates;
     }
 }

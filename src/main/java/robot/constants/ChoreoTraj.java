@@ -27,49 +27,41 @@ public record ChoreoTraj(
     public static final ChoreoTraj LoopedPath = new ChoreoTraj(
 	    "LoopedPath",
 	    OptionalInt.empty(),
-	    6.52432,
-	    new Pose2d(3.35, 6.4, Rotation2d.fromRadians(0)),
-	    new Pose2d(3.35, 6.4, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj LoopedPath$0 = new ChoreoTraj(
-	    "LoopedPath",
-	    OptionalInt.of(0),
-	    0.54199,
-	    new Pose2d(3.35, 6.4, Rotation2d.fromRadians(0)),
-	    new Pose2d(6.115, 6.417, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj LoopedPath$1 = new ChoreoTraj(
-	    "LoopedPath",
-	    OptionalInt.of(1),
-	    2.0252999999999997,
-	    new Pose2d(6.115, 6.417, Rotation2d.fromRadians(0)),
-	    new Pose2d(11.123, 2.295, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj LoopedPath$2 = new ChoreoTraj(
-	    "LoopedPath",
-	    OptionalInt.of(2),
-	    3.9570300000000005,
-	    new Pose2d(11.123, 2.295, Rotation2d.fromRadians(0)),
-	    new Pose2d(3.35, 6.4, Rotation2d.fromRadians(0))
+	    1.72726,
+	    new Pose2d(5.209, 6.499, Rotation2d.fromRadians(0)),
+	    new Pose2d(11, 6.128, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NewPath = new ChoreoTraj(
 	    "NewPath",
 	    OptionalInt.empty(),
-	    2.92138,
-	    new Pose2d(3, 7, Rotation2d.fromRadians(0)),
-	    new Pose2d(13.1, 7, Rotation2d.fromRadians(0))
+	    1.72726,
+	    new Pose2d(5.209, 6.499, Rotation2d.fromRadians(0)),
+	    new Pose2d(11, 6.128, Rotation2d.fromRadians(0))
 	);
-    
+	public static final ChoreoTraj NewPath_copy1 = new ChoreoTraj(
+	    "NewPath_copy1",
+	    OptionalInt.empty(),
+	    1.31721,
+	    new Pose2d(3.333, 6.746, Rotation2d.fromRadians(0)),
+	    new Pose2d(7.002, 5.798, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj NewPath_copy2 = new ChoreoTraj(
+	    "NewPath_copy2",
+	    OptionalInt.empty(),
+	    0.95645,
+	    new Pose2d(5.683, 6.19, Rotation2d.fromRadians(0)),
+	    new Pose2d(7.249, 4.85, Rotation2d.fromRadians(0))
+	);
+
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
     	Map.entry("LoopedPath", LoopedPath),
-		Map.entry("LoopedPath$0", LoopedPath$0),
-		Map.entry("LoopedPath$1", LoopedPath$1),
-		Map.entry("LoopedPath$2", LoopedPath$2),
-		Map.entry("NewPath", NewPath)
+		Map.entry("NewPath", NewPath),
+		Map.entry("NewPath_copy1", NewPath_copy1),
+		Map.entry("NewPath_copy2", NewPath_copy2)
     );
 
     /**

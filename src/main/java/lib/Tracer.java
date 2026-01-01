@@ -20,28 +20,16 @@ import java.util.HashSet;
 import java.util.function.Supplier;
 
 /**
- * A Utility class for tracing code execution time. Will put info to NetworkTables under the
- * "Tracer" table. The times outputted by the Tracer are in milliseconds.
+ * A Utility class for tracing code execution time. Data can be found under the "Tracer" table.
  *
  * <p>Example inside {@code Robot.java}
  *
  * <pre><code>
  * public void robotPeriodic() {
- *   Tracer.trace("CommandScheduler", CommandScheduler.getInstance()::run); // CommandScheduler is already traced
- *   Tracer.trace("MyVendorDep", MyVendorDep::updateAll);
+ * 	 // Calls CommandScheduler.getInstance.run() while measuring it's total loop time.
+ *   Tracer.trace("CommandScheduler", CommandScheduler.getInstance()::run);
+ *   Tracer.trace("SignalUpdate", SignalBatchRefresher::refreshAll);
  *   Tracer.endCycle(); // This MUST be called after all Tracer.trace() calls.
- * }
- * </code></pre>
- *
- * <p>Example inside a {@code Drive Subsystem}
- *
- * <pre><code>
- * // Subsystem periodics are automatically traced
- * public void periodic() {
- *   for (var module : modules) {
- *     Tracer.trace("Module" + module.getName(), module::update);
- *   }
- *   Tracer.trace("Gyro", gyro::update);
  * }
  * </code></pre>
  *
@@ -82,13 +70,13 @@ public class Tracer {
 	 * Runs and traces a function.
 	 *
 	 * @param name the name of the trace, should be unique to the function.
-	 * @param runnable the function to trace.
+	 * @param functionToTrace the function to trace.
 	 * @apiNote If you want to return a value then use {@link Tracer#trace(String, Supplier)}.
 	 */
-	public static void trace(String name, Runnable runnable) {
+	public static void trace(String name, Runnable functionToTrace) {
 		try {
 			startTrace(name);
-			runnable.run();
+			functionToTrace.run();
 		} finally {
 			endTrace();
 		}
@@ -98,11 +86,11 @@ public class Tracer {
 	 * Runs and traces a function.
 	 *
 	 * @param name the name of the trace, should be unique to the function.
-	 * @param supplier the function to trace.
+	 * @param functionToTrace the function to trace.
 	 */
-	public static <T> T trace(String name, Supplier<T> supplier) {
+	public static <T> T trace(String name, Supplier<T> functionToTrace) {
 		try {
-			return supplier.get();
+			return functionToTrace.get();
 		} finally {
 			endTrace();
 		}

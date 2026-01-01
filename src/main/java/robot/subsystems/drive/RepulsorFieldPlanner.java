@@ -12,8 +12,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import lombok.Setter;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +24,6 @@ import static robot.vision.VisionConsts.FIELD_LAYOUT;
  * "repulsing" the robot away from them.
  */
 public class RepulsorFieldPlanner {
-	private static final double FIELD_WIDTH = FIELD_LAYOUT.getFieldWidth();
-	private static final double FIELD_LENGTH = FIELD_LAYOUT.getFieldLength();
-
 	private static final double SOURCE_X = 1.75;
 	private static final double SOURCE_Y = 1.25;
 
@@ -38,34 +33,45 @@ public class RepulsorFieldPlanner {
 	private static final List<Obstacle> FIELD_OBSTACLES =
 		List.of(
 			// Reef
-			new TeardropObstacle(new Translation2d(4.495, 4), 0.9, 2.5, .83, 3.2, 2),
-			new TeardropObstacle(new Translation2d(13.08, 4), 0.9, 2.5, .83, 3.2, 2),
+			new TeardropObstacle(
+				new Translation2d(4.495, 4),
+				0.9, 2.5,
+				.83, 3.2, 2
+			),
+			new TeardropObstacle(
+				new Translation2d(13.08, 4),
+				0.9, 2.5,
+				.83, 3.2, 2
+			),
 			// Walls
 			new HorizontalObstacle(0.0, 0.5, .5, true),
-			new HorizontalObstacle(FIELD_WIDTH, 0.5, .5, false),
+			new HorizontalObstacle(FIELD_LAYOUT.getFieldWidth(), 0.5, .5, false),
 			new VerticalObstacle(0.0, 0.5, .5, true),
-			new VerticalObstacle(FIELD_LENGTH, 0.5, .5, false),
+			new VerticalObstacle(FIELD_LAYOUT.getFieldLength(), 0.5, .5, false),
 			// Sources
-			new LineObstacle(new Translation2d(0, SOURCE_Y), new Translation2d(SOURCE_X, 0), .5, .5),
 			new LineObstacle(
-				new Translation2d(0, FIELD_WIDTH - SOURCE_Y),
-				new Translation2d(SOURCE_X, FIELD_WIDTH),
-				.5,
-				.5
+				new Translation2d(0, SOURCE_Y),
+				new Translation2d(SOURCE_X, 0),
+				.5, .5
 			),
 			new LineObstacle(
-				new Translation2d(FIELD_LENGTH, SOURCE_Y),
-				new Translation2d(FIELD_LENGTH - SOURCE_X, 0),
-				.5,
-				.5
+				new Translation2d(0, FIELD_LAYOUT.getFieldWidth() - SOURCE_Y),
+				new Translation2d(SOURCE_X, FIELD_LAYOUT.getFieldWidth()),
+				.5, .5
 			),
 			new LineObstacle(
-				new Translation2d(FIELD_LENGTH, FIELD_WIDTH - SOURCE_Y),
-				new Translation2d(FIELD_LENGTH - SOURCE_X, FIELD_WIDTH),
-				.5,
-				.5
+				new Translation2d(FIELD_LAYOUT.getFieldLength(), SOURCE_Y),
+				new Translation2d(FIELD_LAYOUT.getFieldLength() - SOURCE_X, 0),
+				.5, .5
+			),
+			new LineObstacle(
+				new Translation2d(FIELD_LAYOUT.getFieldLength(), FIELD_LAYOUT.getFieldWidth() - SOURCE_Y),
+				new Translation2d(FIELD_LAYOUT.getFieldLength() - SOURCE_X, FIELD_LAYOUT.getFieldWidth()),
+				.5, .5
 			)
 		);
+
+	private static final double[] EMPTY_DOUBLE_ARRAY = new double[4];
 
 	public abstract static class Obstacle {
 		double strength;
@@ -229,7 +235,6 @@ public class RepulsorFieldPlanner {
 			this.maxRange = maxRange;
 		}
 		
-		@Override
 		public Translation2d getForceAtPosition(Translation2d position, Translation2d target) {
 			var positionToLine = position.minus(startPoint).rotateBy(inverseAngle);
 			if (positionToLine.getX() > 0 && positionToLine.getX() < length) {
@@ -249,76 +254,57 @@ public class RepulsorFieldPlanner {
 		}
 	}
 
-	/**
-	 * When <code>repulsor.setGoal(Translation2d)</code> is called,
-	 * the field planner is given a new target to move towards.
-	 */
-	@Setter
-	private Translation2d goal = new Translation2d(1, 1);
-
 	private final List<Obstacle> obstacles = new ArrayList<>(FIELD_OBSTACLES);
-	private Translation2d currentTranslation = Translation2d.kZero;
-	private Translation2d lastGoal;
-	private Pose2d[] arrows;
 
 	/**
-	 * Fetches the next target velocity and position to move towards the goal.
-	 * @see RepulsorFieldPlanner#setGoal(Translation2d)
+	 * Takes in the current position of the target, and returns the next pose
+	 * and velocities needed to reach the goal pose.
 	 */
 	public SwerveSample sampleField(
 		Translation2d currentTranslation,
-		double maxSpeed,
-		double slowdownDistance
+		Pose2d goalPose,
+		double maxSpeedMps,
+		double slowdownDistMeters
 	) {
-		this.currentTranslation = currentTranslation;
-		var err = currentTranslation.minus(goal);
-		var netForce = getForce(currentTranslation, goal);
+		var goalTrans = goalPose.getTranslation();
+		var err = currentTranslation.minus(goalTrans);
+		var netForce = getForce(currentTranslation, goalTrans);
 
 		double stepSize_m;
-		if (err.getNorm() < slowdownDistance) {
+		if (err.getNorm() < slowdownDistMeters) {
 			stepSize_m =
 				MathUtil.interpolate(
-					0, maxSpeed * 0.02, err.getNorm() / slowdownDistance);
+					0, maxSpeedMps * 0.02, err.getNorm() / slowdownDistMeters);
 		} else {
-			stepSize_m = maxSpeed * 0.02;
+			stepSize_m = maxSpeedMps * 0.02;
 		}
 		var step = new Translation2d(stepSize_m, netForce.getAngle());
 		return new SwerveSample(
 			0.0,
-			currentTranslation.getX(),
-			currentTranslation.getY(),
-			0.0,
+			currentTranslation.getX() + step.getX(),
+			currentTranslation.getY() + step.getY(),
+			goalPose.getRotation().getRadians(),
 			step.getX() / 0.02,
 			step.getY() / 0.02,
-			0.0, 0.0, 0.0, 0.0, new double[4], new double[4]
+			0.0, 0.0, 0.0, 0.0,
+			EMPTY_DOUBLE_ARRAY, EMPTY_DOUBLE_ARRAY
 		);
 	}
 
-	public boolean atGoal(double tolerance) {
-		return goal.getDistance(currentTranslation) < tolerance;
-	}
-
-	public void logArrows() {
-		if (goal.equals(lastGoal)) {
-			Logger.recordOutput("RepulsorFieldPlanner/Arrows", arrows);
-			return;
-		}
+	public Pose2d[] getArrows(Pose2d goal) {
 		var list = new ArrayList<Pose2d>();
 		for (int x = 0; x <= ARROWS_X; x++) {
 			for (int y = 0; y <= ARROWS_Y; y++) {
 				var translation =
-					new Translation2d(x * FIELD_LENGTH / ARROWS_X, y * FIELD_WIDTH / ARROWS_Y);
-				var force = getObstacleForce(translation, goal);
+					new Translation2d(x * FIELD_LAYOUT.getFieldLength() / ARROWS_X, y * FIELD_LAYOUT.getFieldWidth() / ARROWS_Y);
+				var force = getObstacleForce(translation, goal.getTranslation());
 				if (force.getNorm() > 1e-6) {
 					var rotation = force.getAngle();
-					
 					list.add(new Pose2d(translation, rotation));
 				}
 			}
 		}
-		lastGoal = goal;
-		arrows = list.toArray(new Pose2d[0]);
-		Logger.recordOutput("RepulsorFieldPlanner/Arrows", arrows);
+		return list.toArray(new Pose2d[0]);
 	}
 
 	public void addObstacle(Obstacle obstacle) {
@@ -329,7 +315,7 @@ public class RepulsorFieldPlanner {
 		obstacles.remove(obstacle);
 	}
 	
-	Translation2d getGoalForce(Translation2d curLocation, Translation2d goal) {
+	private Translation2d getGoalForce(Translation2d curLocation, Translation2d goal) {
 		var displacement = goal.minus(curLocation);
 		if (displacement.getNorm() == 0) {
 			return Translation2d.kZero;
@@ -339,7 +325,7 @@ public class RepulsorFieldPlanner {
 		return new Translation2d(mag, direction);
 	}
 
-	Translation2d getObstacleForce(Translation2d curLocation, Translation2d target) {
+	private Translation2d getObstacleForce(Translation2d curLocation, Translation2d target) {
 		var force = Translation2d.kZero;
 		for (Obstacle obs : obstacles) {
 			force = force.plus(obs.getForceAtPosition(curLocation, target));
@@ -347,7 +333,7 @@ public class RepulsorFieldPlanner {
 		return force;
 	}
 
-	Translation2d getForce(Translation2d curLocation, Translation2d target) {
+	private Translation2d getForce(Translation2d curLocation, Translation2d target) {
 		return getGoalForce(curLocation, target).plus(getObstacleForce(curLocation, target));
 	}
 }

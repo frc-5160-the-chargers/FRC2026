@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
-import lib.Tracer;
 import lib.TunableValues.TunableNum;
 import lombok.Setter;
 import robot.vision.Structs.CamPoseEstimate;
@@ -49,25 +48,24 @@ public class SwerveDrive extends ChargerSubsystem {
         testOutput = new TunableNum(key("TestingOutput"), 0),
         translationKP = new TunableNum(key("TranslationKP"), 8),
         rotationKP = new TunableNum(key("RotationKP"), 8),
-        rotationKD = new TunableNum(key("RotationKD"), 0.02);
+        rotationKD = new TunableNum(key("RotationKD"), 0.02),
+        pathfindingSlowdownDist = new TunableNum(key("Pathfinding/SlowdownDist"), 1.2),
+        pathfindingTolerance = new TunableNum(key("Pathfinding/Tolerance"), 0.015);
 
     private final SwerveConfig config;
     @Getter private final SwerveDriveSimulation mapleSim;
     private final SwerveDrivePoseEstimator replayPoseEst;
-    // Calculates desired wheel forces from a change in drivetrain speeds.
-    private final WheelForceCalculator forceCalc;
+    private final WheelForceCalculator forceCalc; // Calculates wheel forces from a change in drivetrain speeds.
     @Getter private final RepulsorFieldPlanner pathfinder = new RepulsorFieldPlanner();
     private final PIDController
         xPoseController = new PIDController(0, 0, 0.1),
         yPoseController = new PIDController(0, 0, 0.1),
         rotationController = new PIDController(0, 0, 0);
+    private boolean replayPoseEstInit = false; // whether the replay pose est has initialized.
     // The control request for path following.
-    private final SwerveRequest.ApplyFieldSpeeds fieldRelativeReq =
+    private final SwerveRequest.ApplyFieldSpeeds pathFollowReq =
         new SwerveRequest.ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
-    // The underlying hardware powering this swerve drivetrain.
-    private final SwerveHardware io;
-    // The current pathfinding target from this drivetrain.
-    private Pose2d pathfindGoal = Pose2d.kZero;
+    private final SwerveHardware io; // The underlying hardware powering this drivetrain.
 
     /** Input Data fetched by this subsystem. */
     @Getter private final SwerveDataAutoLogged inputs = new SwerveDataAutoLogged();
@@ -88,16 +86,9 @@ public class SwerveDrive extends ChargerSubsystem {
             config.encoderStdDevs(), VecBuilder.fill(0.6, 0.6, 0.6)
         );
         forceCalc = new WheelForceCalculator(
-            config.moduleTranslations(), ChoreoVars.botMass, ChoreoVars.botMoi
+            config.moduleTranslations(), ChoreoVars.botMass, ChoreoVars.botMOI
         );
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
-        refreshData(); // ensures data is initialized
-        if (RobotMode.get() == RobotMode.REPLAY) {
-            var frame = inputs.poseEstFrames[0];
-            replayPoseEst.resetPosition(
-                frame.heading(), frame.positions(), inputs.notReplayedPose
-            );
-        }
     }
 
     /** Returns a command that applies the given request repeatedly. */
@@ -127,19 +118,19 @@ public class SwerveDrive extends ChargerSubsystem {
             angleModulus(pose.getRotation().getRadians()),
             angleModulus(sample.heading)
         );
-        fieldRelativeReq.Speeds = target;
+        pathFollowReq.Speeds = target;
         if (deriveModuleForces) {
             var currFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
                 inputs.robotRelativeSpeeds, pose.getRotation()
             );
             var forces = forceCalc.calculate(0.02, currFieldSpeeds, target);
-            fieldRelativeReq.WheelForceFeedforwardsX = forces.x_newtons;
-            fieldRelativeReq.WheelForceFeedforwardsY = forces.y_newtons;
+            pathFollowReq.WheelForceFeedforwardsX = forces.x_newtons;
+            pathFollowReq.WheelForceFeedforwardsY = forces.y_newtons;
         } else {
-            fieldRelativeReq.WheelForceFeedforwardsX = sample.moduleForcesX();
-            fieldRelativeReq.WheelForceFeedforwardsY = sample.moduleForcesY();
+            pathFollowReq.WheelForceFeedforwardsX = sample.moduleForcesX();
+            pathFollowReq.WheelForceFeedforwardsY = sample.moduleForcesY();
         }
-        io.setControl(fieldRelativeReq);
+        io.setControl(pathFollowReq);
     }
 
     private void refreshData() {
@@ -153,26 +144,29 @@ public class SwerveDrive extends ChargerSubsystem {
     public void loggedPeriodic() {
         refreshData();
         // CTRE's SwerveDrivetrain calculates a pose for us(inputs.notReplayedPose),
-        // however, it won't change if a vision algorithm changes during replay mode
-        // (because it is logged as-is). In replay, we instead feed the module positions
-        // we logged on the real robot into a replay-compatible pose estimator.
+        // however, it won't update during replay mode if we change our AprilTag filtering algorithms.
+        // So in replay mode, we feed data logged on the real robot into a separate pose estimator
+        // that can accept replayed vision measurements.
         if (RobotMode.get() == RobotMode.REPLAY) {
             for (var frame: inputs.poseEstFrames) {
+                if (!replayPoseEstInit) {
+                    replayPoseEstInit = true;
+                    replayPoseEst.resetPosition(
+                        frame.heading(), frame.positions(), inputs.notReplayedPose
+                    );
+                }
                 pose = replayPoseEst.updateWithTime(
                     frame.timestampSecs(), frame.heading(), frame.positions()
                 );
             }
             Logger.recordOutput(key("ReplayedPose"), pose);
-            pathfinder.logArrows();
         } else {
             pose = inputs.notReplayedPose;
         }
         if (RobotMode.isSim()) {
-            pathfinder.logArrows();
             Logger.recordOutput(key("TruePose"), truePose());
             if (!simulatePoseEstDrift) pose = truePose();
         }
-        Logger.recordOutput(key("PathfindingGoal"), pathfindGoal);
     }
 
     /** In sim, returns the true pose of the robot without odometry drift. */
@@ -205,18 +199,30 @@ public class SwerveDrive extends ChargerSubsystem {
             .withName("Run Drive Motors");
     }
 
+    private static class PathfindCmdState {
+        boolean atTarget = false;
+    }
+
     /** Returns a command that aligns the drivetrain to the pose while avoiding obstacles. */
     public Command pathfindCmd(Supplier<Pose2d> targetPoseSupplier) {
-        double maxSpeedMps = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-        return Tracer.trace(
-            "Repulsor Pathfind Cmd",
-            this.run(() -> {
-                pathfindGoal = targetPoseSupplier.get();
-                pathfinder.setGoal(pathfindGoal.getTranslation());
-                var sample = pathfinder.sampleField(pose.getTranslation(), maxSpeedMps, 1.5);
-                driveWithSample(sample, true);
-            }).until(() -> pathfinder.atGoal(0.01))
-        );
+        double maxSpeedMps = config.moduleConsts()[0].SpeedAt12Volts;
+        var state = new PathfindCmdState();
+        return this.run(() -> {
+            var goal = targetPoseSupplier.get();
+            var sample = pathfinder.sampleField(
+                pose.getTranslation(), goal, maxSpeedMps,
+                pathfindingSlowdownDist.get()
+            );
+            driveWithSample(sample, true);
+            state.atTarget = goal.minus(pose).getTranslation().getNorm() < pathfindingTolerance.get();
+            Logger.recordOutput(key("Pathfinding/Goal"), goal);
+            Logger.recordOutput(key("Pathfinding/At Target"), state.atTarget);
+            if (RobotMode.get() != RobotMode.REAL) { // this is expensive, so we only log it in sim/replay
+                Logger.recordOutput(key("Pathfinding/Vector Field"), pathfinder.getArrows(goal));
+            }
+        })
+            .until(() -> state.atTarget)
+            .withName("Repulsor Pathfinding Cmd");
     }
 
     /** Adds a vision measurement to this drivetrain's pose estimator. */
@@ -252,16 +258,16 @@ public class SwerveDrive extends ChargerSubsystem {
         );
     }
 
-    private static class WheelRadiusCharacterizationState {
+    private static class CharacterizationState {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
         Rotation2d lastAngle = Rotation2d.kZero;
         double gyroDelta = 0.0;
     }
 
     /** Measures the robot's wheel radius by spinning in a circle. */
-    public Command wheelRadiusCharacterization() {
+    public Command characterizeWheelRadiusCmd() {
         var limiter = new SlewRateLimiter(0.05);
-        var state = new WheelRadiusCharacterizationState();
+        var state = new CharacterizationState();
         var req = new SwerveRequest.RobotCentric();
         var movementCmd = Commands.sequence(
             // Reset acceleration limiter
@@ -288,7 +294,7 @@ public class SwerveDrive extends ChargerSubsystem {
                     currPositions[i].distanceMeters - state.positions[i].distanceMeters
                 ) / 4.0;
             }
-            double wheelDeltaRad = wheelDeltaM / TunerConstants.FrontLeft.WheelRadius;
+            double wheelDeltaRad = wheelDeltaM / config.moduleConsts()[0].WheelRadius;
             double wheelRadius = (state.gyroDelta * config.drivebaseRadius().in(Meters)) / wheelDeltaRad;
             double wheelRadiusIn = Meters.of(wheelRadius).in(Inches);
             var formatter = new DecimalFormat("#0.000000000000000000000000000");

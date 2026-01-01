@@ -3,6 +3,7 @@ package robot.vision;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import lib.Tracer;
 import org.ironmaple.simulation.SimulatedArena;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
@@ -23,15 +24,20 @@ import static robot.vision.VisionConsts.DEFAULT_CAM_PROPERTIES;
 public class SimCameraIOForObjects extends CameraIO {
     private final VisionSystemSim sim;
     private final Map<String, TargetModel> availableObjects;
-    private final Supplier<Pose2d> truePose;
+    private final Supplier<Pose2d> robotTruePose;
 
     public SimCameraIOForObjects(MLCamConsts consts, Supplier<Pose2d> truePose) {
         super(consts.name());
-        this.sim = new VisionSystemSim(consts.name());
-        this.availableObjects = consts.availableObjects();
-        this.truePose = truePose;
+        sim = new VisionSystemSim(consts.name());
+        availableObjects = consts.availableObjects();
+        robotTruePose = truePose;
         var properties = DEFAULT_CAM_PROPERTIES.copy();
-        properties.setCalibration(1280, 720, Rotation2d.fromDegrees(60));
+        if (consts.intrinsics().isPresent()) {
+            var i = consts.intrinsics().get();
+            properties.setCalibration(i.width(), i.height(), i.cameraMatrix(), i.distortionMatrix());
+        } else {
+            properties.setCalibration(1280, 800, Rotation2d.fromDegrees(70));
+        }
         sim.addCamera(
             new PhotonCameraSim(cam, properties, 0.12, 4),
             consts.robotCenterToCamera()
@@ -55,7 +61,7 @@ public class SimCameraIOForObjects extends CameraIO {
                 sim.addVisionTargets(type, new VisionTargetSim(pose, model));
             }
         }
-        sim.update(truePose.get());
+        Tracer.trace("Simulation", () -> sim.update(robotTruePose.get()));
         super.refreshData(inputs);
     }
 }

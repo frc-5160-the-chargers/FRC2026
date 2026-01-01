@@ -7,7 +7,6 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N8;
 import org.photonvision.estimation.TargetModel;
@@ -29,6 +28,14 @@ public class Structs {
     /** A pose estimate originating from the vision cameras. */
     public record CamPoseEstimate(Pose2d pose, double timestampSecs, Vector<N3> deviations) {}
 
+    /** Camera-Specific Constants for object detection. */
+    public record MLCamConsts(
+        String name,
+        Map<String, TargetModel> availableObjects,
+        Transform3d robotCenterToCamera,
+        Optional<CameraIntrinsics> intrinsics
+    ) {}
+
     /** Calibration data for a camera. */
     public record CameraIntrinsics(
         int width,
@@ -37,7 +44,7 @@ public class Structs {
         double fy,
         double cx,
         double cy,
-        Matrix<N8, N1> distortionMatrix
+        Vector<N8> distortionMatrix
     ) {
         public Matrix<N3, N3> cameraMatrix() {
             return MatBuilder.fill(Nat.N3(), Nat.N3(), fx, 0, cx, 0, fy, cy, 0, 0, 1);
@@ -55,13 +62,6 @@ public class Structs {
             return 2.0 * Math.atan2(Math.hypot(width, height) / 2.0, fx);
         }
     }
-
-    /** Camera-Specific Constants for object detection. */
-    public record MLCamConsts(
-        String name,
-        Map<String, TargetModel> availableObjects,
-        Transform3d robotCenterToCamera
-    ) {}
 
     /** This is a utility class. */
     private Structs() {}

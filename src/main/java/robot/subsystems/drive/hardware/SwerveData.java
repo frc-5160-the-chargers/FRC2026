@@ -24,13 +24,13 @@ public class SwerveData {
     public record OdometryFrame(
         Rotation2d heading,
         double timestampSecs,
-        SwerveModulePosition tl,
-        SwerveModulePosition tr,
-        SwerveModulePosition bl,
-        SwerveModulePosition br
+        SwerveModulePosition frontL,
+        SwerveModulePosition frontR,
+        SwerveModulePosition backL,
+        SwerveModulePosition backR
     ) {
         public SwerveModulePosition[] positions() {
-            return new SwerveModulePosition[] {tl, tr, bl, br};
+            return new SwerveModulePosition[] {frontL, frontR, backL, backR};
         }
     }
 }

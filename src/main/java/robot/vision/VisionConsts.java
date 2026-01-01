@@ -2,9 +2,9 @@ package robot.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.units.measure.Distance;
 import lib.Convert;
 import org.photonvision.estimation.TargetModel;
@@ -40,7 +40,7 @@ public class VisionConsts {
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-15),
-                Degrees.of(48) // measured as: 46, previously working: 48
+                Degrees.of(-46) // measured as: 46, previously working: 48
             )
         ),
         REEF_ONLY_LAYOUT, 1.0, Optional.empty()
@@ -72,7 +72,8 @@ public class VisionConsts {
         new Transform3d(
             new Translation3d(-0.3, 0, 0.254),
             new Rotation3d(0, 0, 180 * Convert.DEGREES_TO_RADIANS)
-        )
+        ),
+        Optional.empty()
     );
 
     public static final double MAX_AMBIGUITY = 0.2;
