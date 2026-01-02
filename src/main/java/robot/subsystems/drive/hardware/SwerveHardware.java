@@ -1,29 +1,29 @@
 package robot.subsystems.drive.hardware;
 
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import lib.CurrAlliance;
 import lib.RobotMode;
+import lib.TunableValues.TunableBool;
+import lib.TunableValues.TunableNum;
 import robot.subsystems.drive.SwerveConfig;
 import robot.vision.Structs.CamPoseEstimate;
 import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.*;
 
 /** A class that wraps CTRE's {@link SwerveDrivetrain} with replay support. */
 public class SwerveHardware {
     protected final SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain;
-    private final ReentrantLock stateLock = new ReentrantLock(); // prevents simultaneous modification of poseEstBuffer
+    private final SwerveAlertManager alertManager;
     private final Queue<OdometryFrame> poseEstBuffer = new ArrayDeque<>();
     private SwerveDrivetrain.SwerveDriveState latest;
 
@@ -32,27 +32,26 @@ public class SwerveHardware {
             TalonFX::new, TalonFX::new, CANcoder::new,
             config.driveConsts(), config.moduleConsts()
         );
+        alertManager = new SwerveAlertManager(drivetrain);
         latest = drivetrain.getStateCopy();
         if (RobotMode.get() == RobotMode.REPLAY) drivetrain.getOdometryThread().stop();
         // registerTelemetry() technically means "register a function that logs data",
         // but here we abuse it for data-gathering purposes.
-        drivetrain.registerTelemetry(state -> {
-            try {
-                stateLock.lock();
-                latest = state;
-                if (poseEstBuffer.size() > 30) return;
-                // phoenix 6 measures time differently, so we use currentTimeToFPGATime() to correct the timestamp.
-                var latestFrame = new OdometryFrame(
-                    state.RawHeading, Utils.currentTimeToFPGATime(state.Timestamp),
-                    state.ModulePositions[0], state.ModulePositions[1],
-                    state.ModulePositions[2], state.ModulePositions[3]
-                );
-                poseEstBuffer.add(latestFrame);
-            } finally {
-                stateLock.unlock();
-            }
-        });
+        drivetrain.registerTelemetry(this::recordData);
         drivetrain.setStateStdDevs(config.encoderStdDevs());
+        initDashboardTuning(config);
+    }
+
+    private synchronized void recordData(SwerveDrivetrain.SwerveDriveState state) {
+        latest = state;
+        if (poseEstBuffer.size() > 30) return;
+        // phoenix 6 measures time differently, so we use currentTimeToFPGATime() to correct the timestamp.
+        var latestFrame = new OdometryFrame(
+            state.RawHeading, Utils.currentTimeToFPGATime(state.Timestamp),
+            state.ModulePositions[0], state.ModulePositions[1],
+            state.ModulePositions[2], state.ModulePositions[3]
+        );
+        poseEstBuffer.add(latestFrame);
     }
 
     /** Updates a {@link SwerveDataAutoLogged} instance with the latest data. */
@@ -60,17 +59,14 @@ public class SwerveHardware {
         drivetrain.setOperatorPerspectiveForward(
             CurrAlliance.red() ? Rotation2d.k180deg : Rotation2d.kZero
         );
-        inputs.poseEstValid = drivetrain.isOdometryValid();
-        try {
-            stateLock.lock();
+        alertManager.update();
+        synchronized (this) {
             inputs.poseEstFrames = poseEstBuffer.toArray(new OdometryFrame[0]);
             poseEstBuffer.clear();
             inputs.currentStates = latest.ModuleStates;
             inputs.desiredStates = latest.ModuleTargets;
             inputs.notReplayedPose = latest.Pose;
             inputs.robotRelativeSpeeds = latest.Speeds;
-        } finally {
-            stateLock.unlock();
         }
     }
 
@@ -88,21 +84,47 @@ public class SwerveHardware {
     public void addVisionMeasurement(CamPoseEstimate estimate) {
         drivetrain.addVisionMeasurement(
             estimate.pose(),
-            // phoenix 6 measures time differently, so we use fpgaToCurrentTime() to correct the timestamp.
             Utils.fpgaToCurrentTime(estimate.timestampSecs()),
             estimate.deviations()
         );
     }
 
-    /** Moves the drivetrain straight at the specified output(amps or volts). */
-    public void runDriveMotors(double output) {
-        var steerReq = new PositionVoltage(0);
+    /** Configures neutral mode(brake or coast) on this drivetrain. */
+    public void setCoastMode(boolean enabled) {
+        drivetrain.configNeutralMode(enabled ? NeutralModeValue.Coast : NeutralModeValue.Brake, 0.015);
+    }
+
+    /** Applies custom control requests to the drive and steer motors. Debug only. */
+    public void setControlCustom(ControlRequest drive, ControlRequest steer) {
+        setControl(new SwerveRequest.Idle());
         for (var module: drivetrain.getModules()) {
-            var driveReq = switch (module.getDriveClosedLoopOutputType()) {
-                case Voltage -> new VoltageOut(output);
-                case TorqueCurrentFOC -> new TorqueCurrentFOC(output);
-            };
-            module.apply(driveReq, steerReq);
+            module.getDriveMotor().setControl(drive);
+            module.getSteerMotor().setControl(steer);
+        }
+    }
+
+    private void initDashboardTuning(SwerveConfig config) {
+        var driveGains = config.moduleConsts()[0].DriveMotorGains;
+        var steerGains = config.moduleConsts()[0].SteerMotorGains;
+        new TunableNum("SwerveDrive/DriveMotor/KP", driveGains.kP)
+            .onChange(kP -> applyDriveGains(driveGains.withKP(kP)));
+        new TunableNum("SwerveDrive/SteerMotor/KP", steerGains.kP)
+            .onChange(kP -> applySteerGains(steerGains.withKP(kP)));
+        new TunableNum("SwerveDrive/SteerMotor/KD", steerGains.kD)
+            .onChange(kD -> applySteerGains(steerGains.withKD(kD)));
+        new TunableBool("SwerveDrive/CoastMode", false)
+            .onChange(this::setCoastMode);
+    }
+
+    private void applySteerGains(Slot0Configs configs) {
+        for (var module: drivetrain.getModules()) {
+            module.getSteerMotor().getConfigurator().apply(configs, 0.015);
+        }
+    }
+
+    private void applyDriveGains(Slot0Configs configs) {
+        for (var module: drivetrain.getModules()) {
+            module.getDriveMotor().getConfigurator().apply(configs, 0.015);
         }
     }
 }

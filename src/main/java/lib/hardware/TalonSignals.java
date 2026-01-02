@@ -1,7 +1,6 @@
 package lib.hardware;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.traits.CommonTalon;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.Convert;
@@ -38,7 +37,7 @@ public class TalonSignals {
         signalList.addAll(supplyCurrent);
         signalList.addAll(torqueCurrent);
         BaseStatusSignal.setUpdateFrequencyForAll(50, signalList);
-        SignalBatchRefresher.register((ParentDevice) leader, signalList);
+        SignalBatchRefresher.register(leader.getNetwork(), signalList);
     }
 
     /**

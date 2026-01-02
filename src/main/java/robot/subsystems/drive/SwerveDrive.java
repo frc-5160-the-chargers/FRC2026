@@ -2,6 +2,8 @@ package robot.subsystems.drive;
 
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.utility.WheelForceCalculator;
@@ -45,7 +47,6 @@ public class SwerveDrive extends ChargerSubsystem {
         testPoseX = new TunableNum(key("DemoPose/X"), 0),
         testPoseY = new TunableNum(key("DemoPose/Y"), 0),
         testPoseHeadingDeg = new TunableNum(key("DemoPose/HeadingDeg"), 0),
-        testOutput = new TunableNum(key("TestingOutput"), 0),
         translationKP = new TunableNum(key("TranslationKP"), 8),
         rotationKP = new TunableNum(key("RotationKP"), 8),
         rotationKD = new TunableNum(key("RotationKD"), 0.02),
@@ -193,24 +194,18 @@ public class SwerveDrive extends ChargerSubsystem {
         resetPose(pose);
     }
 
-    /** A simple command to run the drive motors at an output specified in the dashboard. */
-    public Command runDriveMotorsCmd() {
-        return this.run(() -> io.runDriveMotors(testOutput.get()))
-            .withName("Run Drive Motors");
-    }
-
     private static class PathfindCmdState {
         boolean atTarget = false;
     }
 
     /** Returns a command that aligns the drivetrain to the pose while avoiding obstacles. */
     public Command pathfindCmd(Supplier<Pose2d> targetPoseSupplier) {
-        double maxSpeedMps = config.moduleConsts()[0].SpeedAt12Volts;
         var state = new PathfindCmdState();
         return this.run(() -> {
             var goal = targetPoseSupplier.get();
             var sample = pathfinder.sampleField(
-                pose.getTranslation(), goal, maxSpeedMps,
+                pose.getTranslation(), goal,
+                config.maxVel().in(MetersPerSecond),
                 pathfindingSlowdownDist.get()
             );
             driveWithSample(sample, true);
@@ -262,6 +257,12 @@ public class SwerveDrive extends ChargerSubsystem {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
         Rotation2d lastAngle = Rotation2d.kZero;
         double gyroDelta = 0.0;
+    }
+
+    public Command applyCurrent(double amps) {
+        var driveReq = new TorqueCurrentFOC(amps);
+        var steerReq = new PositionVoltage(0);
+        return this.run(() -> io.setControlCustom(driveReq, steerReq)).withName("Apply Current");
     }
 
     /** Measures the robot's wheel radius by spinning in a circle. */

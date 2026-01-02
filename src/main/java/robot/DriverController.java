@@ -6,29 +6,26 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import robot.subsystems.drive.SwerveConfig;
-import robot.subsystems.drive.TunerConstants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.Alert.AlertType.kWarning;
 import static lib.commands.TriggerUtil.bind;
 
 public class DriverController extends CommandPS5Controller {
-    private final double maxSpeedMps = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    private final double maxSpeedRadPerSec = maxSpeedMps / SwerveConfig.DEFAULT.drivebaseRadius().in(Meters);
+    private final double maxVelMetersPerSec, maxVelRadPerSec;
     private final SwerveRequest.FieldCentric request = new SwerveRequest.FieldCentric()
-        .withDriveRequestType(DriveRequestType.Velocity)
-        .withDeadband(0.1 * maxSpeedMps)
-        .withRotationalDeadband(0.1 * maxSpeedRadPerSec);
+        .withDriveRequestType(DriveRequestType.Velocity);
 
-    public DriverController() {
-        super(0);
+    public DriverController(SwerveConfig config) {
+        this(0, config);
     }
 
-    public DriverController(int port) {
+    public DriverController(int port, SwerveConfig config) {
         super(port);
+        this.maxVelMetersPerSec = config.maxVel().in(MetersPerSecond);
+        this.maxVelRadPerSec = config.maxAngularVel().in(RadiansPerSecond);
         bind(new Alert("Driver Disconnected", kWarning), () -> !super.isConnected());
     }
 
@@ -46,7 +43,6 @@ public class DriverController extends CommandPS5Controller {
     }
 
     public SwerveRequest.FieldCentric getSwerveRequest() {
-        double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
         double x = modifyDriveAxis(getLeftY());
         double y = modifyDriveAxis(getLeftX());
         double rot = modifyDriveAxis(getRightX());
@@ -54,8 +50,10 @@ public class DriverController extends CommandPS5Controller {
         Logger.recordOutput("DriverController/yOutput", y);
         Logger.recordOutput("DriverController/rotOutput", rot);
         return request
-            .withVelocityX(x * maxSpeed)
-            .withVelocityY(y * maxSpeed)
-            .withRotationalRate(rot * maxSpeed);
+            .withVelocityX(x * maxVelMetersPerSec)
+            .withVelocityY(y * maxVelMetersPerSec)
+            .withRotationalRate(rot * maxVelRadPerSec)
+            .withDeadband(0.1 * maxVelMetersPerSec)
+            .withRotationalDeadband(0.1 * maxVelRadPerSec);
     }
 }

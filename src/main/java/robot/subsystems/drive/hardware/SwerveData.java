@@ -18,7 +18,6 @@ public class SwerveData {
     public SwerveModuleState[] desiredStates = {};
     public ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
     public Pose2d notReplayedPose = Pose2d.kZero;
-    public boolean poseEstValid = true;
 
     /** Data used for estimating pose in replay mode. */
     public record OdometryFrame(

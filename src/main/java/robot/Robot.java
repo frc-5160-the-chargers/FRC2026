@@ -4,8 +4,10 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import lib.LoggedAutoChooser;
 import lib.TunableValues;
 import lib.commands.CmdLogger;
+import lib.hardware.CanBusLogger;
 import lib.hardware.SignalBatchRefresher;
 import lib.RobotMode;
 import lib.Tracer;
@@ -20,21 +22,27 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
+import robot.subsystems.drive.TunerConstants;
 import robot.vision.AprilTagCam;
 import robot.vision.VisionConsts;
 
-import static edu.wpi.first.wpilibj2.command.button.RobotModeTriggers.autonomous;
-
 @SuppressWarnings({"FieldCanBeLocal", "DataFlowIssue"})
 public class Robot extends LoggedRobot {
-    private final SwerveDrive drive = new SwerveDrive(SwerveConfig.DEFAULT);
-    private final DriverController controller = new DriverController();
+    private final SwerveConfig swerveCfg = new SwerveConfig(
+        TunerConstants.DrivetrainConstants,
+        TunerConstants.FrontLeft, TunerConstants.FrontRight,
+        TunerConstants.BackLeft, TunerConstants.BackRight
+    );
+    private final SwerveDrive drive = new SwerveDrive(swerveCfg);
+    private final DriverController controller = new DriverController(swerveCfg);
 
     private final AprilTagCam cam = new AprilTagCam(VisionConsts.FL_CONSTS, drive::truePose);
 //    private final CameraIO.RawData coralCamData = new CameraIO.RawData();
 //    private final CameraIO coralCam = RobotMode.isSim()
 //        ? new SimCameraIOForObjects(VisionConsts.CORAL_CAM_CONSTS, drive::truePose)
 //        : new CameraIO(VisionConsts.CORAL_CAM_CONSTS.name());
+
+    private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
 
     public Robot() {
         initLogging();
@@ -46,9 +54,6 @@ public class Robot extends LoggedRobot {
             SimulatedArena.getInstance().placeGamePiecesOnField();
         }
         TunableValues.setTuningMode(true);
-        autonomous().whileTrue(
-            drive.pathfindCmd(() -> new Pose2d(5, 7, Rotation2d.kZero))
-        );
     }
 
     private void initLogging() {
@@ -66,7 +71,7 @@ public class Robot extends LoggedRobot {
                 if (DriverStation.isFMSAttached()) return;
                 ntPublisher.putTable(data);
             });
-            Logger.addDataReceiver(new WPILOGWriter());
+            if (!RobotMode.isSim()) Logger.addDataReceiver(new WPILOGWriter());
             Logger.registerURCL(URCL.startExternal());
             Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
             Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
@@ -98,13 +103,14 @@ public class Robot extends LoggedRobot {
         // TODO Disable setCurrentThreadPriority() if loop times are consistently over 20 ms
         Threads.setCurrentThreadPriority(true, 99);
         Tracer.trace("Signal Refresh", SignalBatchRefresher::refreshAll);
-        Tracer.trace("Cmd Logger", () -> CmdLogger.periodic(true));
         Tracer.trace("Cmd Scheduler", CommandScheduler.getInstance()::run);
         Tracer.trace("Vision", this::visionPeriodic);
         Logger.recordOutput(
             "LoggedRobot/MemoryUsageMb",
             (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6
         );
+        canBusLogger.periodic();
+        CmdLogger.periodic(true);
         if (RobotMode.isSim()) {
             Logger.recordOutput("Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
             Logger.recordOutput("Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
