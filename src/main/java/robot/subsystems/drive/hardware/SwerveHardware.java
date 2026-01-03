@@ -47,7 +47,7 @@ public class SwerveHardware {
         if (poseEstBuffer.size() > 30) return;
         // phoenix 6 measures time differently, so we use currentTimeToFPGATime() to correct the timestamp.
         var latestFrame = new OdometryFrame(
-            state.RawHeading, Utils.currentTimeToFPGATime(state.Timestamp),
+            state.RawHeading, state.Timestamp,
             state.ModulePositions[0], state.ModulePositions[1],
             state.ModulePositions[2], state.ModulePositions[3]
         );
@@ -67,6 +67,7 @@ public class SwerveHardware {
             inputs.desiredStates = latest.ModuleTargets;
             inputs.notReplayedPose = latest.Pose;
             inputs.robotRelativeSpeeds = latest.Speeds;
+            inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         }
     }
 
@@ -81,12 +82,9 @@ public class SwerveHardware {
     }
 
     /** Adds a vision measurement to the non-replayed pose estimator. */
-    public void addVisionMeasurement(CamPoseEstimate estimate) {
-        drivetrain.addVisionMeasurement(
-            estimate.pose(),
-            Utils.fpgaToCurrentTime(estimate.timestampSecs()),
-            estimate.deviations()
-        );
+    public void addVisionMeasurement(CamPoseEstimate estimate, double timeOffsetSecs) {
+        double time = estimate.timestampSecs() + timeOffsetSecs;
+        drivetrain.addVisionMeasurement(estimate.pose(), time, estimate.deviations());
     }
 
     /** Configures neutral mode(brake or coast) on this drivetrain. */

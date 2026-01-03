@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import lib.LoggedAutoChooser;
 import lib.TunableValues;
 import lib.commands.CmdLogger;
 import lib.hardware.CanBusLogger;
@@ -100,8 +99,8 @@ public class Robot extends LoggedRobot {
 //            Logger.recordOutput("CoralCam/Tx", data.yaw);
 //            Logger.recordOutput("CoralCam/Ty", data.pitch);
 //        });
-        for (var measurement: cam.update()) {
-            drive.addVisionMeasurement(measurement);
+        for (var m: cam.update()) {
+            drive.addVisionMeasurement(m);
         }
     }
 
@@ -109,9 +108,9 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         // TODO Disable setCurrentThreadPriority() if loop times are consistently over 20 ms
         Threads.setCurrentThreadPriority(true, 99);
-        Tracer.trace("Vision", this::visionPeriodic);
         Tracer.trace("Signal Refresh", SignalBatchRefresher::refreshAll);
         Tracer.trace("Cmd Scheduler", CommandScheduler.getInstance()::run);
+        Tracer.trace("Vision", this::visionPeriodic);
         Logger.recordOutput(
             "LoggedRobot/MemoryUsageMb",
             (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6

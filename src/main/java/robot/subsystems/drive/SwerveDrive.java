@@ -223,12 +223,13 @@ public class SwerveDrive extends ChargerSubsystem {
     /** Adds a vision measurement to this drivetrain's pose estimator. */
     public void addVisionMeasurement(CamPoseEstimate estimate) {
         if (RobotMode.get() == RobotMode.REPLAY) {
+            double time = estimate.timestampSecs() + inputs.timeOffsetSecs;
             replayPoseEst.addVisionMeasurement(
-                estimate.pose(), estimate.timestampSecs(),
-                estimate.deviations()
+                estimate.pose(), time, estimate.deviations()
             );
+        } else {
+            io.addVisionMeasurement(estimate, inputs.timeOffsetSecs);
         }
-        io.addVisionMeasurement(estimate);
     }
 
     /** Creates an AutoFactory, a utility class for following choreo trajectories. */
