@@ -46,12 +46,7 @@ public class AprilTagCam {
         return "Cameras/" + consts.name() + "/" + path;
     }
 
-    /**
-     * Fetches the latest pose estimates from this camera,
-     * using single-tag estimation if applicable.
-     * @param odoFrames Fetched through drive.getInputs().poseEstFrames.
-     */
-    public List<CamPoseEstimate> updateWithTrigSolve(OdometryFrame[] odoFrames) {
+    public void addHeadingData(OdometryFrame[] odoFrames) {
         poseEst.setMultiTagFallbackStrategy(
             DriverStation.isDisabled() || odoFrames.length == 0
                 ? PoseStrategy.LOWEST_AMBIGUITY
@@ -60,7 +55,6 @@ public class AprilTagCam {
         for (var frame: odoFrames) {
             poseEst.addHeadingData(frame.timestampSecs(), frame.heading());
         }
-        return update();
     }
 
     /** Fetches the latest pose estimates from this camera. */
@@ -131,8 +125,8 @@ public class AprilTagCam {
         }
 
         // logs relevant data
-        boolean shouldLog = !inputs.results.isEmpty() && !DriverStation.isFMSAttached();
-        if (RobotMode.get() == RobotMode.REPLAY || shouldLog) {
+        boolean shouldLog = RobotMode.get() == RobotMode.REPLAY || !DriverStation.isFMSAttached();
+        if (!inputs.results.isEmpty() || shouldLog) {
             int[] ids = new int[fiducialIds.size()];
             for (int i = 0; i < fiducialIds.size(); i++) {
                 ids[i] = fiducialIds.get(i);
@@ -146,5 +140,11 @@ public class AprilTagCam {
 
         Tracer.endTrace();
         return poseEstimates;
+    }
+
+    /** Performs a data update without computing anything. */
+    public void updateWithoutCompute() {
+        io.refreshData(inputs);
+        Logger.processInputs(key(""), inputs);
     }
 }

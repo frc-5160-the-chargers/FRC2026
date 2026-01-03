@@ -12,6 +12,7 @@ import lib.hardware.SignalBatchRefresher;
 import lib.RobotMode;
 import lib.Tracer;
 import org.ironmaple.simulation.SimulatedArena;
+import robot.constants.ChoreoTraj;
 import robot.subsystems.drive.SwerveConfig;
 import robot.constants.BuildConstants;
 import robot.subsystems.drive.SwerveDrive;
@@ -25,6 +26,8 @@ import org.littletonrobotics.urcl.URCL;
 import robot.subsystems.drive.TunerConstants;
 import robot.vision.AprilTagCam;
 import robot.vision.VisionConsts;
+
+import static edu.wpi.first.wpilibj2.command.button.RobotModeTriggers.autonomous;
 
 @SuppressWarnings({"FieldCanBeLocal", "DataFlowIssue"})
 public class Robot extends LoggedRobot {
@@ -54,6 +57,11 @@ public class Robot extends LoggedRobot {
             SimulatedArena.getInstance().placeGamePiecesOnField();
         }
         TunableValues.setTuningMode(true);
+        var af = drive.createAutoFactory();
+        autonomous().whileTrue(
+            af.resetOdometry(ChoreoTraj.NewPath.name())
+                .andThen(af.trajectoryCmd(ChoreoTraj.NewPath.name()))
+        );
     }
 
     private void initLogging() {
@@ -71,7 +79,7 @@ public class Robot extends LoggedRobot {
                 if (DriverStation.isFMSAttached()) return;
                 ntPublisher.putTable(data);
             });
-            if (!RobotMode.isSim()) Logger.addDataReceiver(new WPILOGWriter());
+            Logger.addDataReceiver(new WPILOGWriter());
             Logger.registerURCL(URCL.startExternal());
             Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
             Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
@@ -92,8 +100,7 @@ public class Robot extends LoggedRobot {
 //            Logger.recordOutput("CoralCam/Tx", data.yaw);
 //            Logger.recordOutput("CoralCam/Ty", data.pitch);
 //        });
-        var frames = drive.getInputs().poseEstFrames;
-        for (var measurement: cam.updateWithTrigSolve(frames)) {
+        for (var measurement: cam.update()) {
             drive.addVisionMeasurement(measurement);
         }
     }
@@ -102,9 +109,9 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         // TODO Disable setCurrentThreadPriority() if loop times are consistently over 20 ms
         Threads.setCurrentThreadPriority(true, 99);
+        Tracer.trace("Vision", this::visionPeriodic);
         Tracer.trace("Signal Refresh", SignalBatchRefresher::refreshAll);
         Tracer.trace("Cmd Scheduler", CommandScheduler.getInstance()::run);
-        Tracer.trace("Vision", this::visionPeriodic);
         Logger.recordOutput(
             "LoggedRobot/MemoryUsageMb",
             (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6
