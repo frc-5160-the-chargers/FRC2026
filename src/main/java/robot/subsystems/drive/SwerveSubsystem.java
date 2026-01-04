@@ -43,7 +43,7 @@ import static edu.wpi.first.units.Units.*;
  * A subsystem that controls the driving of the robot. In each corner of the robot, there is
  * one motor responsible for spinning the wheel, and another for changing the direction of the wheel.
  */
-public class SwerveDrive extends ChargerSubsystem {
+public class SwerveSubsystem extends ChargerSubsystem {
     private final TunableNum
         testPoseX = new TunableNum(key("DemoPose/X"), 0),
         testPoseY = new TunableNum(key("DemoPose/Y"), 0),
@@ -74,7 +74,7 @@ public class SwerveDrive extends ChargerSubsystem {
     @Getter private Pose2d pose = Pose2d.kZero;
     @Setter private boolean simulatePoseEstDrift = true;
 
-    public SwerveDrive(SwerveConfig config) {
+    public SwerveSubsystem(SwerveConfig config) {
         this.config = config;
         mapleSim = new SwerveDriveSimulation(config.mapleSimConfig(), Pose2d.kZero);
         io = RobotMode.isSim()

@@ -1,9 +1,13 @@
 package robot;
 
+import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
+import lib.LoggedAutoChooser;
 import lib.TunableValues;
 import lib.commands.CmdLogger;
 import lib.hardware.CanBusLogger;
@@ -14,7 +18,7 @@ import org.ironmaple.simulation.SimulatedArena;
 import robot.constants.ChoreoTraj;
 import robot.subsystems.drive.SwerveConfig;
 import robot.constants.BuildConstants;
-import robot.subsystems.drive.SwerveDrive;
+import robot.subsystems.drive.SwerveSubsystem;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -35,7 +39,7 @@ public class Robot extends LoggedRobot {
         TunerConstants.FrontLeft, TunerConstants.FrontRight,
         TunerConstants.BackLeft, TunerConstants.BackRight
     );
-    private final SwerveDrive drive = new SwerveDrive(swerveCfg);
+    private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
     private final DriverController controller = new DriverController(swerveCfg);
 
     private final AprilTagCam cam = new AprilTagCam(VisionConsts.FL_CONSTS, drive::getTruePose);
@@ -45,6 +49,8 @@ public class Robot extends LoggedRobot {
 //        : new CameraIO(VisionConsts.CORAL_CAM_CONSTS.name());
 
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
+    private final LoggedAutoChooser chooser = new LoggedAutoChooser("AutoOptions");
+    private final AutoChooser chooser2 = new AutoChooser();
 
     public Robot() {
         initLogging();
@@ -56,11 +62,15 @@ public class Robot extends LoggedRobot {
             SimulatedArena.getInstance().placeGamePiecesOnField();
         }
         TunableValues.setTuningMode(true);
-        var af = drive.createAutoFactory();
-        autonomous().whileTrue(
-            af.resetOdometry(ChoreoTraj.NewPath.name())
-                .andThen(af.trajectoryCmd(ChoreoTraj.NewPath.name()))
-        );
+        chooser.addCmd("Test", () -> {
+            System.out.println("Regenerated.");
+            return Commands.none();
+        });
+        SmartDashboard.putData("AutoChooserTESTING2", chooser2);
+        chooser2.addCmd("Test", () -> {
+            System.out.println("Regenerated.");
+            return Commands.none();
+        });
     }
 
     private void initLogging() {
