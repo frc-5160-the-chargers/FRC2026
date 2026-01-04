@@ -33,6 +33,7 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 
 import java.text.DecimalFormat;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.math.MathUtil.angleModulus;
@@ -67,12 +68,10 @@ public class SwerveDrive extends ChargerSubsystem {
     private final SwerveRequest.ApplyFieldSpeeds pathFollowReq =
         new SwerveRequest.ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveHardware io; // The underlying hardware powering this drivetrain.
+    private final SwerveDataAutoLogged inputs = new SwerveDataAutoLogged();
 
-    /** Input Data fetched by this subsystem. */
-    @Getter private final SwerveDataAutoLogged inputs = new SwerveDataAutoLogged();
     /** A pose estimate that will be replayed correctly. */
     @Getter private Pose2d pose = Pose2d.kZero;
-    /** If set to false, no pose estimation drift will be simulated. */
     @Setter private boolean simulatePoseEstDrift = true;
 
     public SwerveDrive(SwerveConfig config) {
@@ -165,13 +164,19 @@ public class SwerveDrive extends ChargerSubsystem {
             pose = inputs.notReplayedPose;
         }
         if (RobotMode.isSim()) {
-            Logger.recordOutput(key("TruePose"), truePose());
-            if (!simulatePoseEstDrift) pose = truePose();
+            Logger.recordOutput(key("TruePose"), getTruePose());
+            if (!simulatePoseEstDrift) pose = getTruePose();
         }
     }
 
+    /** The input data of this drivetrain. */
+    public Optional<SwerveDataAutoLogged> getInputs() {
+        if (inputs.currentStates.length == 0) return Optional.empty();
+        return Optional.of(inputs);
+    }
+
     /** In sim, returns the true pose of the robot without odometry drift. */
-    public Pose2d truePose() {
+    public Pose2d getTruePose() {
         return RobotMode.isSim() ? mapleSim.getSimulatedDriveTrainPose() : pose;
     }
 
@@ -254,16 +259,20 @@ public class SwerveDrive extends ChargerSubsystem {
         );
     }
 
-    private static class CharacterizationState {
-        SwerveModulePosition[] positions = new SwerveModulePosition[4];
-        Rotation2d lastAngle = Rotation2d.kZero;
-        double gyroDelta = 0.0;
-    }
-
+    /**
+     * A command that applies a set amount of current to the drive motors.
+     * Use {@link SwerveRequest.SysIdSwerveTranslation} for the voltage equivalent.
+     */
     public Command applyCurrent(double amps) {
         var driveReq = new TorqueCurrentFOC(amps);
         var steerReq = new PositionVoltage(0);
         return this.run(() -> io.setControlCustom(driveReq, steerReq)).withName("Apply Current");
+    }
+
+    private static class CharacterizationState {
+        SwerveModulePosition[] positions = new SwerveModulePosition[4];
+        Rotation2d lastAngle = Rotation2d.kZero;
+        double gyroDelta = 0.0;
     }
 
     /** Measures the robot's wheel radius by spinning in a circle. */

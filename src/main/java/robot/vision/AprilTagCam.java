@@ -46,14 +46,15 @@ public class AprilTagCam {
         return "Cameras/" + consts.name() + "/" + path;
     }
 
-    public void addHeadingData(OdometryFrame[] odoFrames) {
+    public void addHeadingData(OdometryFrame[] odoFrames, double timeOffsetSecs) {
         poseEst.setMultiTagFallbackStrategy(
             DriverStation.isDisabled() || odoFrames.length == 0
                 ? PoseStrategy.LOWEST_AMBIGUITY
                 : PoseStrategy.PNP_DISTANCE_TRIG_SOLVE
         );
         for (var frame: odoFrames) {
-            poseEst.addHeadingData(frame.timestampSecs(), frame.heading());
+            // we have to convert back from phoenix 6 timestamp to FPGA timestamp
+            poseEst.addHeadingData(frame.timestampSecs() - timeOffsetSecs, frame.heading());
         }
     }
 
@@ -71,6 +72,7 @@ public class AprilTagCam {
         }
 
         // process vision data into vision updates
+        // process vision data into esvision updates
         var poseEstimates = new ArrayList<CamPoseEstimate>();
         int ambHighCount = 0;
         int errHighCount = 0;

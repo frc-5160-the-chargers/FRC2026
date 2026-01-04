@@ -38,7 +38,7 @@ public class Robot extends LoggedRobot {
     private final SwerveDrive drive = new SwerveDrive(swerveCfg);
     private final DriverController controller = new DriverController(swerveCfg);
 
-    private final AprilTagCam cam = new AprilTagCam(VisionConsts.FL_CONSTS, drive::truePose);
+    private final AprilTagCam cam = new AprilTagCam(VisionConsts.FL_CONSTS, drive::getTruePose);
 //    private final CameraIO.RawData coralCamData = new CameraIO.RawData();
 //    private final CameraIO coralCam = RobotMode.isSim()
 //        ? new SimCameraIOForObjects(VisionConsts.CORAL_CAM_CONSTS, drive::truePose)
@@ -99,6 +99,9 @@ public class Robot extends LoggedRobot {
 //            Logger.recordOutput("CoralCam/Tx", data.yaw);
 //            Logger.recordOutput("CoralCam/Ty", data.pitch);
 //        });
+//        drive.getInputs().ifPresent(
+//            data -> cam.addHeadingData(data.poseEstFrames, data.timeOffsetSecs)
+//        );
         for (var m: cam.update()) {
             drive.addVisionMeasurement(m);
         }

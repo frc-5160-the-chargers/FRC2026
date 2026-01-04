@@ -44,7 +44,7 @@ public class SwerveHardware {
 
     private synchronized void recordData(SwerveDrivetrain.SwerveDriveState state) {
         latest = state;
-        if (poseEstBuffer.size() > 30) return;
+        if (alertManager.isOverflowing(poseEstBuffer.size())) return;
         // phoenix 6 measures time differently, so we use currentTimeToFPGATime() to correct the timestamp.
         var latestFrame = new OdometryFrame(
             state.RawHeading, state.Timestamp,
@@ -60,6 +60,7 @@ public class SwerveHardware {
             CurrAlliance.red() ? Rotation2d.k180deg : Rotation2d.kZero
         );
         alertManager.update();
+        inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         synchronized (this) {
             inputs.poseEstFrames = poseEstBuffer.toArray(new OdometryFrame[0]);
             poseEstBuffer.clear();
@@ -67,7 +68,6 @@ public class SwerveHardware {
             inputs.desiredStates = latest.ModuleTargets;
             inputs.notReplayedPose = latest.Pose;
             inputs.robotRelativeSpeeds = latest.Speeds;
-            inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         }
     }
 
