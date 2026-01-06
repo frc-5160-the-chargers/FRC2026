@@ -1,6 +1,12 @@
 package lib;
 
-/** A compilation of useful unit conversion factors. */
+/**
+ * A compilation of useful unit conversion factors.
+ * A couple of notes:
+ * 1. Positions fetched from motors are always in rotations.
+ * 2. Velocities for CTRE motors are in rotations/sec, while for REV motors,
+ * they are always in RPM (rotations/minute).
+ */
 public class Convert {
     public static final double FEET_TO_METERS = 0.3048;
     public static final double INCHES_TO_METERS = 0.0254;

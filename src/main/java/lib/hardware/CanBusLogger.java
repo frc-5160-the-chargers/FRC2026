@@ -2,6 +2,7 @@ package lib.hardware;
 
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import lib.RobotMode;
 import org.jetbrains.annotations.Nullable;
@@ -17,35 +18,19 @@ public class CanBusLogger {
     private final String key;
     @Nullable private CANBus.CANBusStatus status = null;
 
-    @SuppressWarnings({"BusyWait", "CallToPrintStackTrace"})
     public CanBusLogger(CANBus canBus) {
         key = canBus.getName();
-        // Match RIO CAN sampling
-        var thread = new Thread(() -> {
-            while (true) {
-                var statusTemp = canBus.getStatus();
-                synchronized (this) {
-                    status = statusTemp;
-                }
-                try {
-                    Thread.sleep(400); // Match RIO CAN sampling
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        new Notifier(() -> {
+            var latest = canBus.getStatus();
+            synchronized (this) {
+                status = latest;
             }
-        });
-        thread.setName("CanivoreReader - " + canBus.getName());
-        thread.start();
+        }).startPeriodic(0.4);
     }
 
     /** Should be run in robotPeriodic(). */
     public void periodic() {
         if (RobotMode.get() == RobotMode.REPLAY) return;
-        logCanivoreData();
-        logMainBusData();
-    }
-
-    private void logCanivoreData() {
         CANBus.CANBusStatus current;
         synchronized (this) {
             if (status == null) return;
@@ -58,6 +43,7 @@ public class CanBusLogger {
         );
         Logger.recordOutput(key + "/Statistics", stats);
         Logger.recordOutput(key + "/Status", current.Status);
+        logMainBusData();
     }
 
     private void logMainBusData() {

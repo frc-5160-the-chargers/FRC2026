@@ -23,6 +23,7 @@ public class CmdLogger {
         ranCmdNames = new HashSet<>(),
         interruptMsgs = new HashSet<>(),
         duplicateMsgs = new HashSet<>();
+    private static final String[] EMPTY_ARRAY = new String[0];
     private static char blank = ' ';
 
     /**
@@ -35,9 +36,9 @@ public class CmdLogger {
             start(logDuplicateNames);
             hasStarted = true;
         }
-        Logger.recordOutput("Commands/Flowchart/warnings", runningCmdNames.toArray(new String[0]));
-        Logger.recordOutput("Commands/Flowchart/infos", runningDefaultCmdNames.toArray(new String[0]));
-        Logger.recordOutput("Commands/FinishedAtLeastOnce", ranCmdNames.toArray(new String[0]));
+        Logger.recordOutput("Commands/Flowchart/warnings", runningCmdNames.toArray(EMPTY_ARRAY));
+        Logger.recordOutput("Commands/Flowchart/infos", runningDefaultCmdNames.toArray(EMPTY_ARRAY));
+        Logger.recordOutput("Commands/FinishedAtLeastOnce", ranCmdNames.toArray(EMPTY_ARRAY));
         if (!interruptMsgs.isEmpty()) {
             var msg = String.join("\n", interruptMsgs) + blank;
             interruptMsgs.clear();

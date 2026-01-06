@@ -7,9 +7,8 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
 import lib.RobotMode;
-import lib.hardware.SignalBatchRefresher;
+import lib.hardware.SignalRefresh;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import static edu.wpi.first.wpilibj.Alert.AlertType.kError;
@@ -40,12 +39,9 @@ class SwerveAlertManager {
                 module.getEncoder().getVersion()
             );
         }
-        BaseStatusSignal.setUpdateFrequencyForAll(
-            5.0, new ArrayList<>(checkupSignals.values())
-        );
-        SignalBatchRefresher.register( // all devices are on the same CAN bus
-            drive.getPigeon2().getNetwork(), checkupSignals.values()
-        );
+        var signalArray = checkupSignals.values().toArray(new BaseStatusSignal[0]);
+        // all devices are on the same CAN bus/network
+        SignalRefresh.register(5, drive.getPigeon2().getNetwork(), signalArray);
     }
 
     /** Updates the connection alerts for swerve. */

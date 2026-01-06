@@ -1,6 +1,7 @@
 package lib;
 
 import edu.wpi.first.wpilibj.RobotBase;
+import lombok.Setter;
 
 import java.util.Objects;
 
@@ -11,10 +12,12 @@ public enum RobotMode {
     // (see line 127 in build.gradle)
     private static final boolean isReplay =
         Objects.equals(System.getProperty("replayMode"), "enabled");
+    // Only use this for unit tests.
+    @Setter private static boolean shimRealRobot = false;
 
     /** Fetches the current robot mode. */
     public static RobotMode get() {
-        if (!RobotBase.isSimulation()) return REAL;
+        if (!RobotBase.isSimulation() || shimRealRobot) return REAL;
         return isReplay ? REPLAY : SIM;
     }
 
