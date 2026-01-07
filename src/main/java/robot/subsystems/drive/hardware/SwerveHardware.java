@@ -23,7 +23,7 @@ import java.util.*;
 /** A class that wraps CTRE's {@link SwerveDrivetrain} with replay support. */
 public class SwerveHardware {
     protected final SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain;
-    private final SwerveAlertManager alertManager;
+    private final SwerveDebugging debugging;
     private final Queue<OdometryFrame> poseEstBuffer = new ArrayDeque<>();
     private SwerveDrivetrain.SwerveDriveState latest;
 
@@ -32,7 +32,7 @@ public class SwerveHardware {
             TalonFX::new, TalonFX::new, CANcoder::new,
             config.driveConsts(), config.moduleConsts()
         );
-        alertManager = new SwerveAlertManager(drivetrain);
+        debugging = new SwerveDebugging(drivetrain);
         latest = drivetrain.getStateCopy();
         if (RobotMode.get() == RobotMode.REPLAY) drivetrain.getOdometryThread().stop();
         // registerTelemetry() technically means "register a function that logs data",
@@ -44,7 +44,7 @@ public class SwerveHardware {
 
     private synchronized void recordData(SwerveDrivetrain.SwerveDriveState state) {
         latest = state;
-        if (alertManager.isOverflowing(poseEstBuffer.size())) return;
+        if (debugging.isOverflowing(poseEstBuffer.size())) return;
         // phoenix 6 measures time differently, so we use currentTimeToFPGATime() to correct the timestamp.
         var latestFrame = new OdometryFrame(
             state.RawHeading, state.Timestamp,
@@ -59,7 +59,7 @@ public class SwerveHardware {
         drivetrain.setOperatorPerspectiveForward(
             CurrAlliance.red() ? Rotation2d.k180deg : Rotation2d.kZero
         );
-        alertManager.update();
+        debugging.logData();
         inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         synchronized (this) {
             inputs.poseEstFrames = poseEstBuffer.toArray(new OdometryFrame[0]);
@@ -104,13 +104,13 @@ public class SwerveHardware {
     private void initDashboardTuning(SwerveConfig config) {
         var driveGains = config.moduleConsts()[0].DriveMotorGains;
         var steerGains = config.moduleConsts()[0].SteerMotorGains;
-        new TunableNum("SwerveDrive/DriveMotor/KP", driveGains.kP)
+        new TunableNum("SwerveSubsystem/DriveMotor/KP", driveGains.kP)
             .onChange(kP -> applyDriveGains(driveGains.withKP(kP)));
-        new TunableNum("SwerveDrive/SteerMotor/KP", steerGains.kP)
+        new TunableNum("SwerveSubsystem/SteerMotor/KP", steerGains.kP)
             .onChange(kP -> applySteerGains(steerGains.withKP(kP)));
-        new TunableNum("SwerveDrive/SteerMotor/KD", steerGains.kD)
+        new TunableNum("SwerveSubsystem/SteerMotor/KD", steerGains.kD)
             .onChange(kD -> applySteerGains(steerGains.withKD(kD)));
-        new TunableBool("SwerveDrive/CoastMode", false)
+        new TunableBool("SwerveSubsystem/CoastMode", false)
             .onChange(this::setCoastMode);
     }
 

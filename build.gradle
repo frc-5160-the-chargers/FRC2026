@@ -116,7 +116,7 @@ dependencies {
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 }
 
-task(replayWatch, type: JavaExec) {
+tasks.register('replayWatch', JavaExec) {
     mainClass = "org.littletonrobotics.junction.ReplayWatch"
     classpath = sourceSets.main.runtimeClasspath
 }
@@ -133,8 +133,6 @@ simulateJavaRelease {
         systemProperties "replayMode": "enabled"
         // This line is very important; the sim GUI can cause race conditions w/ replay
         simGui.defaultEnabled = false
-    } else {
-        dependsOn(test)
     }
 }
 

@@ -1,9 +1,9 @@
 package robot.subsystems.elevatorexample;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import lib.hardware.MotorStats;
+import lib.SimCurrentLimit;
 
 import static edu.wpi.first.units.Units.*;
 import static robot.subsystems.elevatorexample.ElevatorConsts.*;
@@ -15,6 +15,7 @@ public class SimElevatorHardware extends ElevatorHardware {
         true,
         0
     );
+    private final SimCurrentLimit currentLimit = new SimCurrentLimit(MOTOR_KIND, Amps.of(CURRENT_LIMIT));
     private final PIDController pidController = new PIDController(0, 0, 0);
     private double currentRadians = 0;
 
@@ -41,14 +42,8 @@ public class SimElevatorHardware extends ElevatorHardware {
 
     @Override
     public void setVolts(double volts) {
-        sim.setInputVoltage(applyCurrentLimit(volts));
-    }
-
-    private double applyCurrentLimit(double volts) {
-        double radPerSec = sim.getVelocityMetersPerSecond() * REDUCTION / RADIUS.in(Meters);
-        double minVolts = MOTOR_KIND.getVoltage(MOTOR_KIND.getTorque(-CURRENT_LIMIT), radPerSec);
-        double maxVolts = MOTOR_KIND.getVoltage(MOTOR_KIND.getTorque(CURRENT_LIMIT), radPerSec);
-        return MathUtil.clamp(volts, minVolts, maxVolts);
+        var rawVelocity = RadiansPerSecond.of(currentRadians * REDUCTION);
+        sim.setInputVoltage(currentLimit.calcVolts(volts, rawVelocity));
     }
 
     @Override

@@ -12,8 +12,7 @@ public enum RobotMode {
     // (see line 127 in build.gradle)
     private static final boolean isReplay =
         Objects.equals(System.getProperty("replayMode"), "enabled");
-    // Only use this for unit tests.
-    @Setter private static boolean shimRealRobot = false;
+    @Setter private static boolean shimRealRobot = false; // Only use this for unit tests.
 
     /** Fetches the current robot mode. */
     public static RobotMode get() {
