@@ -139,6 +139,8 @@ simulateJavaRelease {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    // Set an environment variable to tell the test code that it is running in a test environment
+    environment 'test', 'true'
 }
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')

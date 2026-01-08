@@ -63,6 +63,9 @@ public class Robot extends LoggedRobot {
     }
 
     private void initLogging() {
+        if (System.getenv("test") != null) {
+            return; // Unit test, don't need logging here
+        }
         if (RobotMode.get() == RobotMode.REPLAY) {
             setUseTiming(false);
             // Checks for an opened log file in AdvantageScope.

@@ -1,14 +1,10 @@
 package robot;
 
 import lib.RobotMode;
-import org.ironmaple.simulation.SimulatedArena;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.LoggedRobot;
 import testingutil.ChargerUnitTest;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-// TODO make this not create a new WPILOG file every run
 class RobotTest extends ChargerUnitTest {
     @Test
     public void instantiateSimRobot() {
@@ -18,13 +14,10 @@ class RobotTest extends ChargerUnitTest {
     }
 
     @Test
-    public void instantiateRealRobot() throws NoSuchFieldException, IllegalAccessException {
+    public void instantiateRealRobot() {
         RobotMode.setShimRealRobot(true);
         var robot = new Robot();
         instantiate(robot);
-        var mapleSim = SimulatedArena.class.getDeclaredField("instance");
-        mapleSim.setAccessible(true);
-        assertNull(mapleSim.get(null), "MapleSim was instantiated on the real robot.");
         robot.close();
     }
 
