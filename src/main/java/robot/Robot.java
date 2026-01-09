@@ -22,7 +22,6 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-import org.littletonrobotics.urcl.URCL;
 import robot.subsystems.drive.TunerConstants;
 import robot.vision.AprilTagCam;
 import robot.vision.VisionConsts;
@@ -81,7 +80,6 @@ public class Robot extends LoggedRobot {
                 ntPublisher.putTable(data);
             });
             Logger.addDataReceiver(new WPILOGWriter());
-            Logger.registerURCL(URCL.startExternal());
             Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
             Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
             Logger.recordMetadata("Timestamp", BuildConstants.BUILD_DATE);

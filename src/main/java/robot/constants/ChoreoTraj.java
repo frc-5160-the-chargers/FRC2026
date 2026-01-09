@@ -4,13 +4,12 @@ package robot.constants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 // If these imports cause errors because you're not using ChoreoLib,
 // turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-
 /**
  * A class containing the name, start pose, end pose, and total time of every Choreo trajectory.
  * This prevents your code from referencing deleted or misspelled trajectories,
@@ -19,72 +18,69 @@ import choreo.auto.AutoTrajectory;
  */
 public record ChoreoTraj(
     String name,
-    OptionalInt segment,
+    Optional<Integer> segment,
     double totalTimeSecs,
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj LoopedPath = new ChoreoTraj(
+
+    // If these methods cause errors because you're not using ChoreoLib,
+    // turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
+    /**
+     * Load an AutoTrajectory directly from a ChoreoTraj, which may be a segment of a larger trajectory.
+     */
+    public static AutoTrajectory trajectory(AutoRoutine routine, ChoreoTraj traj) {
+        if (traj.segment().isPresent()) {
+            return routine.trajectory(traj.name(), traj.segment().get());
+        }
+        return routine.trajectory(traj.name());
+    }
+
+  public static final ChoreoTraj LoopedPath = new ChoreoTraj(
 	    "LoopedPath",
-	    OptionalInt.empty(),
+	    Optional.empty(),
 	    1.72726,
 	    new Pose2d(5.209, 6.499, Rotation2d.fromRadians(0)),
 	    new Pose2d(11, 6.128, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NewPath = new ChoreoTraj(
 	    "NewPath",
-	    OptionalInt.empty(),
+	    Optional.empty(),
 	    1.72726,
 	    new Pose2d(5.209, 6.499, Rotation2d.fromRadians(0)),
 	    new Pose2d(11, 6.128, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NewPath_copy1 = new ChoreoTraj(
 	    "NewPath_copy1",
-	    OptionalInt.empty(),
+	    Optional.empty(),
 	    1.31721,
 	    new Pose2d(3.333, 6.746, Rotation2d.fromRadians(0)),
 	    new Pose2d(7.002, 5.798, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NewPath_copy2 = new ChoreoTraj(
 	    "NewPath_copy2",
-	    OptionalInt.empty(),
+	    Optional.empty(),
 	    0.95645,
 	    new Pose2d(5.683, 6.19, Rotation2d.fromRadians(0)),
 	    new Pose2d(7.249, 4.85, Rotation2d.fromRadians(0))
 	);
-
-    /**
-     * A map between trajectory names and their corresponding data.
-     * This allows for trajectory data to be looked up with strings during runtime.
-     */
-    public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("LoopedPath", LoopedPath),
-		Map.entry("NewPath", NewPath),
-		Map.entry("NewPath_copy1", NewPath_copy1),
-		Map.entry("NewPath_copy2", NewPath_copy2)
+  /**
+   * A map between trajectory names and their corresponding data.
+   * This allows for trajectory data to be looked up with strings during runtime.
+   */
+  public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
+     Map.entry("LoopedPath", LoopedPath),
+     Map.entry("NewPath", NewPath),
+     Map.entry("NewPath_copy1", NewPath_copy1),
+     Map.entry("NewPath_copy2", NewPath_copy2)
     );
 
     /**
-     * Looks up the ChoreoTraj segment of the given overall ChoreoTraj.
-     * WARNING: will raise an exception if not called with a valid segment index.
+     * Looks up the ChoreoTraj segment of the given overall ChoreoTraj
+     *
+     * WARNING: will return null at runtime if not called with an overall ChoreoTraj and a valid segment index.
      */
-    public ChoreoTraj segment(int segment) {
-        var traj = ChoreoTraj.ALL_TRAJECTORIES.get(this.name + "$" + segment);
-        if (traj == null) {
-            throw new NullPointerException("Trajectory " + this.name + " does not have segment #" + segment + ".");
-        }
-        return traj;
-    }
-    
-    // If these methods cause errors because you're not using ChoreoLib,
-    // turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
-    /**
-     * Load an AutoTrajectory directly from a ChoreoTraj, which may be a segment of a larger trajectory.
-     */
-    public AutoTrajectory asAutoTraj(AutoRoutine routine) {
-        if (this.segment.isPresent()) {
-            return routine.trajectory(this.name, this.segment.getAsInt());
-        }
-        return routine.trajectory(this.name);
+    public static ChoreoTraj segment(ChoreoTraj main, int segment) {
+        return ChoreoTraj.ALL_TRAJECTORIES.get(main.name() + "$" + segment);
     }
 }

@@ -48,11 +48,11 @@ public class SwerveSubsystem extends ChargerSubsystem {
         testPoseX = new TunableNum(key("DemoPose/X"), 0),
         testPoseY = new TunableNum(key("DemoPose/Y"), 0),
         testPoseHeadingDeg = new TunableNum(key("DemoPose/HeadingDeg"), 0),
-        translationKP = new TunableNum(key("TranslationKP"), 8),
-        rotationKP = new TunableNum(key("RotationKP"), 8),
-        rotationKD = new TunableNum(key("RotationKD"), 0.02),
-        pathfindingSlowdownDist = new TunableNum(key("Pathfinding/SlowdownDist"), 1.2),
-        pathfindingTolerance = new TunableNum(key("Pathfinding/Tolerance"), 0.015);
+        translationKP = new TunableNum(key("TranslationKP"), 0),
+        rotationKP = new TunableNum(key("RotationKP"), 0),
+        rotationKD = new TunableNum(key("RotationKD"), 0),
+        pathfindingSlowdownDist = new TunableNum(key("Pathfinding/SlowdownDist"), 0),
+        pathfindingTolerance = new TunableNum(key("Pathfinding/Tolerance"), 0);
 
     private final SwerveConfig config;
     @Getter private final SwerveDriveSimulation mapleSim;
