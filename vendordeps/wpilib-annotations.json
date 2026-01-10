@@ -4,7 +4,7 @@
   "name": "wpilib annotations",
   "version": "1.0.0",
   "uuid": "4443e3c8-b125-4940-9b7b-206c6b539ea8",
-  "frcYear": "2026beta",
+  "frcYear": "2026",
   "mavenUrls": ["https://frcmaven.wpi.edu/artifactory/release/"],
   "jsonUrl": "",
   "javaDependencies": [
