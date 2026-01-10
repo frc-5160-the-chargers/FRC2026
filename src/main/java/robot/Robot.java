@@ -1,5 +1,6 @@
 package robot;
 
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
@@ -80,6 +81,7 @@ public class Robot extends LoggedRobot {
                 ntPublisher.putTable(data);
             });
             Logger.addDataReceiver(new WPILOGWriter());
+            SignalLogger.enableAutoLogging(false);
             Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
             Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
             Logger.recordMetadata("Timestamp", BuildConstants.BUILD_DATE);
