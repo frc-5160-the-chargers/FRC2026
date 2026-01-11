@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
-import lib.TunableValues.TunableNum;
+import lib.Tunable;
 import lombok.Setter;
 import robot.vision.Structs.CamPoseEstimate;
 import robot.constants.ChoreoVars;
@@ -44,15 +44,12 @@ import static edu.wpi.first.units.Units.*;
  * one motor responsible for spinning the wheel, and another for changing the direction of the wheel.
  */
 public class SwerveSubsystem extends ChargerSubsystem {
-    private final TunableNum
-        testPoseX = new TunableNum(key("DemoPose/X"), 0),
-        testPoseY = new TunableNum(key("DemoPose/Y"), 0),
-        testPoseHeadingDeg = new TunableNum(key("DemoPose/HeadingDeg"), 0),
-        translationKP = new TunableNum(key("TranslationKP"), 0),
-        rotationKP = new TunableNum(key("RotationKP"), 0),
-        rotationKD = new TunableNum(key("RotationKD"), 0),
-        pathfindingSlowdownDist = new TunableNum(key("Pathfinding/SlowdownDist"), 0),
-        pathfindingTolerance = new TunableNum(key("Pathfinding/Tolerance"), 0);
+    private final Tunable<Double>
+        translationKP = Tunable.of(key("TranslationKP"), 8),
+        rotationKP = Tunable.of(key("RotationKP"), 8),
+        rotationKD = Tunable.of(key("RotationKD"), 0.02),
+        pathfindingSlowdownDist = Tunable.of(key("Pathfinding/SlowdownDist"), 1.2),
+        pathfindingTolerance = Tunable.of(key("Pathfinding/Tolerance"), 0.015);
 
     private final SwerveConfig config;
     @Getter private final SwerveDriveSimulation mapleSim;
@@ -188,15 +185,6 @@ public class SwerveSubsystem extends ChargerSubsystem {
         io.resetNotReplayedPose(pose);
         if (RobotMode.get() != RobotMode.REPLAY) return;
         replayPoseEst.resetPosition(pose.getRotation(), getModPositions(), pose);
-    }
-
-    /** Resets to the pose configured in the dashboard. */
-    public void resetToDemoPose() {
-        var pose = new Pose2d(
-            testPoseX.get(), testPoseY.get(),
-            Rotation2d.fromDegrees(testPoseHeadingDeg.get())
-        );
-        resetPose(pose);
     }
 
     private static class PathfindCmdState {

@@ -6,18 +6,18 @@ import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.wpilibj.RobotBase;
-import lib.TunableValues.TunableNum;
+import lib.Tunable;
 
 import static edu.wpi.first.units.Units.*;
 
 public class ElevatorConsts {
     private ElevatorConsts() {}
 
-    static final TunableNum
-        DEMO_HEIGHT = new TunableNum("Elevator/DemoHeightMeters", 0.5),
-        DEMO_VOLTS = new TunableNum("Elevator/DemoVolts", 3),
-        KP = new TunableNum("Elevator/KP", 0.5),
-        KD = new TunableNum("Elevator/KD", 0);
+    static final Tunable<Double>
+        DEMO_HEIGHT = Tunable.of("Elevator/DemoHeightMeters", 0.5),
+        DEMO_VOLTS = Tunable.of("Elevator/DemoVolts", 3),
+        KP = Tunable.of("Elevator/KP", 0.5),
+        KD = Tunable.of("Elevator/KD", 0);
 
     static final double REDUCTION = 5.0;
     static final Distance RADIUS = Inches.of(2 * 0.95);

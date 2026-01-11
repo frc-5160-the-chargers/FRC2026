@@ -1,4 +1,4 @@
-package lib;
+package lib.commands;
 
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj.DriverStation;

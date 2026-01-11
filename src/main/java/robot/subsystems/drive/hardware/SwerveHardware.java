@@ -10,10 +10,9 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import lib.CurrAlliance;
 import lib.RobotMode;
-import lib.TunableValues.TunableBool;
-import lib.TunableValues.TunableNum;
+import lib.Tunable;
+import robot.constants.GlobalConsts;
 import robot.subsystems.drive.SwerveConfig;
 import robot.vision.Structs.CamPoseEstimate;
 import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
@@ -57,7 +56,7 @@ public class SwerveHardware {
     /** Updates a {@link SwerveDataAutoLogged} instance with the latest data. */
     public void refreshData(SwerveDataAutoLogged inputs) {
         drivetrain.setOperatorPerspectiveForward(
-            CurrAlliance.red() ? Rotation2d.k180deg : Rotation2d.kZero
+            GlobalConsts.redAlliance() ? Rotation2d.k180deg : Rotation2d.kZero
         );
         debugging.logData();
         inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
@@ -104,13 +103,13 @@ public class SwerveHardware {
     private void initDashboardTuning(SwerveConfig config) {
         var driveGains = config.moduleConsts()[0].DriveMotorGains;
         var steerGains = config.moduleConsts()[0].SteerMotorGains;
-        new TunableNum("SwerveSubsystem/DriveMotor/KP", driveGains.kP)
+        Tunable.of("SwerveSubsystem/DriveMotor/KP", driveGains.kP)
             .onChange(kP -> applyDriveGains(driveGains.withKP(kP)));
-        new TunableNum("SwerveSubsystem/SteerMotor/KP", steerGains.kP)
+        Tunable.of("SwerveSubsystem/SteerMotor/KP", steerGains.kP)
             .onChange(kP -> applySteerGains(steerGains.withKP(kP)));
-        new TunableNum("SwerveSubsystem/SteerMotor/KD", steerGains.kD)
+        Tunable.of("SwerveSubsystem/SteerMotor/KD", steerGains.kD)
             .onChange(kD -> applySteerGains(steerGains.withKD(kD)));
-        new TunableBool("SwerveSubsystem/CoastMode", false)
+        Tunable.of("SwerveSubsystem/CoastMode", false)
             .onChange(this::setCoastMode);
     }
 

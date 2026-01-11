@@ -6,8 +6,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import lib.LoggedAutoChooser;
-import lib.TunableValues;
+import lib.commands.LoggedAutoChooser;
+import lib.Tunable;
 import lib.commands.CmdLogger;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
@@ -29,6 +29,7 @@ import robot.vision.VisionConsts;
 
 @SuppressWarnings({"FieldCanBeLocal", "DataFlowIssue"})
 public class Robot extends LoggedRobot {
+    private final Tunable<Pose2d> demoPose = Tunable.of("DemoPose", Pose2d.kZero);
     private final SwerveConfig swerveCfg = new SwerveConfig(
         TunerConstants.DrivetrainConstants,
         TunerConstants.FrontLeft, TunerConstants.FrontRight,
@@ -55,7 +56,8 @@ public class Robot extends LoggedRobot {
         if (RobotMode.isSim()) {
             SimulatedArena.getInstance().placeGamePiecesOnField();
         }
-        TunableValues.setTuningMode(true);
+        Tunable.setEnabled(true);
+        demoPose.onChange(drive::resetPose);
         chooser.addCmd("Test", () -> {
             System.out.println("Regenerated.");
             return Commands.none();
