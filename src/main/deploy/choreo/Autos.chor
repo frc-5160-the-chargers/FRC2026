@@ -4,13 +4,6 @@
  "type":"Swerve",
  "variables":{
   "expressions":{
-   "MomentOfInertia":{
-    "dimension":"Number",
-    "var":{
-     "exp":"1",
-     "val":1.0
-    }
-   },
    "botMOI":{
     "dimension":"MoI",
     "var":{
@@ -51,6 +44,13 @@
     "var":{
      "exp":"11 in",
      "val":0.2794
+    }
+   },
+   "moi":{
+    "dimension":"Number",
+    "var":{
+     "exp":"1",
+     "val":1.0
     }
    },
    "wheelRadius":{

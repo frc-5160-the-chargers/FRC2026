@@ -11,7 +11,7 @@ import edu.wpi.first.units.measure.*;
  * in the Choreo GUI.
  */
 public final class ChoreoVars {
-    public static final double MomentOfInertia = 1;
+    public static final double moi = 1;
     public static final MomentOfInertia botMOI = Units.KilogramSquareMeters.of(5.8);
     public static final Mass botMass = Units.Kilograms.of(63.5);
     public static final double cof = 1.5;
