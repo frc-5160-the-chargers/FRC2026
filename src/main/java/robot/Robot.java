@@ -1,11 +1,12 @@
 package robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import lib.commands.LoggedAutoChooser;
 import lib.Tunable;
 import lib.commands.CmdLogger;
@@ -24,11 +25,20 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import robot.subsystems.drive.TunerConstants;
-import robot.vision.AprilTagCam;
-import robot.vision.VisionConsts;
 
 @SuppressWarnings({"FieldCanBeLocal", "DataFlowIssue"})
 public class Robot extends LoggedRobot {
+    private static class EvergreenArena extends SimulatedArena {
+        protected EvergreenArena() {
+            super(new FieldMap() {});
+        }
+        @Override public void placeGamePiecesOnField() {}
+    }
+
+    static {
+        SimulatedArena.overrideInstance(new EvergreenArena());
+    }
+
     private final Tunable<Pose2d> demoPose = Tunable.of("DemoPose", Pose2d.kZero);
     private final SwerveConfig swerveCfg = new SwerveConfig(
         TunerConstants.DrivetrainConstants,
@@ -38,14 +48,13 @@ public class Robot extends LoggedRobot {
     private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
     private final DriverController controller = new DriverController(swerveCfg);
 
-    private final AprilTagCam cam = new AprilTagCam(VisionConsts.FL_CONSTS, drive::getTruePose);
+//    private final AprilTagCam cam = new AprilTagCam(VisionConsts.FL_CONSTS, drive::getTruePose);
 //    private final CameraIO.RawData coralCamData = new CameraIO.RawData();
 //    private final CameraIO coralCam = RobotMode.isSim()
 //        ? new SimCameraIOForObjects(VisionConsts.CORAL_CAM_CONSTS, drive::truePose)
 //        : new CameraIO(VisionConsts.CORAL_CAM_CONSTS.name());
 
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
-    private final LoggedAutoChooser chooser = new LoggedAutoChooser("AutoOptions");
 
     public Robot() {
         initLogging();
@@ -53,15 +62,11 @@ public class Robot extends LoggedRobot {
             drive.driveCmd(controller::getSwerveRequest)
         );
         drive.resetPose(new Pose2d(5, 7, Rotation2d.kZero));
-        if (RobotMode.isSim()) {
-            SimulatedArena.getInstance().placeGamePiecesOnField();
-        }
         Tunable.setEnabled(true);
         demoPose.onChange(drive::resetPose);
-        chooser.addCmd("Test", () -> {
-            System.out.println("Regenerated.");
-            return Commands.none();
-        });
+        RobotModeTriggers.autonomous().whileTrue(
+            drive.alignCmd(true, () -> new Pose2d(5, 7, Rotation2d.kZero))
+        );
     }
 
     private void initLogging() {
@@ -83,7 +88,9 @@ public class Robot extends LoggedRobot {
                 ntPublisher.putTable(data);
             });
             Logger.addDataReceiver(new WPILOGWriter());
+            // Disable REV and CTRE logging because we don't really use them
             SignalLogger.enableAutoLogging(false);
+            StatusLogger.disableAutoLogging();
             Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
             Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
             Logger.recordMetadata("Timestamp", BuildConstants.BUILD_DATE);
@@ -106,9 +113,9 @@ public class Robot extends LoggedRobot {
 //        drive.getInputs().ifPresent(
 //            data -> cam.addHeadingData(data.poseEstFrames, data.timeOffsetSecs)
 //        );
-        for (var m: cam.update()) {
-            drive.addVisionMeasurement(m);
-        }
+//        for (var m: cam.update()) {
+//            drive.addVisionMeasurement(m);
+//        }
     }
 
     @Override

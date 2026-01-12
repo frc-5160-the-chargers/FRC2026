@@ -76,6 +76,11 @@ public class Tunable<T> extends LoggedNetworkInput {
         return value;
     }
 
+    /** Adds a function that listens to changes to this tunable value. */
+    public void onChange(Runnable listener) {
+        listeners.add(ignored -> listener.run());
+    }
+
     @Override
     public void periodic() {
         if (!enabled || DriverStation.isFMSAttached()) return;

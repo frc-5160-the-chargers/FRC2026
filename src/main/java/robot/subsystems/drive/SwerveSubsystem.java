@@ -2,11 +2,12 @@ package robot.subsystems.drive;
 
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.utility.WheelForceCalculator;
+import com.ctre.phoenix6.swerve.utility.LinearPath;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -16,14 +17,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
 import lombok.Setter;
+import org.littletonrobotics.junction.AutoLogOutput;
 import robot.vision.Structs.CamPoseEstimate;
-import robot.constants.ChoreoVars;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.drive.hardware.MapleSimSwerveHardware;
 import robot.subsystems.drive.hardware.SwerveDataAutoLogged;
@@ -45,17 +47,16 @@ import static edu.wpi.first.units.Units.*;
  */
 public class SwerveSubsystem extends ChargerSubsystem {
     private final Tunable<Double>
-        translationKP = Tunable.of(key("TranslationKP"), 8),
-        rotationKP = Tunable.of(key("RotationKP"), 8),
+        translationKP = Tunable.of(key("TranslationKP"), 3.5),
+        rotationKP = Tunable.of(key("RotationKP"), 4),
         rotationKD = Tunable.of(key("RotationKD"), 0.02),
-        pathfindingSlowdownDist = Tunable.of(key("Pathfinding/SlowdownDist"), 1.2),
-        pathfindingTolerance = Tunable.of(key("Pathfinding/Tolerance"), 0.015);
+        alignTolerance = Tunable.of("Alignment/Tolerance", 0.015),
+        alignMaxAccel = Tunable.of("Alignment/MaxAccel (m per s^2)", 10),
+        alignMaxAngularAccel = Tunable.of("Alignment/MaxAngularAccel (rad per s^2)", 50);
 
     private final SwerveConfig config;
     @Getter private final SwerveDriveSimulation mapleSim;
     private final SwerveDrivePoseEstimator replayPoseEst;
-    private final WheelForceCalculator forceCalc; // Calculates wheel forces from a change in drivetrain speeds.
-    @Getter private final RepulsorFieldPlanner pathfinder = new RepulsorFieldPlanner();
     private final PIDController
         xPoseController = new PIDController(0, 0, 0.1),
         yPoseController = new PIDController(0, 0, 0.1),
@@ -64,6 +65,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
     // The control request for path following.
     private final SwerveRequest.ApplyFieldSpeeds pathFollowReq =
         new SwerveRequest.ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
+    private LinearPath alignment; // The autoalign handler.
     private final SwerveHardware io; // The underlying hardware powering this drivetrain.
     private final SwerveDataAutoLogged inputs = new SwerveDataAutoLogged();
 
@@ -82,10 +84,17 @@ public class SwerveSubsystem extends ChargerSubsystem {
             Rotation2d.kZero, getModPositions(), Pose2d.kZero,
             config.encoderStdDevs(), VecBuilder.fill(0.6, 0.6, 0.6)
         );
-        forceCalc = new WheelForceCalculator(
-            config.moduleTranslations(), ChoreoVars.botMass, ChoreoVars.botMOI
-        );
+        configureAlignment();
+        alignMaxAccel.onChange(this::configureAlignment);
+        alignMaxAngularAccel.onChange(this::configureAlignment);
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    private void configureAlignment() {
+        double radius = config.drivebaseRadius().in(Meters);
+        var linear = new Constraints(config.maxVel().in(MetersPerSecond), alignMaxAccel.get());
+        var angular = new Constraints(linear.maxVelocity / radius, alignMaxAngularAccel.get());
+        alignment = new LinearPath(linear, angular);
     }
 
     /** Returns a command that applies the given request repeatedly. */
@@ -104,42 +113,26 @@ public class SwerveSubsystem extends ChargerSubsystem {
         return inputs.poseEstFrames[inputs.poseEstFrames.length - 1].positions();
     }
 
-    private void driveWithSample(SwerveSample sample, boolean deriveModuleForces) {
+    private void updatePathFollowReq(ChassisSpeeds goalSpeed, Pose2d goalPose) {
         xPoseController.setP(translationKP.get());
         yPoseController.setP(translationKP.get());
         rotationController.setPID(rotationKP.get(), 0, rotationKD.get());
-        var target = sample.getChassisSpeeds();
-        target.vxMetersPerSecond += xPoseController.calculate(pose.getX(), sample.x);
-        target.vyMetersPerSecond += yPoseController.calculate(pose.getY(), sample.y);
+        var target = ChassisSpeeds.discretize(goalSpeed, 0.02);
+        target.vxMetersPerSecond += xPoseController.calculate(pose.getX(), goalPose.getX());
+        target.vyMetersPerSecond += yPoseController.calculate(pose.getY(), goalPose.getY());
         target.omegaRadiansPerSecond += rotationController.calculate(
             angleModulus(pose.getRotation().getRadians()),
-            angleModulus(sample.heading)
+            angleModulus(goalPose.getRotation().getRadians())
         );
         pathFollowReq.Speeds = target;
-        if (deriveModuleForces) {
-            var currFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-                inputs.robotRelativeSpeeds, pose.getRotation()
-            );
-            var forces = forceCalc.calculate(0.02, currFieldSpeeds, target);
-            pathFollowReq.WheelForceFeedforwardsX = forces.x_newtons;
-            pathFollowReq.WheelForceFeedforwardsY = forces.y_newtons;
-        } else {
-            pathFollowReq.WheelForceFeedforwardsX = sample.moduleForcesX();
-            pathFollowReq.WheelForceFeedforwardsY = sample.moduleForcesY();
-        }
-        io.setControl(pathFollowReq);
-    }
-
-    private void refreshData() {
-        io.refreshData(inputs);
-        // If not in replay mode, logs every value.
-        // If in replay mode, overrides every variable with values from the log file.
-        Logger.processInputs(getName(), inputs);
     }
 
     @Override
     public void loggedPeriodic() {
-        refreshData();
+        io.refreshData(inputs);
+        // If not in replay mode, logs every value.
+        // If in replay mode, overrides every variable with values from the log file.
+        Logger.processInputs(getName(), inputs);
         // CTRE's SwerveDrivetrain calculates a pose for us(inputs.notReplayedPose),
         // however, it won't update during replay mode if we change our AprilTag filtering algorithms.
         // So in replay mode, we feed data logged on the real robot into a separate pose estimator
@@ -187,30 +180,23 @@ public class SwerveSubsystem extends ChargerSubsystem {
         replayPoseEst.resetPosition(pose.getRotation(), getModPositions(), pose);
     }
 
-    private static class PathfindCmdState {
-        boolean atTarget = false;
+    private static class AutoAlignState {
+        LinearPath.State setpoint = new LinearPath.State();
+        double distToGoal = 0;
     }
 
-    /** Returns a command that aligns the drivetrain to the pose while avoiding obstacles. */
-    public Command pathfindCmd(Supplier<Pose2d> targetPoseSupplier) {
-        var state = new PathfindCmdState();
+    public Command alignCmd(boolean indefinite, Supplier<Pose2d> targetPoseSupplier) {
+        var state = new AutoAlignState();
         return this.run(() -> {
             var goal = targetPoseSupplier.get();
-            var sample = pathfinder.sampleField(
-                pose.getTranslation(), goal,
-                config.maxVel().in(MetersPerSecond),
-                pathfindingSlowdownDist.get()
-            );
-            driveWithSample(sample, true);
-            state.atTarget = goal.minus(pose).getTranslation().getNorm() < pathfindingTolerance.get();
-            Logger.recordOutput(key("Pathfinding/Goal"), goal);
-            Logger.recordOutput(key("Pathfinding/At Target"), state.atTarget);
-            if (RobotMode.get() != RobotMode.REAL) { // this is expensive, so we only log it in sim/replay
-                Logger.recordOutput(key("Pathfinding/Vector Field"), pathfinder.getArrows(goal));
-            }
+            state.setpoint = alignment.calculate(0.02, state.setpoint, goal);
+            state.distToGoal = Math.hypot(goal.getX() - pose.getX(), goal.getY() - pose.getY());
+            updatePathFollowReq(state.setpoint.speeds, state.setpoint.pose);
+            io.setControl(pathFollowReq);
         })
-            .until(() -> state.atTarget)
-            .withName("Repulsor Pathfinding Cmd");
+            .beforeStarting(() -> state.setpoint = new LinearPath.State(pose, getFieldSpeeds()))
+            .until(() -> !indefinite && state.distToGoal < alignTolerance.get())
+            .withName("AutoAlignCmd");
     }
 
     /** Adds a vision measurement to this drivetrain's pose estimator. */
@@ -225,26 +211,36 @@ public class SwerveSubsystem extends ChargerSubsystem {
         }
     }
 
+    /** Fetches the field-relative speeds of this drivetrain. */
+    @AutoLogOutput
+    public ChassisSpeeds getFieldSpeeds() {
+        return ChassisSpeeds.fromRobotRelativeSpeeds(
+            inputs.robotRelativeSpeeds, pose.getRotation()
+        );
+    }
+
     /** Creates an AutoFactory, a utility class for following choreo trajectories. */
     public AutoFactory createAutoFactory() {
         return new AutoFactory(
-            () -> pose,
-            this::resetPose,
-            // a function that runs trajectory following
-            (SwerveSample trajSample) -> driveWithSample(trajSample, false),
-            true,
-            this,
-            (trajectory, isStart) -> {
-                Logger.recordOutput(key("CurrentTraj/Name"), trajectory.name());
-                if (RobotMode.get() != RobotMode.REPLAY && DriverStation.isFMSAttached()) {
-                    return; // don't log trajectory during matches, use replay mode to do so instead
-                }
-                Logger.recordOutput(
-                    key("CurrentTraj/Samples"),
-                    trajectory.samples().toArray(new SwerveSample[0])
-                );
-            }
+            () -> pose, this::resetPose, this::followChoreoTraj,
+            true, this, this::logTrajectory
         );
+    }
+
+    private void followChoreoTraj(SwerveSample trajSample) {
+        updatePathFollowReq(trajSample.getChassisSpeeds(), trajSample.getPose());
+        pathFollowReq.WheelForceFeedforwardsX = trajSample.moduleForcesX();
+        pathFollowReq.WheelForceFeedforwardsY = trajSample.moduleForcesY();
+        io.setControl(pathFollowReq);
+    }
+
+    private void logTrajectory(Trajectory<SwerveSample> trajectory, boolean isStart) {
+        Logger.recordOutput(key("CurrentTraj/Name"), trajectory.name());
+        if (RobotMode.get() != RobotMode.REPLAY && DriverStation.isFMSAttached()) {
+            return; // don't log trajectory during matches, use replay mode to do so instead
+        }
+        var samples = trajectory.samples().toArray(new SwerveSample[0]);
+        Logger.recordOutput(key("CurrentTraj/Samples"), samples);
     }
 
     /**

@@ -38,6 +38,13 @@ public record ChoreoTraj(
 	    new Pose2d(2.877, 3.714, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.527, 4.174, Rotation2d.fromRadians(0))
 	);
+	public static final ChoreoTraj BorderLineTests = new ChoreoTraj(
+	    "BorderLineTests",
+	    OptionalInt.empty(),
+	    1.88078,
+	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.064, 5.94, Rotation2d.fromRadians(0))
+	);
 
     /**
      * A map between trajectory names and their corresponding data.
@@ -45,7 +52,8 @@ public record ChoreoTraj(
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
     	Map.entry("NewPath", NewPath),
-		Map.entry("SimplePath", SimplePath)
+		Map.entry("SimplePath", SimplePath),
+		Map.entry("BorderLineTests", BorderLineTests)
     );
 
     /**
