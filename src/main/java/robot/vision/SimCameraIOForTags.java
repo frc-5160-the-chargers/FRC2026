@@ -5,7 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import lib.Tracer;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
-import robot.vision.Structs.AprilTagCamConsts;
+import robot.vision.DataTypes.AprilTagCamConsts;
 
 import java.util.function.Supplier;
 

@@ -14,7 +14,7 @@ import lib.RobotMode;
 import lib.Tunable;
 import robot.constants.GlobalConsts;
 import robot.subsystems.drive.SwerveConfig;
-import robot.vision.Structs.CamPoseEstimate;
+import robot.vision.DataTypes.CamPoseEstimate;
 import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
 
 import java.util.*;

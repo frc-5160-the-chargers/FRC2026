@@ -25,7 +25,7 @@ import lib.RobotMode;
 import lib.Tunable;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import robot.vision.Structs.CamPoseEstimate;
+import robot.vision.DataTypes.CamPoseEstimate;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.drive.hardware.MapleSimSwerveHardware;
 import robot.subsystems.drive.hardware.SwerveDataAutoLogged;
