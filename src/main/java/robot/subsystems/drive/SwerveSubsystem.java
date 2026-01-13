@@ -48,7 +48,7 @@ import static edu.wpi.first.units.Units.*;
 public class SwerveSubsystem extends ChargerSubsystem {
     private final Tunable<Double>
         translationKP = Tunable.of(key("TranslationKP"), 3.5),
-        rotationKP = Tunable.of(key("RotationKP"), 4),
+        rotationKP = Tunable.of(key("RotationKP"), 8),
         rotationKD = Tunable.of(key("RotationKD"), 0.02),
         alignTolerance = Tunable.of("Alignment/Tolerance", 0.015),
         alignMaxAccel = Tunable.of("Alignment/MaxAccel (m per s^2)", 10),
@@ -97,10 +97,23 @@ public class SwerveSubsystem extends ChargerSubsystem {
         alignment = new LinearPath(linear, angular);
     }
 
-    /** Returns a command that applies the given request repeatedly. */
-    public Command driveCmd(Supplier<SwerveRequest> getRequest) {
-        return this.run(() -> io.setControl(getRequest.get()))
-            .withName("DriveCmd (" + getRequest.get().getClass().getSimpleName() + ")");
+    private SwerveRequest applyPID(SwerveRequest request) {
+        if (request instanceof SwerveRequest.FieldCentricFacingAngle r) {
+            r.HeadingController.setPID(rotationKP.get(), 0, rotationKD.get());
+        } else if (request instanceof SwerveRequest.RobotCentricFacingAngle r) {
+            r.HeadingController.setPID(rotationKP.get(), 0, rotationKD.get());
+        }
+        return request;
+    }
+
+    /**
+     * Returns a command that applies the given request repeatedly.
+     * Will implicitly inject PID constants into facing angle requests.
+     */
+    public Command driveCmd(Supplier<SwerveRequest> requestSupplier) {
+        String requestName = requestSupplier.get().getClass().getSimpleName();
+        return this.run(() -> io.setControl(applyPID(requestSupplier.get())))
+            .withName("DriveCmd (" + requestName + ")");
     }
 
     private SwerveModulePosition[] getModPositions() {
