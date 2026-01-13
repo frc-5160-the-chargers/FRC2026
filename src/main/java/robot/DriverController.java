@@ -5,6 +5,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import lib.Tunable;
 import robot.subsystems.drive.SwerveConfig;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -17,6 +18,7 @@ public class DriverController extends CommandPS5Controller {
     private final double maxVelMetersPerSec, maxVelRadPerSec;
     private final SwerveRequest.FieldCentric request = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.Velocity);
+    private final Tunable<Double> speedReduction = Tunable.of("SpeedReduction", 1);
 
     public DriverController(SwerveConfig config) {
         this(0, config);
@@ -38,7 +40,7 @@ public class DriverController extends CommandPS5Controller {
     }
 
     private double modifyDriveAxis(double output) {
-        output *= slowModeOutput();
+        output *= slowModeOutput() * speedReduction.get();
         return output * -1;
     }
 
@@ -53,7 +55,7 @@ public class DriverController extends CommandPS5Controller {
             .withVelocityX(x * maxVelMetersPerSec)
             .withVelocityY(y * maxVelMetersPerSec)
             .withRotationalRate(rot * maxVelRadPerSec)
-            .withDeadband(0.1 * maxVelMetersPerSec)
-            .withRotationalDeadband(0.1 * maxVelRadPerSec);
+            .withDeadband(0.1 * maxVelMetersPerSec * speedReduction.get())
+            .withRotationalDeadband(0.1 * maxVelRadPerSec * speedReduction.get());
     }
 }

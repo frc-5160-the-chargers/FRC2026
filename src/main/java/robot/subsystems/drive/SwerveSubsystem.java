@@ -25,7 +25,7 @@ import lib.RobotMode;
 import lib.Tunable;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import robot.vision.Structs.CamPoseEstimate;
+import robot.vision.DataTypes.CamPoseEstimate;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.drive.hardware.MapleSimSwerveHardware;
 import robot.subsystems.drive.hardware.SwerveDataAutoLogged;
@@ -97,23 +97,22 @@ public class SwerveSubsystem extends ChargerSubsystem {
         alignment = new LinearPath(linear, angular);
     }
 
-    private SwerveRequest applyPID(SwerveRequest request) {
-        if (request instanceof SwerveRequest.FieldCentricFacingAngle r) {
-            r.HeadingController.setPID(rotationKP.get(), 0, rotationKD.get());
-        } else if (request instanceof SwerveRequest.RobotCentricFacingAngle r) {
-            r.HeadingController.setPID(rotationKP.get(), 0, rotationKD.get());
-        }
-        return request;
-    }
-
     /**
      * Returns a command that applies the given request repeatedly.
      * Will implicitly inject PID constants into facing angle requests.
      */
     public Command driveCmd(Supplier<SwerveRequest> requestSupplier) {
-        String requestName = requestSupplier.get().getClass().getSimpleName();
-        return this.run(() -> io.setControl(applyPID(requestSupplier.get())))
-            .withName("DriveCmd (" + requestName + ")");
+        return this.run(() -> {
+            var request = requestSupplier.get();
+            if (request instanceof SwerveRequest.FieldCentricFacingAngle r) {
+                request = r.withHeadingPID(rotationKP.get(), 0, rotationKD.get());
+            } else if (request instanceof SwerveRequest.RobotCentricFacingAngle r) {
+                request = r.withHeadingPID(rotationKP.get(), 0, rotationKD.get());
+            }
+            io.setControl(request);
+            Logger.recordOutput(key("Request"), request.getClass().getSimpleName());
+        })
+            .withName("SwerveDriveCmd");
     }
 
     private SwerveModulePosition[] getModPositions() {
@@ -207,8 +206,11 @@ public class SwerveSubsystem extends ChargerSubsystem {
             updatePathFollowReq(state.setpoint.speeds, state.setpoint.pose);
             io.setControl(pathFollowReq);
         })
-            .beforeStarting(() -> state.setpoint = new LinearPath.State(pose, getFieldSpeeds()))
             .until(() -> !indefinite && state.distToGoal < alignTolerance.get())
+            .beforeStarting(() -> {
+                state.setpoint = new LinearPath.State(pose, getFieldSpeeds());
+                Logger.recordOutput(key("Request"), "AutoAlign");
+            })
             .withName("AutoAlignCmd");
     }
 

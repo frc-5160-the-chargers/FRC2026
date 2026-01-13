@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /** Data structures used for vision processing. */
-public class Structs {
+public class DataTypes {
     /** Camera-Specific Constants for AprilTag detection. */
     public record AprilTagCamConsts(
         String name,
@@ -64,5 +64,5 @@ public class Structs {
     }
 
     /** This is a utility class. */
-    private Structs() {}
+    private DataTypes() {}
 }

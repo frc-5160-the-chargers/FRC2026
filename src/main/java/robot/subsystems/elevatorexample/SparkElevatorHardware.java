@@ -12,8 +12,8 @@ import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import static com.revrobotics.spark.SparkBase.PersistMode.kPersistParameters;
-import static com.revrobotics.spark.SparkBase.ResetMode.kResetSafeParameters;
+import static com.revrobotics.PersistMode.kPersistParameters;
+import static com.revrobotics.ResetMode.kResetSafeParameters;
 import static com.revrobotics.spark.SparkLowLevel.MotorType.kBrushless;
 import static edu.wpi.first.wpilibj.Alert.AlertType.kError;
 import static robot.subsystems.elevatorexample.ElevatorConsts.*;

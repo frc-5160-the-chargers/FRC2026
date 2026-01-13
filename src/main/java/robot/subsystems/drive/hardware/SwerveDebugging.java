@@ -4,7 +4,6 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
-import edu.wpi.first.wpilibj.Timer;
 import lib.RobotMode;
 import lib.hardware.MotorStats;
 import lib.hardware.SignalRefresh;
@@ -13,13 +12,12 @@ import org.littletonrobotics.junction.Logger;
 /** Manages debug logging and error handling for swerve. */
 class SwerveDebugging {
     private static final boolean LOG_HARDWARE_STATS = true;
-    private static final int OVERFLOW_LIMIT = 35, OVERFLOW_PREVENT_SECS = 5;
+    private static final int OVERFLOW_LIMIT = 40;
 
     private final MotorStats[] driveStats = new MotorStats[4];
     private final MotorStats[] steerStats = new MotorStats[4];
     private final boolean[] encodersConnected = new boolean[4];
     private final BaseStatusSignal[] connectedSignals = new BaseStatusSignal[5];
-    private final Timer overflowTimer = new Timer();
 
     private final SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain;
 
@@ -46,8 +44,7 @@ class SwerveDebugging {
     }
 
     boolean isOverflowing(int poseEstBufferSize) {
-        boolean res = poseEstBufferSize > OVERFLOW_LIMIT
-            && overflowTimer.get() > OVERFLOW_PREVENT_SECS;
+        boolean res = poseEstBufferSize > OVERFLOW_LIMIT;
         Logger.recordOutput("SwerveSubsystem/PoseEstBufferOverflow", res);
         return res;
     }

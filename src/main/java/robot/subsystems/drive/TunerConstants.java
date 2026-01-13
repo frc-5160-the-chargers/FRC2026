@@ -31,7 +31,7 @@ public class TunerConstants {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(1.0).withKI(0).withKD(0)
+        .withKP(0.1).withKI(0).withKD(0)
         .withKS(0.04).withKV(
             1 / (DCMotor.getKrakenX60(1).KvRadPerSecPerVolt / 6.2 * Convert.RADIANS_TO_ROTATIONS)
         );
@@ -81,7 +81,7 @@ public class TunerConstants {
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot
-    private static final double kCoupleRatio = 0;
+    private static final double kCoupleRatio = 0.4079;
 
     private static final double kDriveGearRatio = 6.2;
     private static final double kSteerGearRatio = 12.1 * 0.775;

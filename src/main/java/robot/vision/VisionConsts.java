@@ -9,9 +9,9 @@ import edu.wpi.first.units.measure.Distance;
 import lib.Convert;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.SimCameraProperties;
-import robot.vision.Structs.AprilTagCamConsts;
+import robot.vision.DataTypes.AprilTagCamConsts;
 import robot.subsystems.drive.TunerConstants;
-import robot.vision.Structs.MLCamConsts;
+import robot.vision.DataTypes.MLCamConsts;
 
 import java.util.Map;
 import java.util.Optional;

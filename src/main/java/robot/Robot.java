@@ -87,7 +87,7 @@ public class Robot extends LoggedRobot {
                 if (DriverStation.isFMSAttached()) return;
                 ntPublisher.putTable(data);
             });
-            Logger.addDataReceiver(new WPILOGWriter());
+            Logger.addDataReceiver(new WPILOGWriter("/home/lvuser/logs/"));
             // Disable REV and CTRE logging because we don't really use them
             SignalLogger.enableAutoLogging(false);
             StatusLogger.disableAutoLogging();

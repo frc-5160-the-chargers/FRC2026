@@ -1,7 +1,8 @@
 package lib;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /** A linear interpolation table with tuning support. */
 public class TunableLerpTable {
@@ -19,7 +20,8 @@ public class TunableLerpTable {
         }
     }
 
-    private final ArrayList<Entry> entries = new ArrayList<>();
+    private final SortedSet<Entry> entrySet = new TreeSet<>();
+    private ArrayList<Entry> entries = new ArrayList<>();
     private final String name, xName, yName;
 
     public TunableLerpTable(String xName, String yName) {
@@ -29,7 +31,7 @@ public class TunableLerpTable {
         // Since AdvantageScope displays tunable booleans as a red/green button,
         // We ignore the actual boolean value and just use it as a toggle.
         Tunable.of(name + "/Add Entry Button", false)
-            .onChange(ignore -> {
+            .onChange(() -> {
                 var last = entries.get(entries.size() - 1);
                 put(last.x.get(), last.y.get());
             });
@@ -40,8 +42,8 @@ public class TunableLerpTable {
         String prefix = name + "/" + entries.size() + "/";
         var x = Tunable.of(prefix + xName, key);
         var y = Tunable.of(prefix + yName, value);
-        entries.add(new Entry(x, y));
-        Collections.sort(entries);
+        entrySet.add(new Entry(x, y)); // ensures that values are sorted.
+        entries = new ArrayList<>(entrySet);
         return this;
     }
 
