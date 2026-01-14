@@ -19,10 +19,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lib.RobotMode;
 import lib.Tunable;
 import lombok.Setter;
@@ -46,7 +45,7 @@ import static edu.wpi.first.units.Units.*;
 /**
  * A subsystem that controls the driving of the robot. In each corner of the robot, there is
  * one motor responsible for spinning the wheel, and another for changing the direction of the wheel.
- * Note: you should wait until the timestamp in AdvantageScope is > 9 secs before driving the robot.
+ * Note that pose replay will be inaccurate for 1-2 secs after startup.
  */
 public class SwerveSubsystem extends ChargerSubsystem {
     private final Tunable<Double>
@@ -64,11 +63,9 @@ public class SwerveSubsystem extends ChargerSubsystem {
         xPoseController = new PIDController(0, 0, 0.1),
         yPoseController = new PIDController(0, 0, 0.1),
         rotationController = new PIDController(0, 0, 0);
-    private boolean replayPoseEstInit = false; // whether the replay pose est has initialized.
-    // The control request for path following.
     private final SwerveRequest.ApplyFieldSpeeds pathFollowReq =
         new SwerveRequest.ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
-    private LinearPath alignment; // The autoalign handler.
+    private LinearPath alignment;
     private final SwerveHardware io; // The underlying hardware powering this drivetrain.
     private final SwerveDataAutoLogged inputs = new SwerveDataAutoLogged();
 
@@ -87,22 +84,20 @@ public class SwerveSubsystem extends ChargerSubsystem {
             Rotation2d.kZero, getModPositions(), Pose2d.kZero,
             config.encoderStdDevs(), VecBuilder.fill(0.6, 0.6, 0.6)
         );
+        // Configure Auto-Align utilities
         configureAlignment();
         alignMaxAccel.onChange(this::configureAlignment);
         alignMaxAngularAccel.onChange(this::configureAlignment);
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
-        configurePoseEst();
-    }
-
-    private void configurePoseEst() {
-        if (RobotMode.get() != RobotMode.REAL) return;
-        io.setPoseEstEnabled(false);
-        new Trigger(() -> Timer.getTimestamp() > 9)
-            .onTrue(
-                Commands.runOnce(() -> io.setPoseEstEnabled(true))
-                    .ignoringDisable(true)
-                    .withName("Pose Estimation Enabler")
-            );
+        // Ensures that replay pose estimator syncs with the real one.
+        var resetCmd = Commands.waitUntil(() -> !inputs.bufferOverflow)
+            .andThen(Commands.waitSeconds(1))
+            .andThen(() -> {
+                var f = inputs.poseEstFrames[inputs.poseEstFrames.length - 1];
+                replayPoseEst.resetPosition(f.heading(), f.positions(), inputs.notReplayedPose);
+            })
+            .ignoringDisable(true);
+        CommandScheduler.getInstance().schedule(resetCmd);
     }
 
     private void configureAlignment() {
@@ -166,12 +161,6 @@ public class SwerveSubsystem extends ChargerSubsystem {
         // that can accept replayed vision measurements.
         if (RobotMode.get() == RobotMode.REPLAY) {
             for (var frame: inputs.poseEstFrames) {
-                if (!replayPoseEstInit) {
-                    replayPoseEstInit = true;
-                    replayPoseEst.resetPosition(
-                        frame.heading(), frame.positions(), inputs.notReplayedPose
-                    );
-                }
                 pose = replayPoseEst.updateWithTime(
                     frame.timestampSecs(), frame.heading(), frame.positions()
                 );
@@ -204,7 +193,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
     public void resetPose(Pose2d pose) {
         io.resetNotReplayedPose(pose);
         if (RobotMode.get() != RobotMode.REPLAY) return;
-        replayPoseEst.resetPosition(pose.getRotation(), getModPositions(), pose);
+        replayPoseEst.resetPose(pose);
     }
 
     private static class AutoAlignState {

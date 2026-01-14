@@ -43,6 +43,7 @@ public class Tracer {
 	 * <h3>This must be the very last statement in robotPeriodic().
 	 */
 	public static void endCycle() {
+		if (logger == null) return;
 		if (!traceStack.isEmpty()) {
 			DriverStation.reportWarning("Tracer.endCycle() must be run after ALL Tracer.trace() calls.", false);
 			return;
