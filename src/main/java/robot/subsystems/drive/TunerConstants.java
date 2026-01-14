@@ -33,7 +33,7 @@ public class TunerConstants {
     private static final Slot0Configs driveGains = new Slot0Configs()
         .withKP(0.1).withKI(0).withKD(0)
         .withKS(0.04).withKV(
-            1 / (DCMotor.getKrakenX60(1).KvRadPerSecPerVolt / 6.2 * Convert.RADIANS_TO_ROTATIONS)
+            1 / (DCMotor.getKrakenX60(1).KvRadPerSecPerVolt * Convert.RADIANS_TO_ROTATIONS)
         );
 
     // The closed-loop output type to use for the steer motors;
