@@ -19,8 +19,10 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lib.RobotMode;
 import lib.Tunable;
 import lombok.Setter;
@@ -88,6 +90,18 @@ public class SwerveSubsystem extends ChargerSubsystem {
         alignMaxAccel.onChange(this::configureAlignment);
         alignMaxAngularAccel.onChange(this::configureAlignment);
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
+        configurePoseEst();
+    }
+
+    private void configurePoseEst() {
+        if (RobotMode.get() != RobotMode.REAL) return;
+        io.setPoseEstEnabled(false);
+        new Trigger(() -> Timer.getTimestamp() > 9)
+            .onTrue(
+                Commands.runOnce(() -> io.setPoseEstEnabled(true))
+                    .ignoringDisable(true)
+                    .withName("Pose Estimation Enabler")
+            );
     }
 
     private void configureAlignment() {

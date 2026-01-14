@@ -11,9 +11,6 @@ import org.littletonrobotics.junction.Logger;
 
 /** Manages debug logging and error handling for swerve. */
 class SwerveDebugging {
-    private static final boolean LOG_HARDWARE_STATS = true;
-    private static final int OVERFLOW_LIMIT = 40;
-
     private final MotorStats[] driveStats = new MotorStats[4];
     private final MotorStats[] steerStats = new MotorStats[4];
     private final boolean[] encodersConnected = new boolean[4];
@@ -31,7 +28,7 @@ class SwerveDebugging {
     }
 
     void logData() {
-        if (RobotMode.get() == RobotMode.REPLAY || !LOG_HARDWARE_STATS) return;
+        if (RobotMode.get() == RobotMode.REPLAY) return;
         for (int i = 0; i < 4; i++) {
             driveStats[i] = MotorStats.from(drivetrain.getModule(i).getDriveMotor());
             steerStats[i] = MotorStats.from(drivetrain.getModule(i).getSteerMotor());
@@ -41,11 +38,5 @@ class SwerveDebugging {
         Logger.recordOutput("SwerveSubsystem/SteerMotorData", steerStats);
         Logger.recordOutput("SwerveSubsystem/EncodersConnected", encodersConnected);
         Logger.recordOutput("SwerveSubsystem/GyroConnected", connectedSignals[4].getStatus().isOK());
-    }
-
-    boolean isOverflowing(int poseEstBufferSize) {
-        boolean res = poseEstBufferSize > OVERFLOW_LIMIT;
-        Logger.recordOutput("SwerveSubsystem/PoseEstBufferOverflow", res);
-        return res;
     }
 }

@@ -19,6 +19,7 @@ public class SwerveData {
     public ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
     public Pose2d notReplayedPose = Pose2d.kZero;
     public double timeOffsetSecs = 0.0; // conversion factor from FPGA to Phoenix 6 timestamp.
+    public boolean bufferOverflow = false;
 
     /** Data used for estimating pose in replay mode. */
     public record OdometryFrame(

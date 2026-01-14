@@ -21,6 +21,7 @@ import java.util.*;
 
 /** A class that wraps CTRE's {@link SwerveDrivetrain} with replay support. */
 public class SwerveHardware {
+    private static final int MAX_BUFFER_CAPACITY = 60;
     protected final SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain;
     private final SwerveDebugging debugging;
     private final Queue<OdometryFrame> poseEstBuffer = new ArrayDeque<>();
@@ -43,7 +44,7 @@ public class SwerveHardware {
 
     private synchronized void recordData(SwerveDrivetrain.SwerveDriveState state) {
         latest = state;
-        if (debugging.isOverflowing(poseEstBuffer.size())) return;
+        if (poseEstBuffer.size() > MAX_BUFFER_CAPACITY) return;
         // phoenix 6 measures time differently, so we use currentTimeToFPGATime() to correct the timestamp.
         var latestFrame = new OdometryFrame(
             state.RawHeading, state.Timestamp,
@@ -51,6 +52,11 @@ public class SwerveHardware {
             state.ModulePositions[2], state.ModulePositions[3]
         );
         poseEstBuffer.add(latestFrame);
+    }
+
+    public void setPoseEstEnabled(boolean enabled) {
+        if (enabled) drivetrain.getOdometryThread().start();
+        else drivetrain.getOdometryThread().stop();
     }
 
     /** Updates a {@link SwerveDataAutoLogged} instance with the latest data. */
@@ -61,6 +67,7 @@ public class SwerveHardware {
         debugging.logData();
         inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         synchronized (this) {
+            inputs.bufferOverflow = poseEstBuffer.size() > MAX_BUFFER_CAPACITY;
             inputs.poseEstFrames = poseEstBuffer.toArray(new OdometryFrame[0]);
             poseEstBuffer.clear();
             inputs.currentStates = latest.ModuleStates;
