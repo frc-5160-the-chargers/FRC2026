@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import lib.Tunable;
 import robot.constants.GlobalConsts;
@@ -55,6 +56,7 @@ public class SwerveHardware {
     }
 
     public void setPoseEstEnabled(boolean enabled) {
+        DriverStation.reportWarning("Pose Estimation Enabled? " + enabled, false);
         if (enabled) drivetrain.getOdometryThread().start();
         else drivetrain.getOdometryThread().stop();
     }

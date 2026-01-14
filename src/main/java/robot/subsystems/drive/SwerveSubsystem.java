@@ -46,6 +46,7 @@ import static edu.wpi.first.units.Units.*;
 /**
  * A subsystem that controls the driving of the robot. In each corner of the robot, there is
  * one motor responsible for spinning the wheel, and another for changing the direction of the wheel.
+ * Note: you should wait until the timestamp in AdvantageScope is > 9 secs before driving the robot.
  */
 public class SwerveSubsystem extends ChargerSubsystem {
     private final Tunable<Double>
