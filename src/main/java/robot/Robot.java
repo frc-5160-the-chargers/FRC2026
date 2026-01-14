@@ -3,6 +3,7 @@ package robot;
 import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -25,6 +26,8 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import robot.subsystems.drive.TunerConstants;
+
+import java.io.File;
 
 @SuppressWarnings({"FieldCanBeLocal", "DataFlowIssue"})
 public class Robot extends LoggedRobot {
@@ -82,12 +85,15 @@ public class Robot extends LoggedRobot {
                 new WPILOGWriter(LogFileUtil.addPathSuffix(path, "_replay"))
             );
         } else {
-            var ntPublisher = new NT4Publisher();
+            var ntLogger = new NT4Publisher();
             Logger.addDataReceiver(data -> {
                 if (DriverStation.isFMSAttached()) return;
-                ntPublisher.putTable(data);
+                ntLogger.putTable(data);
             });
-            Logger.addDataReceiver(new WPILOGWriter("/home/lvuser/logs/"));
+            boolean logToUsbDrive = RobotMode.isSim() || new File("/U/logs/").exists();
+            Logger.addDataReceiver(
+                logToUsbDrive ? new WPILOGWriter() : new WPILOGWriter("/home/lvuser/logs")
+            );
             // Disable REV and CTRE logging because we don't really use them
             SignalLogger.enableAutoLogging(false);
             StatusLogger.disableAutoLogging();
@@ -99,6 +105,7 @@ public class Robot extends LoggedRobot {
                 case 1 -> "There are uncommited changes; replay might be inaccurate";
                 default -> "Unknown";
             });
+            Logger.recordMetadata("LoggedToUSBDrive", logToUsbDrive ? "Yes" : "No");
         }
         Logger.start();
     }
