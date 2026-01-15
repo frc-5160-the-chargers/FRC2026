@@ -10,6 +10,7 @@ import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import lib.RobotMode;
 import lib.Tracer;
+import org.ironmaple.simulation.SimulatedArena;
 import robot.constants.LoggingConfig;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
@@ -19,6 +20,19 @@ import robot.subsystems.drive.TunerConstants;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
+    // A sim arena with no obstacles. TBD before MapleSim 2026 releases
+    private static class EvergreenSimArena extends SimulatedArena {
+        protected EvergreenSimArena() {
+            super(new FieldMap() {});
+        }
+        @Override public void placeGamePiecesOnField() {}
+    }
+
+    static { // This is run before subsystems are created
+        LoggingConfig.initForMainRobot();
+        SimulatedArena.overrideInstance(new EvergreenSimArena());
+    }
+
     private final Tunable<Pose2d> demoPose = Tunable.of("DemoPose", Pose2d.kZero);
     private final SwerveConfig swerveCfg = new SwerveConfig(
         TunerConstants.DrivetrainConstants,
@@ -31,11 +45,10 @@ public class Robot extends LoggedRobot {
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
-        LoggingConfig.initForMainRobot();
         drive.setDefaultCommand(
             drive.driveCmd(controller::getSwerveRequest)
         );
-        drive.resetPose(new Pose2d(5, 7, Rotation2d.kZero));
+        if (RobotMode.isSim()) drive.resetPose(new Pose2d(5, 7, Rotation2d.kZero));
         Tunable.setEnabled(true);
         demoPose.onChange(drive::resetPose);
         RobotModeTriggers.autonomous().whileTrue(

@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.utility.LinearPath;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
@@ -24,7 +25,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
-import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import robot.vision.DataTypes.CamPoseEstimate;
 import robot.subsystems.ChargerSubsystem;
@@ -45,7 +45,6 @@ import static edu.wpi.first.units.Units.*;
 /**
  * A subsystem that controls the driving of the robot. In each corner of the robot, there is
  * one motor responsible for spinning the wheel, and another for changing the direction of the wheel.
- * Note that pose replay will be inaccurate for 1-2 secs after startup.
  */
 public class SwerveSubsystem extends ChargerSubsystem {
     private final Tunable<Double>
@@ -65,13 +64,13 @@ public class SwerveSubsystem extends ChargerSubsystem {
         rotationController = new PIDController(0, 0, 0);
     private final SwerveRequest.ApplyFieldSpeeds pathFollowReq =
         new SwerveRequest.ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
+    private boolean poseEstInitialized = false;
     private LinearPath alignment;
     private final SwerveHardware io; // The underlying hardware powering this drivetrain.
     private final SwerveDataAutoLogged inputs = new SwerveDataAutoLogged();
 
     /** A pose estimate that will be replayed correctly. */
     @Getter private Pose2d pose = Pose2d.kZero;
-    @Setter private boolean simulatePoseEstDrift = true;
 
     public SwerveSubsystem(SwerveConfig config) {
         this.config = config;
@@ -89,15 +88,6 @@ public class SwerveSubsystem extends ChargerSubsystem {
         alignMaxAccel.onChange(this::configureAlignment);
         alignMaxAngularAccel.onChange(this::configureAlignment);
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
-        // Ensures that replay pose estimator syncs with the real one.
-        var resetCmd = Commands.waitUntil(() -> !inputs.bufferOverflow)
-            .andThen(Commands.waitSeconds(1))
-            .andThen(() -> {
-                var f = inputs.poseEstFrames[inputs.poseEstFrames.length - 1];
-                replayPoseEst.resetPosition(f.heading(), f.positions(), inputs.notReplayedPose);
-            })
-            .ignoringDisable(true);
-        CommandScheduler.getInstance().schedule(resetCmd);
     }
 
     private void configureAlignment() {
@@ -109,14 +99,12 @@ public class SwerveSubsystem extends ChargerSubsystem {
 
     /**
      * Returns a command that applies the given request repeatedly.
-     * Will implicitly inject PID constants into facing angle requests.
+     * Will implicitly inject PID constants into the {@link FieldCentricFacingAngle} request.
      */
     public Command driveCmd(Supplier<SwerveRequest> requestSupplier) {
         return this.run(() -> {
             var request = requestSupplier.get();
-            if (request instanceof SwerveRequest.FieldCentricFacingAngle r) {
-                request = r.withHeadingPID(rotationKP.get(), 0, rotationKD.get());
-            } else if (request instanceof SwerveRequest.RobotCentricFacingAngle r) {
+            if (request instanceof FieldCentricFacingAngle r && r.HeadingController.getP() == 0) {
                 request = r.withHeadingPID(rotationKP.get(), 0, rotationKD.get());
             }
             io.setControl(request);
@@ -155,10 +143,16 @@ public class SwerveSubsystem extends ChargerSubsystem {
         // If not in replay mode, logs every value.
         // If in replay mode, overrides every variable with values from the log file.
         Logger.processInputs(getName(), inputs);
-        // CTRE's SwerveDrivetrain calculates a pose for us(inputs.notReplayedPose),
-        // however, it won't update during replay mode if we change our AprilTag filtering algorithms.
-        // So in replay mode, we feed data logged on the real robot into a separate pose estimator
-        // that can accept replayed vision measurements.
+        // Syncs the replay pose estimator with the robot's state.
+        if (inputs.bufferOverflow) return;
+        if (!poseEstInitialized) {
+            poseEstInitialized = true;
+            var fm = inputs.poseEstFrames[0];
+            replayPoseEst.resetPosition(fm.heading(), fm.positions(), inputs.notReplayedPose);
+        }
+        // The value of inputs.notReplayedPose is pre-computed by CTRE,
+        // but won't update during replay mode if vision algorithms are changed.
+        // So in replay mode, a separate pose estimator is used and updated.
         if (RobotMode.get() == RobotMode.REPLAY) {
             for (var frame: inputs.poseEstFrames) {
                 pose = replayPoseEst.updateWithTime(
@@ -169,10 +163,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         } else {
             pose = inputs.notReplayedPose;
         }
-        if (RobotMode.isSim()) {
-            Logger.recordOutput(key("TruePose"), getTruePose());
-            if (!simulatePoseEstDrift) pose = getTruePose();
-        }
+        if (RobotMode.isSim()) Logger.recordOutput(key("TruePose"), getTruePose());
     }
 
     /** The input data of this drivetrain. */
@@ -191,9 +182,16 @@ public class SwerveSubsystem extends ChargerSubsystem {
      * {@link SwerveRequest.ForwardPerspectiveValue#BlueAlliance} perspective.
      */
     public void resetPose(Pose2d pose) {
-        io.resetNotReplayedPose(pose);
-        if (RobotMode.get() != RobotMode.REPLAY) return;
-        replayPoseEst.resetPose(pose);
+        if (poseEstInitialized) {
+            io.resetNotReplayedPose(pose);
+            if (RobotMode.get() == RobotMode.REPLAY) replayPoseEst.resetPose(pose);
+        } else {
+            var cmd = Commands.waitUntil(() -> poseEstInitialized)
+                .andThen(() -> resetPose(pose))
+                .ignoringDisable(true)
+                .withName("Delayed resetPose()");
+            CommandScheduler.getInstance().schedule(cmd);
+        }
     }
 
     private static class AutoAlignState {
@@ -201,6 +199,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         double distToGoal = 0;
     }
 
+    /** Returns a command that aligns the robot to a specified pose. */
     public Command alignCmd(boolean indefinite, Supplier<Pose2d> targetPoseSupplier) {
         var state = new AutoAlignState();
         return this.run(() -> {
@@ -209,12 +208,10 @@ public class SwerveSubsystem extends ChargerSubsystem {
             state.distToGoal = Math.hypot(goal.getX() - pose.getX(), goal.getY() - pose.getY());
             updatePathFollowReq(state.setpoint.speeds, state.setpoint.pose);
             io.setControl(pathFollowReq);
+            Logger.recordOutput(key("Request"), "AutoAlign");
         })
             .until(() -> !indefinite && state.distToGoal < alignTolerance.get())
-            .beforeStarting(() -> {
-                state.setpoint = new LinearPath.State(pose, getFieldSpeeds());
-                Logger.recordOutput(key("Request"), "AutoAlign");
-            })
+            .beforeStarting(() -> state.setpoint = new LinearPath.State(pose, getFieldSpeeds()))
             .withName("AutoAlignCmd");
     }
 
@@ -225,9 +222,8 @@ public class SwerveSubsystem extends ChargerSubsystem {
             replayPoseEst.addVisionMeasurement(
                 estimate.pose(), time, estimate.deviations()
             );
-        } else {
-            io.addVisionMeasurement(estimate, inputs.timeOffsetSecs);
         }
+        io.addVisionMeasurement(estimate, inputs.timeOffsetSecs);
     }
 
     /** Fetches the field-relative speeds of this drivetrain. */
