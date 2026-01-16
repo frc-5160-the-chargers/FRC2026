@@ -1,5 +1,8 @@
-package robot.subsystems.intakepivot;
+package robot.subsystems.pivot;
 
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.MomentOfInertia;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -7,11 +10,22 @@ import org.littletonrobotics.junction.AutoLog;
  * A class that controls the hardware powering the elevator(motors and encoders).
  */
 public class PivotHardware {
+    /** Data read from a pivoting mechanism every 0.02 secs. */
     @AutoLog
     static class PivotData {
         public double radians = 0, radiansPerSec = 0;
         public MotorStats motorStats = MotorStats.EMPTY;
     }
+
+    /** Hardware-level config for a pivoting mechanism. */
+    public record PivotHardwareCfg(
+        double reduction,
+        MomentOfInertia moi,
+        double currentLimit,
+        Distance pivotLength,
+        DCMotor motorKind,
+        boolean simulateGravity
+    ) {}
 
     public void refreshData(PivotDataAutoLogged data) {}
 

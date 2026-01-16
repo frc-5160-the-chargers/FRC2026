@@ -1,4 +1,4 @@
-package robot.subsystems.intakepivot;
+package robot.subsystems.pivot;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -6,15 +6,22 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import lib.hardware.MotorStats;
 
 import static edu.wpi.first.units.Units.*;
-import static robot.subsystems.intakepivot.PivotConsts.*;
 
 public class SimPivotHardware extends PivotHardware {
-    private final SingleJointedArmSim sim = new SingleJointedArmSim(
-        MOTOR_KIND, REDUCTION, MOI_KG_METERS_SQ,
-        PIVOT_LENGTH.in(Meters), 0, 2 * Math.PI,
-        true, 0
-    );
+    private final PivotHardwareCfg config;
+    private final SingleJointedArmSim sim;
     private final PIDController pidController = new PIDController(0, 0, 0);
+
+    public SimPivotHardware(PivotHardwareCfg config) {
+        this.config = config;
+        sim = new SingleJointedArmSim(
+            config.motorKind(), config.reduction(),
+            config.moi().in(KilogramSquareMeters),
+            config.pivotLength().in(Meters),
+            0, 2 * Math.PI,
+            config.simulateGravity(), 0
+        );
+    }
 
     @Override
     public void setPDGains(double p, double d) {
@@ -38,10 +45,10 @@ public class SimPivotHardware extends PivotHardware {
     @Override
     public void setVolts(double volts) {
         // applies a current limit
-        var rawVelocity = sim.getAngleRads() * REDUCTION;
-        double torque = MOTOR_KIND.getTorque(CURRENT_LIMIT_AMPS);
-        double minVolts = MOTOR_KIND.getVoltage(-torque, rawVelocity);
-        double maxVolts = MOTOR_KIND.getVoltage(torque, rawVelocity);
+        var rawVelocity = sim.getAngleRads() * config.reduction();
+        double torque = config.motorKind().getTorque(config.currentLimit());
+        double minVolts = config.motorKind().getVoltage(-torque, rawVelocity);
+        double maxVolts = config.motorKind().getVoltage(torque, rawVelocity);
         sim.setInputVoltage(MathUtil.clamp(volts, minVolts, maxVolts));
     }
 

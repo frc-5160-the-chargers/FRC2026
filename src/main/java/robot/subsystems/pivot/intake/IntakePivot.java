@@ -1,5 +1,6 @@
-package robot.subsystems.intakepivot;
+package robot.subsystems.pivot.intake;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -8,10 +9,14 @@ import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
+import robot.subsystems.pivot.PivotDataAutoLogged;
+import robot.subsystems.pivot.PivotHardware;
+import robot.subsystems.pivot.PivotHardware.PivotHardwareCfg;
+import robot.subsystems.pivot.SimPivotHardware;
 
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.*;
 
 public class IntakePivot extends ChargerSubsystem {
     private final Tunable<Double>
@@ -24,7 +29,13 @@ public class IntakePivot extends ChargerSubsystem {
     private final PivotDataAutoLogged inputs = new PivotDataAutoLogged();
     private final PivotHardware io = switch (RobotMode.get()) {
         case REAL, REPLAY -> new PivotHardware();
-        case SIM -> new SimPivotHardware();
+        case SIM -> new SimPivotHardware(
+            new PivotHardwareCfg(
+                6.0, KilogramSquareMeters.of(0.025),
+                60.0, Meters.of(0.2),
+                DCMotor.getNEO(1), true
+            ) // TODO find actual values
+        );
     };
     private TrapezoidProfile motionProfile;
     @AutoLogOutput private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();

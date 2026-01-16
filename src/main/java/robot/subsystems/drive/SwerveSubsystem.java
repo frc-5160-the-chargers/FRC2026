@@ -53,7 +53,8 @@ public class SwerveSubsystem extends ChargerSubsystem {
         rotationKD = Tunable.of(key("RotationKD"), 0.02),
         alignTolerance = Tunable.of("Alignment/Tolerance", 0.015),
         alignMaxAccel = Tunable.of("Alignment/MaxAccel (m per s^2)", 10),
-        alignMaxAngularAccel = Tunable.of("Alignment/MaxAngularAccel (rad per s^2)", 50);
+        alignMaxAngularAccel = Tunable.of("Alignment/MaxAngularAccel (rad per s^2)", 50),
+        wrcMaxSpeed = Tunable.of(key("WheelRadiusCharacterization/MaxSpeed(rad per s)"), 2.0);
 
     private final SwerveConfig config;
     @Getter private final SwerveDriveSimulation mapleSim;
@@ -283,7 +284,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
             // Reset acceleration limiter
             Commands.runOnce(() -> limiter.reset(0.0)),
             // Turn in place, accelerating up to full speed
-            driveCmd(() -> req.withRotationalRate(limiter.calculate(2)))
+            driveCmd(() -> req.withRotationalRate(limiter.calculate(wrcMaxSpeed.get())))
         );
         var measurementCmd = Commands.sequence(
             Commands.waitSeconds(2.0),
