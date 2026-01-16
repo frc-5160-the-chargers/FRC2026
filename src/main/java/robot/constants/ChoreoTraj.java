@@ -24,7 +24,14 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj NewPath = new ChoreoTraj(
+    public static final ChoreoTraj BorderLineTests = new ChoreoTraj(
+	    "BorderLineTests",
+	    OptionalInt.empty(),
+	    1.88078,
+	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.064, 5.94, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj NewPath = new ChoreoTraj(
 	    "NewPath",
 	    OptionalInt.empty(),
 	    4.97994,
@@ -38,12 +45,12 @@ public record ChoreoTraj(
 	    new Pose2d(2.877, 3.714, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.527, 4.174, Rotation2d.fromRadians(0))
 	);
-	public static final ChoreoTraj BorderLineTests = new ChoreoTraj(
-	    "BorderLineTests",
+	public static final ChoreoTraj ShortPath = new ChoreoTraj(
+	    "ShortPath",
 	    OptionalInt.empty(),
-	    1.88078,
-	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.064, 5.94, Rotation2d.fromRadians(0))
+	    0.93322,
+	    new Pose2d(1, 2, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.5, 2, Rotation2d.fromRadians(0))
 	);
 
     /**
@@ -51,9 +58,10 @@ public record ChoreoTraj(
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("NewPath", NewPath),
+    	Map.entry("BorderLineTests", BorderLineTests),
+		Map.entry("NewPath", NewPath),
 		Map.entry("SimplePath", SimplePath),
-		Map.entry("BorderLineTests", BorderLineTests)
+		Map.entry("ShortPath", ShortPath)
     );
 
     /**

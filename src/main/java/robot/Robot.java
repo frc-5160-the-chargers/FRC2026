@@ -3,6 +3,7 @@ package robot;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import lib.Tunable;
 import lib.commands.CmdLogger;
@@ -11,12 +12,15 @@ import lib.hardware.SignalRefresh;
 import lib.RobotMode;
 import lib.Tracer;
 import org.ironmaple.simulation.SimulatedArena;
+import robot.constants.ChoreoTraj;
 import robot.constants.LoggingConfig;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.drive.TunerConstants;
+
+import static lib.commands.TriggerUtil.doubleClicked;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
@@ -48,11 +52,19 @@ public class Robot extends LoggedRobot {
         drive.setDefaultCommand(
             drive.driveCmd(controller::getSwerveRequest)
         );
+        doubleClicked(controller.touchpad()).onTrue(
+            Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero))
+        );
+        var f = drive.createAutoFactory();
+        controller.triangle().whileTrue(
+            f.resetOdometry(ChoreoTraj.ShortPath.name())
+                .andThen(f.trajectoryCmd(ChoreoTraj.ShortPath.name()))
+        );
         if (RobotMode.isSim()) drive.resetPose(new Pose2d(5, 7, Rotation2d.kZero));
         Tunable.setEnabled(true);
         demoPose.onChange(drive::resetPose);
         RobotModeTriggers.autonomous().whileTrue(
-            drive.alignCmd(true, () -> new Pose2d(5, 7, Rotation2d.kZero))
+            drive.characterizeWheelRadiusCmd()
         );
     }
 

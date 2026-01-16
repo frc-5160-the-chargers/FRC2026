@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.ApplyFieldSpeeds;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.utility.LinearPath;
 import edu.wpi.first.math.VecBuilder;
@@ -48,23 +49,23 @@ import static edu.wpi.first.units.Units.*;
  */
 public class SwerveSubsystem extends ChargerSubsystem {
     private final Tunable<Double>
-        translationKP = Tunable.of(key("TranslationKP"), 3.5),
-        rotationKP = Tunable.of(key("RotationKP"), 8),
-        rotationKD = Tunable.of(key("RotationKD"), 0.02),
-        alignTolerance = Tunable.of("Alignment/Tolerance", 0.015),
-        alignMaxAccel = Tunable.of("Alignment/MaxAccel (m per s^2)", 10),
-        alignMaxAngularAccel = Tunable.of("Alignment/MaxAngularAccel (rad per s^2)", 50),
+        alignKP = Tunable.of(key("AutoAlign/TranslationKP"), 2),
+        choreoKP = Tunable.of(key("Choreo/TranslationKP"), 3.5),
+        rotationKP = Tunable.of(key("AutoAlign/RotationKP"), 2),
+        alignTolerance = Tunable.of(key("AutoAlign/Tolerance"), 0.015),
+        alignMaxAccel = Tunable.of(key("AutoAlign/MaxAccel (m per s^2)"), 10),
+        alignMaxAngularAccel = Tunable.of(key("AutoAlign/MaxAngularAccel (rad per s^2)"), 40),
         wrcMaxSpeed = Tunable.of(key("WheelRadiusCharacterization/MaxSpeed(rad per s)"), 2.0);
 
     private final SwerveConfig config;
     @Getter private final SwerveDriveSimulation mapleSim;
     private final SwerveDrivePoseEstimator replayPoseEst;
     private final PIDController
-        xPoseController = new PIDController(0, 0, 0.1),
-        yPoseController = new PIDController(0, 0, 0.1),
+        xPoseController = new PIDController(0, 0, 0),
+        yPoseController = new PIDController(0, 0, 0),
         rotationController = new PIDController(0, 0, 0);
-    private final SwerveRequest.ApplyFieldSpeeds pathFollowReq =
-        new SwerveRequest.ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
+    private final ApplyFieldSpeeds pathFollowReq =
+        new ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     private boolean poseEstInitialized = false;
     private LinearPath alignment;
     private final SwerveHardware io; // The underlying hardware powering this drivetrain.
@@ -106,7 +107,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         return this.run(() -> {
             var request = requestSupplier.get();
             if (request instanceof FieldCentricFacingAngle r && r.HeadingController.getP() == 0) {
-                request = r.withHeadingPID(rotationKP.get(), 0, rotationKD.get());
+                request = r.withHeadingPID(rotationKP.get(), 0, 0);
             }
             io.setControl(request);
             Logger.recordOutput(key("Request"), request.getClass().getSimpleName());
@@ -124,10 +125,10 @@ public class SwerveSubsystem extends ChargerSubsystem {
         return inputs.poseEstFrames[inputs.poseEstFrames.length - 1].positions();
     }
 
-    private void updatePathFollowReq(ChassisSpeeds goalSpeed, Pose2d goalPose) {
-        xPoseController.setP(translationKP.get());
-        yPoseController.setP(translationKP.get());
-        rotationController.setPID(rotationKP.get(), 0, rotationKD.get());
+    private void updatePathFollowReq(ChassisSpeeds goalSpeed, Pose2d goalPose, double transKP) {
+        xPoseController.setP(transKP);
+        yPoseController.setP(transKP);
+        rotationController.setP(rotationKP.get());
         var target = ChassisSpeeds.discretize(goalSpeed, 0.02);
         target.vxMetersPerSecond += xPoseController.calculate(pose.getX(), goalPose.getX());
         target.vyMetersPerSecond += yPoseController.calculate(pose.getY(), goalPose.getY());
@@ -148,7 +149,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         if (inputs.bufferOverflow) return;
         if (!poseEstInitialized) {
             poseEstInitialized = true;
-            var fm = inputs.poseEstFrames[0];
+            var fm = inputs.poseEstFrames[inputs.poseEstFrames.length - 1];
             replayPoseEst.resetPosition(fm.heading(), fm.positions(), inputs.notReplayedPose);
         }
         // The value of inputs.notReplayedPose is pre-computed by CTRE,
@@ -195,24 +196,30 @@ public class SwerveSubsystem extends ChargerSubsystem {
         }
     }
 
+    /** Resets only the heading of the robot. */
+    public void resetHeading(Rotation2d heading) {
+        resetPose(new Pose2d(pose.getX(), pose.getY(), heading));
+    }
+
     private static class AutoAlignState {
         LinearPath.State setpoint = new LinearPath.State();
         double distToGoal = 0;
     }
 
     /** Returns a command that aligns the robot to a specified pose. */
-    public Command alignCmd(boolean indefinite, Supplier<Pose2d> targetPoseSupplier) {
+    public Command alignCmd(Supplier<Pose2d> targetPoseSupplier) {
         var state = new AutoAlignState();
         return this.run(() -> {
             var goal = targetPoseSupplier.get();
             state.setpoint = alignment.calculate(0.02, state.setpoint, goal);
             state.distToGoal = Math.hypot(goal.getX() - pose.getX(), goal.getY() - pose.getY());
-            updatePathFollowReq(state.setpoint.speeds, state.setpoint.pose);
+            updatePathFollowReq(state.setpoint.speeds, state.setpoint.pose, alignKP.get());
             io.setControl(pathFollowReq);
             Logger.recordOutput(key("Request"), "AutoAlign");
         })
-            .until(() -> !indefinite && state.distToGoal < alignTolerance.get())
+            .until(() -> state.distToGoal < alignTolerance.get())
             .beforeStarting(() -> state.setpoint = new LinearPath.State(pose, getFieldSpeeds()))
+            .finallyDo(() -> io.setControl(new SwerveRequest.SwerveDriveBrake()))
             .withName("AutoAlignCmd");
     }
 
@@ -243,10 +250,10 @@ public class SwerveSubsystem extends ChargerSubsystem {
         );
     }
 
-    private void followChoreoTraj(SwerveSample trajSample) {
-        updatePathFollowReq(trajSample.getChassisSpeeds(), trajSample.getPose());
-        pathFollowReq.WheelForceFeedforwardsX = trajSample.moduleForcesX();
-        pathFollowReq.WheelForceFeedforwardsY = trajSample.moduleForcesY();
+    private void followChoreoTraj(SwerveSample target) {
+        updatePathFollowReq(target.getChassisSpeeds(), target.getPose(), choreoKP.get());
+        pathFollowReq.WheelForceFeedforwardsX = target.moduleForcesX();
+        pathFollowReq.WheelForceFeedforwardsY = target.moduleForcesY();
         io.setControl(pathFollowReq);
     }
 
@@ -301,10 +308,9 @@ public class SwerveSubsystem extends ChargerSubsystem {
             var currPositions = getModPositions();
             double wheelDeltaM = 0.0;
             for (int i = 0; i < 4; i++) {
-                wheelDeltaM += Math.abs(
-                    currPositions[i].distanceMeters - state.positions[i].distanceMeters
-                ) / 4.0;
+                wheelDeltaM += Math.abs(currPositions[i].distanceMeters - state.positions[i].distanceMeters);
             }
+            wheelDeltaM /= 4.0;
             double wheelDeltaRad = wheelDeltaM / config.moduleConsts()[0].WheelRadius;
             double wheelRadius = (state.gyroDelta * config.drivebaseRadius().in(Meters)) / wheelDeltaRad;
             double wheelRadiusIn = Meters.of(wheelRadius).in(Inches);

@@ -45,14 +45,14 @@ public class Tunable<T> extends LoggedNetworkInput {
 
     /** Creates a tunable {@link Pose2d}. */
     public static Tunable<Pose2d> of(String key, Pose2d value) {
-        var x = new LoggedNetworkNumber(key + "/xMeters", value.getX());
-        var y = new LoggedNetworkNumber(key + "/yMeters", value.getY());
+        var x = new LoggedNetworkNumber("/Tuning/" + key + "/xMeters", value.getX());
+        var y = new LoggedNetworkNumber("/Tuning/" + key + "/yMeters", value.getY());
         var rot = new LoggedNetworkNumber(
-            key + "/headingDeg", value.getRotation().getDegrees()
+            "/Tuning/" + key + "/headingDeg",
+            value.getRotation().getDegrees()
         );
         return new Tunable<>(
-            () -> new Pose2d(x.get(), y.get(), Rotation2d.fromDegrees(rot.get())),
-            value
+            () -> new Pose2d(x.get(), y.get(), Rotation2d.fromDegrees(rot.get())), value
         );
     }
 
