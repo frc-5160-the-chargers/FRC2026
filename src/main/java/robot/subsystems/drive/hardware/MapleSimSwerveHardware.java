@@ -55,6 +55,7 @@ public class MapleSimSwerveHardware extends SwerveHardware {
             moduleConfig.DriveMotorInverted = false;
             moduleConfig.SteerMotorInverted = false;
             moduleConfig.EncoderInverted = false;
+            moduleConfig.CouplingGearRatio = 0;
         }
         return new MapleSimSwerveHardware(config, sim);
     }

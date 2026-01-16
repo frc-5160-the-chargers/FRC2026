@@ -11,9 +11,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
-import lib.Convert;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -80,7 +78,7 @@ public class TunerConstants {
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot
-    private static final double kCoupleRatio = 0.4079;
+    private static final double kCoupleRatio = 2.4516;
 
     private static final double kDriveGearRatio = 6.2;
     private static final double kSteerGearRatio = 12.1 * 0.775;

@@ -1,4 +1,4 @@
-package robot.subsystems.elevatorexample;
+package robot.subsystems.intakepivot;
 
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
@@ -6,15 +6,14 @@ import org.littletonrobotics.junction.AutoLog;
 /**
  * A class that controls the hardware powering the elevator(motors and encoders).
  */
-public class ElevatorHardware {
+public class PivotHardware {
     @AutoLog
-    static class ElevatorData {
+    static class PivotData {
         public double radians = 0, radiansPerSec = 0;
-        public MotorStats leaderStats = MotorStats.EMPTY;
-        public MotorStats followerStats = MotorStats.EMPTY;
+        public MotorStats motorStats = MotorStats.EMPTY;
     }
 
-    public void refreshData(ElevatorDataAutoLogged data) {}
+    public void refreshData(PivotDataAutoLogged data) {}
 
     public void setRadians(double radians, double feedforwardV) {}
 
