@@ -8,4 +8,8 @@ public class ClimberHardware {
     public void setVoltage(double volts) {
 
     }
+
+    public void setRadians(double radians) {
+
+    }
 }

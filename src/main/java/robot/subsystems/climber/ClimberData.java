@@ -5,12 +5,12 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public class ClimberData implements LoggableInputs{
     public double volts = 0.0;
-    public double pos = 0;
+    public double radians = 0.0;
 
     @Override
     public void toLog(LogTable table) {
         table.put("volts", volts);
-        table.put("pos", pos);
+        table.put("radians", radians);
     }
 
     // Used to replace the values we saved from a previous run
@@ -19,6 +19,6 @@ public class ClimberData implements LoggableInputs{
     @Override
     public void fromLog(LogTable table) {
         volts = table.get("volts", 0.0);
-        pos = table.get("pos", 0.0);
+        radians = table.get("radians", 0.0);
     }
 }
