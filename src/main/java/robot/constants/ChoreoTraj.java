@@ -1,4 +1,3 @@
-
 package robot.constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,22 +27,22 @@ public record ChoreoTraj(
 	    "BorderLineTests",
 	    OptionalInt.empty(),
 	    1.88078,
-	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.064, 5.94, Rotation2d.fromRadians(0))
+	    new Pose2d(3.08779, 5.70991, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.06448, 5.94001, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NewPath = new ChoreoTraj(
 	    "NewPath",
 	    OptionalInt.empty(),
 	    4.97994,
-	    new Pose2d(3.174, 3.633, Rotation2d.fromRadians(0)),
-	    new Pose2d(7.497, 2.121, Rotation2d.fromRadians(0))
+	    new Pose2d(3.17442, 3.63336, Rotation2d.fromRadians(0)),
+	    new Pose2d(7.49661, 2.12059, Rotation2d.fromRadians(0))
 	);
-	public static final ChoreoTraj SimplePath = new ChoreoTraj(
-	    "SimplePath",
+	public static final ChoreoTraj NewPath_copy1 = new ChoreoTraj(
+	    "NewPath_copy1",
 	    OptionalInt.empty(),
-	    3.97718,
-	    new Pose2d(2.877, 3.714, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.527, 4.174, Rotation2d.fromRadians(0))
+	    2.38411,
+	    new Pose2d(2.20911, 5.53533, Rotation2d.fromRadians(0)),
+	    new Pose2d(5.42496, 4.93114, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj ShortPath = new ChoreoTraj(
 	    "ShortPath",
@@ -51,6 +50,13 @@ public record ChoreoTraj(
 	    0.93322,
 	    new Pose2d(1, 2, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.5, 2, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj SimplePath = new ChoreoTraj(
+	    "SimplePath",
+	    OptionalInt.empty(),
+	    7.61439,
+	    new Pose2d(2.87727, 3.7144, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.54318, 5.94601, Rotation2d.fromRadians(0))
 	);
 
     /**
@@ -60,8 +66,9 @@ public record ChoreoTraj(
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
     	Map.entry("BorderLineTests", BorderLineTests),
 		Map.entry("NewPath", NewPath),
-		Map.entry("SimplePath", SimplePath),
-		Map.entry("ShortPath", ShortPath)
+		Map.entry("NewPath_copy1", NewPath_copy1),
+		Map.entry("ShortPath", ShortPath),
+		Map.entry("SimplePath", SimplePath)
     );
 
     /**

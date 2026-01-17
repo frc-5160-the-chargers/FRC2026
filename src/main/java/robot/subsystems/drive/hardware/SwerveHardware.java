@@ -67,7 +67,7 @@ public class SwerveHardware {
             poseEstBuffer.clear();
             inputs.currentStates = latest.ModuleStates;
             inputs.desiredStates = latest.ModuleTargets;
-            inputs.notReplayedPose = latest.Pose;
+            inputs.pose = latest.Pose;
             inputs.robotRelativeSpeeds = latest.Speeds;
         }
     }

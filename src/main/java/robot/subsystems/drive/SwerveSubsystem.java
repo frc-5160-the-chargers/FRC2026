@@ -150,9 +150,9 @@ public class SwerveSubsystem extends ChargerSubsystem {
         if (!poseEstInitialized) {
             poseEstInitialized = true;
             var fm = inputs.poseEstFrames[inputs.poseEstFrames.length - 1];
-            replayPoseEst.resetPosition(fm.heading(), fm.positions(), inputs.notReplayedPose);
+            replayPoseEst.resetPosition(fm.heading(), fm.positions(), inputs.pose);
         }
-        // The value of inputs.notReplayedPose is pre-computed by CTRE,
+        // The value of inputs.pose is pre-computed by CTRE,
         // but won't update during replay mode if vision algorithms are changed.
         // So in replay mode, a separate pose estimator is used and updated.
         if (RobotMode.get() == RobotMode.REPLAY) {
@@ -163,7 +163,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
             }
             Logger.recordOutput(key("ReplayedPose"), pose);
         } else {
-            pose = inputs.notReplayedPose;
+            pose = inputs.pose;
         }
         if (RobotMode.isSim()) Logger.recordOutput(key("TruePose"), getTruePose());
     }
