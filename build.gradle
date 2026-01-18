@@ -126,6 +126,7 @@ var simGui = wpi.sim.addGui()
 simGui.defaultEnabled = true
 wpi.sim.addDriverstation()
 
+// Replay Mode Check!!!!!!
 simulateJavaRelease {
     project.logger.lifecycle('Checking if replay mode...')
     if (frc.project.hasProperty("replay")) {

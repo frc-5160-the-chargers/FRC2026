@@ -4,20 +4,6 @@
  "type":"Swerve",
  "variables":{
   "expressions":{
-   "botMOI":{
-    "dimension":"MoI",
-    "var":{
-     "exp":"5.8 kg * m ^ 2",
-     "val":5.8
-    }
-   },
-   "botMass":{
-    "dimension":"Mass",
-    "var":{
-     "exp":"63.5 kg",
-     "val":63.5
-    }
-   },
    "cof":{
     "dimension":"Number",
     "var":{
@@ -46,11 +32,18 @@
      "val":0.2794
     }
    },
-   "moi":{
-    "dimension":"Number",
+   "robotMOI":{
+    "dimension":"MoI",
     "var":{
-     "exp":"1",
-     "val":1.0
+     "exp":"5.8 kg * m ^ 2",
+     "val":5.8
+    }
+   },
+   "robotMass":{
+    "dimension":"Mass",
+    "var":{
+     "exp":"63.5 kg",
+     "val":63.5
     }
    },
    "wheelRadius":{
@@ -85,11 +78,11 @@
    }
   },
   "mass":{
-   "exp":"botMass",
+   "exp":"robotMass",
    "val":63.5
   },
   "inertia":{
-   "exp":"botMOI",
+   "exp":"robotMOI",
    "val":5.8
   },
   "gearing":{

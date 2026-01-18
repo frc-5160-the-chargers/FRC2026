@@ -11,14 +11,15 @@ import edu.wpi.first.units.measure.*;
  * in the Choreo GUI.
  */
 public final class ChoreoVars {
-    public static final MomentOfInertia botMOI = Units.KilogramSquareMeters.of(5.8);
-    public static final Mass botMass = Units.Kilograms.of(63.5);
-    public static final double cof = 1.5;
-    public static final double gearing = 6.2;
-    public static final Distance moduleX = Units.Meters.of(0.348);
-    public static final Distance moduleY = Units.Meters.of(0.279);
-    public static final double moi = 1;
-    public static final Distance wheelRadius = Units.Meters.of(0.051);
+	public static final double cof = 1.5;
+	public static final double gearing = 6.2;
+	public static final Distance moduleX = Units.Meters.of(0.34798);
+	public static final Distance moduleY = Units.Meters.of(0.2794);
+	public static final MomentOfInertia robotMOI = Units.KilogramSquareMeters.of(5.8);
+	public static final Mass robotMass = Units.Kilograms.of(63.5);
+	public static final Distance wheelRadius = Units.Meters.of(0.0508);
 
-    private ChoreoVars() {}
+    public static final class Poses {
+
+    }
 }

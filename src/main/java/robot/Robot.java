@@ -24,17 +24,8 @@ import static lib.commands.TriggerUtil.doubleClicked;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
-    // A sim arena with no obstacles. TBD before MapleSim 2026 releases
-    private static class EvergreenSimArena extends SimulatedArena {
-        protected EvergreenSimArena() {
-            super(new FieldMap() {});
-        }
-        @Override public void placeGamePiecesOnField() {}
-    }
-
     static { // This is run before subsystems are created
         LoggingConfig.initForMainRobot();
-        SimulatedArena.overrideInstance(new EvergreenSimArena());
     }
 
     private final Tunable<Pose2d> demoPose = Tunable.of("DemoPose", Pose2d.kZero);
@@ -78,6 +69,9 @@ public class Robot extends LoggedRobot {
             "LoggedRobot/MemoryUsageMb",
             (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6
         );
+        if (RobotMode.isSim()) {
+            Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        }
         canBusLogger.periodic();
         CmdLogger.periodic(true);
         Tracer.endCycle();
