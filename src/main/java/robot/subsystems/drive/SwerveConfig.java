@@ -63,7 +63,7 @@ public record SwerveConfig(
             ChoreoVars.cof
         );
         return DriveTrainSimulationConfig.Default()
-            .withRobotMass(ChoreoVars.botMass)
+            .withRobotMass(ChoreoVars.robotMass)
             .withCustomModuleTranslations(moduleTranslations())
             .withGyro(COTS.ofPigeon2())
             .withSwerveModule(mapleSimModuleCfg)

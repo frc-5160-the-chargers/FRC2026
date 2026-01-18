@@ -51,7 +51,10 @@ public class Robot extends LoggedRobot {
             f.resetOdometry(ChoreoTraj.ShortPath.name())
                 .andThen(f.trajectoryCmd(ChoreoTraj.ShortPath.name()))
         );
-        if (RobotMode.isSim()) drive.resetPose(new Pose2d(5, 7, Rotation2d.kZero));
+        if (RobotMode.isSim()) {
+            drive.resetPose(new Pose2d(5, 7, Rotation2d.kZero));
+            SimulatedArena.getInstance().placeGamePiecesOnField();
+        }
         Tunable.setEnabled(true);
         demoPose.onChange(drive::resetPose);
         RobotModeTriggers.autonomous().whileTrue(

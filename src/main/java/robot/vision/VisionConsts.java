@@ -20,7 +20,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class VisionConsts {
     public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(
-        AprilTagFields.k2025ReefscapeAndyMark
+        AprilTagFields.k2026RebuiltAndymark
     );
     public static final AprilTagFieldLayout REEF_ONLY_LAYOUT = new AprilTagFieldLayout(
         FIELD_LAYOUT.getTags()
