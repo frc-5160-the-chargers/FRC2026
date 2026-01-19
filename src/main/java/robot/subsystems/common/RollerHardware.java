@@ -4,6 +4,9 @@ import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
 import robot.subsystems.rollers.RollerDataAutoLogged;
 
+/**
+ * A hardware base class representing a generic roller mechanism.
+ */
 public class RollerHardware {
     @AutoLog
     static class RollerData {

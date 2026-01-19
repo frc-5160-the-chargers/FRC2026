@@ -8,7 +8,7 @@ import org.littletonrobotics.junction.AutoLog;
 import robot.subsystems.pivot.PivotDataAutoLogged;
 
 /**
- * A class that controls the hardware powering the elevator(motors and encoders).
+ * A hardware base class representing a generic pivoting mechanism.
  */
 public class PivotHardware {
     /** Data read from a pivoting mechanism every 0.02 secs. */
