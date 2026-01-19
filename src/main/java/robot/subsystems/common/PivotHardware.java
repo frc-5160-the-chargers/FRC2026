@@ -1,10 +1,11 @@
-package robot.subsystems.pivot;
+package robot.subsystems.common;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
+import robot.subsystems.pivot.PivotDataAutoLogged;
 
 /**
  * A class that controls the hardware powering the elevator(motors and encoders).

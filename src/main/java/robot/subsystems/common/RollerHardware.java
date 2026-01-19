@@ -1,7 +1,8 @@
-package robot.subsystems.rollers;
+package robot.subsystems.common;
 
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
+import robot.subsystems.rollers.RollerDataAutoLogged;
 
 public class RollerHardware {
     @AutoLog
