@@ -19,7 +19,7 @@ public class PivotHardware {
     }
 
     /** Hardware-level config for a pivoting mechanism. */
-    public record PivotHardwareCfg(
+    public record PivotSimConfig(
         double reduction,
         MomentOfInertia moi,
         double currentLimit,

@@ -9,11 +9,11 @@ import robot.subsystems.pivot.PivotDataAutoLogged;
 import static edu.wpi.first.units.Units.*;
 
 public class SimPivotHardware extends PivotHardware {
-    private final PivotHardwareCfg config;
+    private final PivotSimConfig config;
     private final SingleJointedArmSim sim;
     private final PIDController pidController = new PIDController(0, 0, 0);
 
-    public SimPivotHardware(PivotHardwareCfg config) {
+    public SimPivotHardware(PivotSimConfig config) {
         this.config = config;
         sim = new SingleJointedArmSim(
             config.motorKind(), config.reduction(),

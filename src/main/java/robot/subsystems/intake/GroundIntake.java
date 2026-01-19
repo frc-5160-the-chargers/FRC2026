@@ -14,7 +14,7 @@ import robot.subsystems.common.RollerHardware;
 import robot.subsystems.common.SimRollerHardware;
 import robot.subsystems.pivot.PivotDataAutoLogged;
 import robot.subsystems.common.PivotHardware;
-import robot.subsystems.common.PivotHardware.PivotHardwareCfg;
+import robot.subsystems.common.PivotHardware.PivotSimConfig;
 import robot.subsystems.common.SimPivotHardware;
 import robot.subsystems.rollers.RollerDataAutoLogged;
 
@@ -41,17 +41,21 @@ public class GroundIntake extends ChargerSubsystem {
 
     public GroundIntake() {
         switch (RobotMode.get()) {
-            case REAL, REPLAY -> {
+            case REAL -> {
+                pivotIO = new IntakePivotHardware();
+                rollerIO = new IntakeRollersHardware();
+            }
+            case REPLAY -> {
                 pivotIO = new PivotHardware();
                 rollerIO = new RollerHardware();
             }
             case SIM -> {
-                var pivotCfg = new PivotHardwareCfg( // TODO find actual values
+                var pivotSimConfig = new PivotSimConfig( // TODO find actual values
                     6.0, KilogramSquareMeters.of(0.025),
                     60.0, Meters.of(0.2),
                     DCMotor.getNEO(1), true
                 );
-                pivotIO = new SimPivotHardware(pivotCfg);
+                pivotIO = new SimPivotHardware(pivotSimConfig);
                 rollerIO = new SimRollerHardware(
                     DCMotor.getNeoVortex(1),
                     KilogramSquareMeters.of(0.001),
