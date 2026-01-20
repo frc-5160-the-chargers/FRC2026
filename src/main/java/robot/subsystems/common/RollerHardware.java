@@ -2,7 +2,6 @@ package robot.subsystems.common;
 
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
-import robot.subsystems.rollers.RollerDataAutoLogged;
 
 /**
  * A hardware base class representing a generic roller mechanism.

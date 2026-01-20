@@ -4,7 +4,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import lib.hardware.MotorStats;
-import robot.subsystems.pivot.PivotDataAutoLogged;
 
 import static edu.wpi.first.units.Units.*;
 

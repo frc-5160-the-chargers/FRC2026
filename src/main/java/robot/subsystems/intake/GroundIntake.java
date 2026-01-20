@@ -10,13 +10,8 @@ import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
-import robot.subsystems.common.RollerHardware;
-import robot.subsystems.common.SimRollerHardware;
-import robot.subsystems.pivot.PivotDataAutoLogged;
-import robot.subsystems.common.PivotHardware;
+import robot.subsystems.common.*;
 import robot.subsystems.common.PivotHardware.PivotSimConfig;
-import robot.subsystems.common.SimPivotHardware;
-import robot.subsystems.rollers.RollerDataAutoLogged;
 
 import java.util.function.Supplier;
 

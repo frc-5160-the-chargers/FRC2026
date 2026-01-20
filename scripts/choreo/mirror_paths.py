@@ -1,5 +1,5 @@
 """
-Mirrors choreo trajectories. Adds the "mirrored_" prefix to these new trajectories.
+Mirrors choreo trajectories, which are labeled with the "mirrored_" prefix.
 Using the -exclude option can exclude certain trajectories from being mirrored.
 """
 import json

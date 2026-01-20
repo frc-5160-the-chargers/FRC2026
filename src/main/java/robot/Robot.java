@@ -1,6 +1,7 @@
 package robot;
 
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -14,6 +15,7 @@ import lib.Tracer;
 import org.ironmaple.simulation.SimulatedArena;
 import robot.constants.ChoreoTraj;
 import robot.constants.LoggingConfig;
+import robot.controllers.DriverController;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -59,6 +61,11 @@ public class Robot extends LoggedRobot {
         demoPose.onChange(drive::resetPose);
         RobotModeTriggers.autonomous().whileTrue(
             drive.characterizeWheelRadiusCmd()
+        );
+        RobotModeTriggers.test().onTrue(
+            Commands.runOnce(() -> {
+                controller.setRumble(GenericHID.RumbleType.kBothRumble, 0.2);
+            })
         );
     }
 

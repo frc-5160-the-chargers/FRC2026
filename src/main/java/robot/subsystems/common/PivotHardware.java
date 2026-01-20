@@ -5,7 +5,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
-import robot.subsystems.pivot.PivotDataAutoLogged;
 
 /**
  * A hardware base class representing a generic pivoting mechanism.

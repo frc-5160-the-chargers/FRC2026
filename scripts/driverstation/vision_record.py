@@ -1,10 +1,14 @@
+"""
+A script that records video from our vision cameras for post-match analysis.
+Designed to run on the Driver Station Computer (and partially inspired by team 4561).
+"""
+import sys
 import threading
 import time
-import ntcore
 import cv2
 import os
 
-from ntcore._ntcore import NetworkTable
+from ntcore import NetworkTable, NetworkTableInstance
 from dataclasses import dataclass
 
 @dataclass
@@ -12,7 +16,7 @@ class VideoHandler:
     capture: cv2.VideoCapture
     recorder: cv2.VideoWriter
 
-is_sim = True
+is_sim = "-sim" in sys.argv
 multithreading_lock = threading.Lock()
 handlers: list[VideoHandler] = []
 
@@ -49,12 +53,12 @@ def main():
             os.mkdir("../logs/camRecordings")
         except FileExistsError:
             pass
-        inst = ntcore.NetworkTableInstance.getDefault()
+        inst = NetworkTableInstance.getDefault()
         if is_sim:
             inst.setServer("127.0.0.1", 5810)
         else:
             inst.setServerTeam(5160)
-        inst.startClient4("Test Client")
+        inst.startClient4("Vision Recording Client")
         while not inst.isConnected():
             time.sleep(1.0)
         time.sleep(5)

@@ -5,7 +5,6 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import lib.hardware.MotorStats;
-import robot.subsystems.rollers.RollerDataAutoLogged;
 
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 

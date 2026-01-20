@@ -1,1 +1,2 @@
+REM Regenerates choreo trajectories when run.
 %USERPROFILE%\AppData\Local\Choreo\choreo-cli.exe --chor ..\src\main\deploy\choreo\Autos.chor --all-trajectory -g
