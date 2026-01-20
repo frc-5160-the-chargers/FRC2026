@@ -1,8 +1,8 @@
 package robot.subsystems.drive.hardware;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -12,6 +12,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import lib.RobotMode;
 import lib.Tunable;
+import lib.hardware.MotorStats;
+import lib.hardware.SignalRefresh;
+import org.littletonrobotics.junction.Logger;
 import robot.constants.GlobalConsts;
 import robot.subsystems.drive.SwerveConfig;
 import robot.vision.DataTypes.CamPoseEstimate;
@@ -23,7 +26,7 @@ import java.util.*;
 public class SwerveHardware {
     private static final int MAX_BUFFER_CAPACITY = 60;
     protected final SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain;
-    private final SwerveDebugging debugging;
+    private final BaseStatusSignal[] debugSignals = new BaseStatusSignal[5];
     private final Queue<OdometryFrame> poseEstBuffer = new ArrayDeque<>();
     private SwerveDrivetrain.SwerveDriveState latest;
 
@@ -32,7 +35,6 @@ public class SwerveHardware {
             TalonFX::new, TalonFX::new, CANcoder::new,
             config.driveConsts(), config.moduleConsts()
         );
-        debugging = new SwerveDebugging(drivetrain);
         latest = drivetrain.getStateCopy();
         if (RobotMode.get() == RobotMode.REPLAY) drivetrain.getOdometryThread().stop();
         // registerTelemetry() technically means "register a function that logs data",
@@ -40,6 +42,7 @@ public class SwerveHardware {
         drivetrain.registerTelemetry(this::recordData);
         drivetrain.setStateStdDevs(config.encoderStdDevs());
         initDashboardTuning(config);
+        initDebugSignals();
     }
 
     private synchronized void recordData(SwerveDrivetrain.SwerveDriveState state) {
@@ -59,7 +62,6 @@ public class SwerveHardware {
         drivetrain.setOperatorPerspectiveForward(
             GlobalConsts.redAlliance() ? Rotation2d.k180deg : Rotation2d.kZero
         );
-        debugging.logData();
         inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         synchronized (this) {
             inputs.bufferOverflow = poseEstBuffer.size() > MAX_BUFFER_CAPACITY;
@@ -70,6 +72,7 @@ public class SwerveHardware {
             inputs.pose = latest.Pose;
             inputs.robotRelativeSpeeds = latest.Speeds;
         }
+        if (RobotMode.get() != RobotMode.REPLAY) logDebugData();
     }
 
     /** Applies the specified control request to this swerve drivetrain. */
@@ -91,15 +94,6 @@ public class SwerveHardware {
     /** Configures neutral mode(brake or coast) on this drivetrain. */
     public void setCoastMode(boolean enabled) {
         drivetrain.configNeutralMode(enabled ? NeutralModeValue.Coast : NeutralModeValue.Brake, 0.015);
-    }
-
-    /** Applies custom control requests to the drive and steer motors. Debug only. */
-    public void setControlCustom(ControlRequest drive, ControlRequest steer) {
-        setControl(new SwerveRequest.Idle());
-        for (var module: drivetrain.getModules()) {
-            module.getDriveMotor().setControl(drive);
-            module.getSteerMotor().setControl(steer);
-        }
     }
 
     private void initDashboardTuning(SwerveConfig config) {
@@ -125,5 +119,28 @@ public class SwerveHardware {
         for (var module: drivetrain.getModules()) {
             module.getDriveMotor().getConfigurator().apply(configs, 0.015);
         }
+    }
+
+    private void initDebugSignals() {
+        for (int i = 0; i < 4; i++) {
+            debugSignals[i] = drivetrain.getModule(i).getEncoder().getVersion();
+        }
+        debugSignals[4] = drivetrain.getPigeon2().getVersion();
+        SignalRefresh.register(10, drivetrain.getPigeon2().getNetwork(), debugSignals);
+    }
+
+    private void logDebugData() {
+        var driveStats = new MotorStats[4];
+        var steerStats = new MotorStats[4];
+        var encodersConnected = new boolean[4];
+        for (int i = 0; i < 4; i++) {
+            driveStats[i] = MotorStats.from(drivetrain.getModule(i).getDriveMotor());
+            steerStats[i] = MotorStats.from(drivetrain.getModule(i).getSteerMotor());
+            encodersConnected[i] = debugSignals[i].getStatus().isOK();
+        }
+        Logger.recordOutput("SwerveSubsystem/DriveMotorData", driveStats);
+        Logger.recordOutput("SwerveSubsystem/SteerMotorData", steerStats);
+        Logger.recordOutput("SwerveSubsystem/EncodersConnected", encodersConnected);
+        Logger.recordOutput("SwerveSubsystem/GyroConnected", debugSignals[4].getStatus().isOK());
     }
 }

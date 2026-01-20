@@ -76,10 +76,8 @@ public class MapleSimSwerveHardware extends SwerveHardware {
     }
 
     /**
-     * A utility class that handles simulation of a TalonFX.
-     * For swerve, we use "hardware injection simulation", where data from physics simulations
-     * (in this case, maplesim) is directly injected into the motor, allowing for calls like
-     * motor.getPosition() (which wouldn't normally work in sim) to function properly.
+     * MapleSim will call the updateControlSignal() method, allowing us to override
+     * the position & velocity values read from a TalonFX with simulated values.
      */
     private record TalonFXSim(TalonFX motor, @Nullable CANcoder encoder) implements SimulatedMotorController {
         @Override

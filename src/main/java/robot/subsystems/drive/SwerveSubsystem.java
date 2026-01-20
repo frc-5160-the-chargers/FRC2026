@@ -3,8 +3,6 @@ package robot.subsystems.drive;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ApplyFieldSpeeds;
@@ -264,16 +262,6 @@ public class SwerveSubsystem extends ChargerSubsystem {
         }
         var samples = trajectory.samples().toArray(new SwerveSample[0]);
         Logger.recordOutput(key("CurrentTraj/Samples"), samples);
-    }
-
-    /**
-     * A command that applies a set amount of current to the drive motors.
-     * Use {@link SwerveRequest.SysIdSwerveTranslation} for the voltage equivalent.
-     */
-    public Command applyCurrent(double amps) {
-        var driveReq = new TorqueCurrentFOC(amps);
-        var steerReq = new PositionVoltage(0);
-        return this.run(() -> io.setControlCustom(driveReq, steerReq)).withName("Apply Current");
     }
 
     private static class CharacterizationState {
