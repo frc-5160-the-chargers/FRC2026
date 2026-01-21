@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Replay Log File (Windows)",
+      "type": "shell",
+      "command": "./gradlew simulateJava -Preplay",
+      "presentation": {
+        "reveal": "always"
+      },
+      "detail": "Replays a log file opened in AdvantageScope."
+    },
+    {
+      "label": "Replay Watch Log File (Windows)",
+      "type": "shell",
+      "command": "./gradlew replayWatch",
+      "presentation": {
+        "reveal": "always"
+      },
+      "detail": "Runs replay in watch mode, automatically reloading when you modify a file."
+    }
+  ]
+}

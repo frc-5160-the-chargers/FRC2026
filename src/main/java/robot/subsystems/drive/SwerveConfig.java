@@ -50,26 +50,28 @@ public record SwerveConfig(
 
     /** Gets this drivetrain's config for maplesim. */
     public DriveTrainSimulationConfig mapleSimConfig() {
-        var moduleCfg = moduleConsts[0];
-        var mapleSimModuleCfg = new SwerveModuleSimulationConfig(
-            DCMotor.getKrakenX60(1),
-            DCMotor.getKrakenX44(1),
-            moduleCfg.DriveMotorGearRatio,
-            moduleCfg.SteerMotorGearRatio,
-            Volts.of(moduleCfg.DriveFrictionVoltage),
-            Volts.of(moduleCfg.SteerFrictionVoltage),
-            Meters.of(moduleCfg.WheelRadius),
-            KilogramSquareMeters.of(moduleCfg.SteerInertia),
-            ChoreoVars.cof
-        );
+        var moduleConfigs = new SwerveModuleSimulationConfig[4];
+        for (int i = 0; i < 4; i++) {
+            moduleConfigs[i] = new SwerveModuleSimulationConfig(
+                DCMotor.getKrakenX60(1),
+                DCMotor.getKrakenX44(1),
+                moduleConsts[i].DriveMotorGearRatio,
+                moduleConsts[i].SteerMotorGearRatio,
+                Volts.of(moduleConsts[i].DriveFrictionVoltage),
+                Volts.of(moduleConsts[i].SteerFrictionVoltage),
+                Meters.of(moduleConsts[i].WheelRadius),
+                KilogramSquareMeters.of(moduleConsts[i].SteerInertia),
+                ChoreoVars.cof
+            );
+        }
         return DriveTrainSimulationConfig.Default()
             .withRobotMass(ChoreoVars.robotMass)
             .withCustomModuleTranslations(moduleTranslations())
             .withGyro(COTS.ofPigeon2())
-            .withSwerveModule(mapleSimModuleCfg)
+            .withSwerveModules(moduleConfigs)
             .withBumperSize(
-                Meters.of(2 * (moduleCfg.LocationX + bumperThickness.in(Meters))),
-                Meters.of(2 * (moduleCfg.LocationY + bumperThickness.in(Meters)))
+                Meters.of(2 * (moduleConsts[0].LocationX + bumperThickness.in(Meters))),
+                Meters.of(2 * (moduleConsts[0].LocationY + bumperThickness.in(Meters)))
             );
     }
 
