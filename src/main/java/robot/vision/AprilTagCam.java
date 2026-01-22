@@ -30,10 +30,10 @@ public class AprilTagCam {
     private final List<Integer> fiducialIds = new ArrayList<>();
     private final List<Pose3d> poses = new ArrayList<>();
 
-    public AprilTagCam(AprilTagCamConsts consts, Supplier<Pose2d> simPoseSupplier) {
+    public AprilTagCam(AprilTagCamConsts consts) {
         this.consts = consts;
         this.io = RobotMode.isSim()
-            ? new SimCameraIOForTags(consts, simPoseSupplier)
+            ? new SimCameraIOForTags(consts)
             : new CameraIO(consts.name());
         this.poseEst = new PhotonPoseEstimator(
             consts.fieldLayout(),

@@ -15,7 +15,7 @@ import lib.Tunable;
 import lib.hardware.MotorStats;
 import lib.hardware.SignalRefresh;
 import org.littletonrobotics.junction.Logger;
-import robot.constants.GlobalConsts;
+import robot.SharedData;
 import robot.subsystems.drive.SwerveConfig;
 import robot.vision.DataTypes.CamPoseEstimate;
 import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
@@ -60,7 +60,7 @@ public class SwerveHardware {
     /** Updates a {@link SwerveDataAutoLogged} instance with the latest data. */
     public void refreshData(SwerveDataAutoLogged inputs) {
         drivetrain.setOperatorPerspectiveForward(
-            GlobalConsts.redAlliance() ? Rotation2d.k180deg : Rotation2d.kZero
+            SharedData.redAlliance() ? Rotation2d.k180deg : Rotation2d.kZero
         );
         inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         synchronized (this) {

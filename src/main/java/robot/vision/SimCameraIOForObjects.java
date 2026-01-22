@@ -1,6 +1,5 @@
 package robot.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.Tracer;
@@ -9,10 +8,11 @@ import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.simulation.VisionTargetSim;
+import robot.SharedData;
+import robot.subsystems.drive.hardware.MapleSimSwerveHardware;
 import robot.vision.DataTypes.MLCamConsts;
 
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static robot.vision.VisionConsts.DEFAULT_CAM_PROPERTIES;
 
@@ -24,13 +24,11 @@ import static robot.vision.VisionConsts.DEFAULT_CAM_PROPERTIES;
 public class SimCameraIOForObjects extends CameraIO {
     private final VisionSystemSim sim;
     private final Map<String, TargetModel> availableObjects;
-    private final Supplier<Pose2d> robotTruePose;
 
-    public SimCameraIOForObjects(MLCamConsts consts, Supplier<Pose2d> truePose) {
+    public SimCameraIOForObjects(MLCamConsts consts) {
         super(consts.name());
         sim = new VisionSystemSim(consts.name());
         availableObjects = consts.availableObjects();
-        robotTruePose = truePose;
         var properties = DEFAULT_CAM_PROPERTIES.copy();
         if (consts.intrinsics().isPresent()) {
             var i = consts.intrinsics().get();
@@ -61,7 +59,7 @@ public class SimCameraIOForObjects extends CameraIO {
                 sim.addVisionTargets(type, new VisionTargetSim(pose, model));
             }
         }
-        Tracer.trace("Simulation", () -> sim.update(robotTruePose.get()));
+        Tracer.trace("Simulation", () -> sim.update(SharedData.truePoseInSim));
         super.refreshData(inputs);
     }
 }

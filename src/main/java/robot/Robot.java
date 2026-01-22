@@ -54,7 +54,6 @@ public class Robot extends LoggedRobot {
                 .andThen(f.trajectoryCmd(ChoreoTraj.ShortPath.name()))
         );
         if (RobotMode.isSim()) {
-            drive.resetPose(new Pose2d(5, 7, Rotation2d.kZero));
             SimulatedArena.getInstance().placeGamePiecesOnField();
         }
         Tunable.setEnabled(true);

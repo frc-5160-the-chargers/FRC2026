@@ -5,6 +5,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
@@ -14,13 +15,15 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.motorsims.SimulatedBattery;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 import org.jetbrains.annotations.Nullable;
+import org.littletonrobotics.junction.Logger;
+import robot.SharedData;
 import robot.subsystems.drive.SwerveConfig;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 /** Swerve hardware that uses MapleSim, a library that simulates on-field collisions. */
 public class MapleSimSwerveHardware extends SwerveHardware {
+    private static final Pose2d INITIAL_POSE = new Pose2d(7, 2, Rotation2d.kZero);
     private static final double SIM_UPDATE_PERIOD = 0.002;
     private static final Notifier DATA_UPDATER =
         new Notifier(() -> SimulatedArena.getInstance().simulationPeriodic());
@@ -28,10 +31,11 @@ public class MapleSimSwerveHardware extends SwerveHardware {
     private final Pigeon2SimState gyroSim;
     private final SwerveDriveSimulation mapleSim;
 
-    private MapleSimSwerveHardware(SwerveConfig config, SwerveDriveSimulation mapleSim) {
+    private MapleSimSwerveHardware(SwerveConfig config) {
         super(config);
-        this.mapleSim = mapleSim;
+        this.mapleSim = new SwerveDriveSimulation(config.mapleSimConfig(), INITIAL_POSE);
         this.gyroSim = super.drivetrain.getPigeon2().getSimState();
+        super.drivetrain.resetTranslation(INITIAL_POSE.getTranslation());
         // these values simulate drag.
         mapleSim.setLinearDamping(0.7);
         mapleSim.setAngularDamping(0.7);
@@ -47,8 +51,8 @@ public class MapleSimSwerveHardware extends SwerveHardware {
         }
     }
 
-    /** Creates a variant of SwerveHardware using MapleSim. */
-    public static MapleSimSwerveHardware create(SwerveConfig config, SwerveDriveSimulation sim) {
+    /** Creates an instance of a {@link MapleSimSwerveHardware}. */
+    public static MapleSimSwerveHardware create(SwerveConfig config) {
         // offsets that aren't applicable to sim must be cleared before the swerve hardware is created.
         for (var moduleConfig: config.moduleConsts()) {
             moduleConfig.EncoderOffset = 0;
@@ -57,16 +61,15 @@ public class MapleSimSwerveHardware extends SwerveHardware {
             moduleConfig.EncoderInverted = false;
             moduleConfig.CouplingGearRatio = 0;
         }
-        return new MapleSimSwerveHardware(config, sim);
+        return new MapleSimSwerveHardware(config);
     }
 
     @Override
     public void refreshData(SwerveDataAutoLogged data) {
+        SharedData.truePoseInSim = mapleSim.getSimulatedDriveTrainPose();
+        gyroSim.setRawYaw(SharedData.truePoseInSim.getRotation().getMeasure());
+        Logger.recordOutput("SwerveSubsystem/TruePose", SharedData.truePoseInSim);
         super.refreshData(data);
-        // "Injects" data into the gyro, overriding the value of getYaw() and getAngularVelocity().
-        gyroSim.setRawYaw(mapleSim.getSimulatedDriveTrainPose().getRotation().getMeasure());
-        var vel = mapleSim.getDriveTrainSimulatedChassisSpeedsRobotRelative();
-        gyroSim.setAngularVelocityZ(RadiansPerSecond.of(vel.omegaRadiansPerSecond));
     }
 
     @Override

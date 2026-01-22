@@ -31,7 +31,6 @@ import robot.subsystems.drive.hardware.MapleSimSwerveHardware;
 import robot.subsystems.drive.hardware.SwerveDataAutoLogged;
 import robot.subsystems.drive.hardware.SwerveHardware;
 import lombok.Getter;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 
 import java.text.DecimalFormat;
@@ -56,7 +55,6 @@ public class SwerveSubsystem extends ChargerSubsystem {
         wrcMaxSpeed = Tunable.of(key("WheelRadiusCharacterization/MaxSpeed(rad per s)"), 2.0);
 
     private final SwerveConfig config;
-    @Getter private final SwerveDriveSimulation mapleSim;
     private final SwerveDrivePoseEstimator replayPoseEst;
     private final PIDController
         xPoseController = new PIDController(0, 0, 0),
@@ -74,9 +72,8 @@ public class SwerveSubsystem extends ChargerSubsystem {
 
     public SwerveSubsystem(SwerveConfig config) {
         this.config = config;
-        mapleSim = new SwerveDriveSimulation(config.mapleSimConfig(), Pose2d.kZero);
         io = RobotMode.isSim()
-            ? MapleSimSwerveHardware.create(config, mapleSim)
+            ? MapleSimSwerveHardware.create(config)
             : new SwerveHardware(config);
         replayPoseEst = new SwerveDrivePoseEstimator(
             new SwerveDriveKinematics(config.moduleTranslations()),
@@ -163,18 +160,12 @@ public class SwerveSubsystem extends ChargerSubsystem {
         } else {
             pose = inputs.pose;
         }
-        if (RobotMode.isSim()) Logger.recordOutput(key("TruePose"), getTruePose());
     }
 
     /** The input data of this drivetrain. */
     public Optional<SwerveDataAutoLogged> getInputs() {
         if (inputs.currentStates.length == 0) return Optional.empty();
         return Optional.of(inputs);
-    }
-
-    /** In sim, returns the true pose of the robot without odometry drift. */
-    public Pose2d getTruePose() {
-        return RobotMode.isSim() ? mapleSim.getSimulatedDriveTrainPose() : pose;
     }
 
     /**
