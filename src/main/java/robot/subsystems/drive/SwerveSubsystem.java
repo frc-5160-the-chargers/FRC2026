@@ -8,7 +8,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ApplyFieldSpeeds;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.utility.LinearPath;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -71,14 +70,14 @@ public class SwerveSubsystem extends ChargerSubsystem {
     @Getter private Pose2d pose = Pose2d.kZero;
 
     public SwerveSubsystem(SwerveConfig config) {
+        super(config.name());
         this.config = config;
         io = RobotMode.isSim()
             ? MapleSimSwerveHardware.create(config)
             : new SwerveHardware(config);
         replayPoseEst = new SwerveDrivePoseEstimator(
             new SwerveDriveKinematics(config.moduleTranslations()),
-            Rotation2d.kZero, getModPositions(), Pose2d.kZero,
-            config.encoderStdDevs(), VecBuilder.fill(0.6, 0.6, 0.6)
+            Rotation2d.kZero, getModPositions(), Pose2d.kZero
         );
         // Configure Auto-Align utilities
         configureAlignment();

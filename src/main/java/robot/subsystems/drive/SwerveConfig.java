@@ -2,10 +2,7 @@ package robot.subsystems.drive;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -19,12 +16,10 @@ import static edu.wpi.first.units.Units.*;
 
 /**
  * Represents a selection of tuner constants for the drivetrain.
- * @param encoderStdDevs Confidence of the drivetrain's encoder measurements
- *                       in the x, y, and theta directions. Usually just 3 0.1s.
  * @param moduleConsts Must be in front left, front right, back left, and back right order.
  */
 public record SwerveConfig(
-    Vector<N3> encoderStdDevs,
+    String name,
     Distance bumperThickness,
     SwerveDrivetrainConstants driveConsts,
     SwerveModuleConstants<?, ?, ?>... moduleConsts
@@ -33,7 +28,7 @@ public record SwerveConfig(
         SwerveDrivetrainConstants driveConsts,
         SwerveModuleConstants<?, ?, ?>... moduleConsts
     ) {
-        this(VecBuilder.fill(0.1, 0.1, 0.1), Inches.of(3.5), driveConsts, moduleConsts);
+        this("SwerveSubsystem", Inches.of(3.5), driveConsts, moduleConsts);
     }
 
     /**

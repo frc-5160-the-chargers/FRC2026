@@ -68,7 +68,7 @@ public class MapleSimSwerveHardware extends SwerveHardware {
     public void refreshData(SwerveDataAutoLogged data) {
         SharedData.truePoseInSim = mapleSim.getSimulatedDriveTrainPose();
         gyroSim.setRawYaw(SharedData.truePoseInSim.getRotation().getMeasure());
-        Logger.recordOutput("SwerveSubsystem/TruePose", SharedData.truePoseInSim);
+        Logger.recordOutput(super.name + "TruePose", SharedData.truePoseInSim);
         super.refreshData(data);
     }
 

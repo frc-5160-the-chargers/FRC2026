@@ -25,6 +25,7 @@ import java.util.*;
 /** A class that wraps CTRE's {@link SwerveDrivetrain} with replay support. */
 public class SwerveHardware {
     private static final int MAX_BUFFER_CAPACITY = 60;
+    protected final String name;
     protected final SwerveDrivetrain<TalonFX, TalonFX, CANcoder> drivetrain;
     private final BaseStatusSignal[] debugSignals = new BaseStatusSignal[5];
     private final Queue<OdometryFrame> poseEstBuffer = new ArrayDeque<>();
@@ -35,12 +36,12 @@ public class SwerveHardware {
             TalonFX::new, TalonFX::new, CANcoder::new,
             config.driveConsts(), config.moduleConsts()
         );
+        name = config.name() + "/";
         latest = drivetrain.getStateCopy();
         if (RobotMode.get() == RobotMode.REPLAY) drivetrain.getOdometryThread().stop();
         // registerTelemetry() technically means "register a function that logs data",
         // but here we abuse it for data-gathering purposes.
         drivetrain.registerTelemetry(this::recordData);
-        drivetrain.setStateStdDevs(config.encoderStdDevs());
         initDashboardTuning(config);
         initDebugSignals();
     }
@@ -99,13 +100,13 @@ public class SwerveHardware {
     private void initDashboardTuning(SwerveConfig config) {
         var driveGains = config.moduleConsts()[0].DriveMotorGains;
         var steerGains = config.moduleConsts()[0].SteerMotorGains;
-        Tunable.of("SwerveSubsystem/DriveMotor/KP", driveGains.kP)
+        Tunable.of(name + "DriveMotor/KP", driveGains.kP)
             .onChange(kP -> applyDriveGains(driveGains.withKP(kP)));
-        Tunable.of("SwerveSubsystem/SteerMotor/KP", steerGains.kP)
+        Tunable.of(name + "SteerMotor/KP", steerGains.kP)
             .onChange(kP -> applySteerGains(steerGains.withKP(kP)));
-        Tunable.of("SwerveSubsystem/SteerMotor/KD", steerGains.kD)
+        Tunable.of(name + "SteerMotor/KD", steerGains.kD)
             .onChange(kD -> applySteerGains(steerGains.withKD(kD)));
-        Tunable.of("SwerveSubsystem/CoastMode", false)
+        Tunable.of(name + "CoastMode", false)
             .onChange(this::setCoastMode);
     }
 
@@ -138,9 +139,9 @@ public class SwerveHardware {
             steerStats[i] = MotorStats.from(drivetrain.getModule(i).getSteerMotor());
             encodersConnected[i] = debugSignals[i].getStatus().isOK();
         }
-        Logger.recordOutput("SwerveSubsystem/DriveMotorData", driveStats);
-        Logger.recordOutput("SwerveSubsystem/SteerMotorData", steerStats);
-        Logger.recordOutput("SwerveSubsystem/EncodersConnected", encodersConnected);
-        Logger.recordOutput("SwerveSubsystem/GyroConnected", debugSignals[4].getStatus().isOK());
+        Logger.recordOutput(name + "DriveMotorData", driveStats);
+        Logger.recordOutput(name + "SteerMotorData", steerStats);
+        Logger.recordOutput(name + "EncodersConnected", encodersConnected);
+        Logger.recordOutput(name + "GyroConnected", debugSignals[4].getStatus().isOK());
     }
 }
