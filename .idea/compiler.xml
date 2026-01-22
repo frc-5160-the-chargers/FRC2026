@@ -25,4 +25,11 @@
     </annotationProcessing>
     <bytecodeTargetLevel target="17" />
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="FRC2026" options="-Xlint:-processing -XDstringConcat=inline" />
+      <module name="FRC2026.main" options="-Xlint:-processing -XDstringConcat=inline" />
+      <module name="FRC2026.test" options="-Xlint:-processing -XDstringConcat=inline" />
+    </option>
+  </component>
 </project>

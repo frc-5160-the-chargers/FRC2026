@@ -98,14 +98,21 @@ public class SwerveHardware {
     }
 
     private void initDashboardTuning(SwerveConfig config) {
+        // Front left, front right, back left, back right
+        // int[], int... - arrays!
         var driveGains = config.moduleConsts()[0].DriveMotorGains;
-        var steerGains = config.moduleConsts()[0].SteerMotorGains;
+        var steerGainsFront = config.moduleConsts()[0].SteerMotorGains;
+        var steerGainsBack = config.moduleConsts()[2].SteerMotorGains;
         Tunable.of(name + "DriveMotor/KP", driveGains.kP)
             .onChange(kP -> applyDriveGains(driveGains.withKP(kP)));
-        Tunable.of(name + "SteerMotor/KP", steerGains.kP)
-            .onChange(kP -> applySteerGains(steerGains.withKP(kP)));
-        Tunable.of(name + "SteerMotor/KD", steerGains.kD)
-            .onChange(kD -> applySteerGains(steerGains.withKD(kD)));
+        Tunable.of(name + "SteerMotor/KP/front", steerGainsFront.kP)
+            .onChange(kP -> applySteerGains(steerGainsFront.withKP(kP)));
+        Tunable.of(name + "SteerMotor/KD/front", steerGainsFront.kD)
+            .onChange(kD -> applySteerGains(steerGainsFront.withKD(kD)));
+        Tunable.of(name + "SteerMotor/KP/back", steerGainsBack.kP)
+                .onChange(kP -> applySteerGains(steerGainsBack.withKP(kP)));
+        Tunable.of(name + "SteerMotor/KD/back", steerGainsBack.kD)
+                .onChange(kD -> applySteerGains(steerGainsBack.withKD(kD)));
         Tunable.of(name + "CoastMode", false)
             .onChange(this::setCoastMode);
     }
