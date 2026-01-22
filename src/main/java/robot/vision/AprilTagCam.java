@@ -1,7 +1,6 @@
 package robot.vision;
 
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
@@ -15,7 +14,6 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Meters;
 import static robot.vision.VisionConsts.*;

@@ -62,9 +62,7 @@ public class Robot extends LoggedRobot {
             drive.characterizeWheelRadiusCmd()
         );
         RobotModeTriggers.test().onTrue(
-            Commands.runOnce(() -> {
-                controller.setRumble(GenericHID.RumbleType.kBothRumble, 0.2);
-            })
+            Commands.runOnce(() -> controller.setRumble(GenericHID.RumbleType.kBothRumble, 0.2))
         );
     }
 

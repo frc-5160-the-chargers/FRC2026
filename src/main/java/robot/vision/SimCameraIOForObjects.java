@@ -9,7 +9,6 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.simulation.VisionTargetSim;
 import robot.SharedData;
-import robot.subsystems.drive.hardware.MapleSimSwerveHardware;
 import robot.vision.DataTypes.MLCamConsts;
 
 import java.util.Map;
