@@ -5,7 +5,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import lib.Tracer;
-import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
 import robot.vision.DataTypes.CamPoseEstimate;
 import robot.vision.DataTypes.AprilTagCamConsts;
 import org.littletonrobotics.junction.Logger;
@@ -42,18 +41,6 @@ public class AprilTagCam {
     
     private String key(String path) {
         return "Cameras/" + consts.name() + "/" + path;
-    }
-
-    public void addHeadingData(OdometryFrame[] odoFrames, double timeOffsetSecs) {
-        poseEst.setMultiTagFallbackStrategy(
-            DriverStation.isDisabled() || odoFrames.length == 0
-                ? PoseStrategy.LOWEST_AMBIGUITY
-                : PoseStrategy.PNP_DISTANCE_TRIG_SOLVE
-        );
-        for (var frame: odoFrames) {
-            // we have to convert back from phoenix 6 timestamp to FPGA timestamp
-            poseEst.addHeadingData(frame.timestampSecs() - timeOffsetSecs, frame.heading());
-        }
     }
 
     /** Fetches the latest pose estimates from this camera. */
