@@ -49,6 +49,7 @@ public class MapleSimSwerveHardware extends SwerveHardware {
             sim.useDriveMotorController(new TalonFXSim(module.getDriveMotor(), null));
             sim.useSteerMotorController(new TalonFXSim(module.getSteerMotor(), module.getEncoder()));
         }
+        SharedData.numSimulatedRobots++;
     }
 
     /** Creates an instance of a {@link MapleSimSwerveHardware}. */
@@ -66,10 +67,15 @@ public class MapleSimSwerveHardware extends SwerveHardware {
 
     @Override
     public void refreshData(SwerveDataAutoLogged data) {
-        SharedData.truePoseInSim = mapleSim.getSimulatedDriveTrainPose();
-        gyroSim.setRawYaw(SharedData.truePoseInSim.getRotation().getMeasure());
-        Logger.recordOutput(super.name + "TruePose", SharedData.truePoseInSim);
         super.refreshData(data);
+        var truePose = mapleSim.getSimulatedDriveTrainPose();
+        Logger.recordOutput(super.name + "TruePose", truePose);
+        gyroSim.setRawYaw(truePose.getRotation().getMeasure());
+        if (SharedData.numSimulatedRobots > 1) {
+            data.pose = truePose; // don't use vision sim if we have a sim defense bot
+        } else {
+            SharedData.visionSimPose = truePose;
+        }
     }
 
     @Override

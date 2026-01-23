@@ -5,11 +5,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * Data(constants and global mutable state) shared across different components of the robot.
- * In general, avoid adding things to this class unless if it's an absolute necessity.
+ * Avoid accessing this class from a hardware/IO layer (as that behavior will not be replayed).
  */
 public class SharedData {
-    /** In sim, represents the true pose of the robot without any odometry drift. */
-    public static Pose2d truePoseInSim = Pose2d.kZero;
+    // Mutable State
+    public static Pose2d visionSimPose = Pose2d.kZero;
+    public static int numSimulatedRobots = 0;
 
     /** Returns true when the current alliance is red. */
     public static boolean redAlliance() {

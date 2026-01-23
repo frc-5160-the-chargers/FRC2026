@@ -32,7 +32,9 @@ public class SimCameraIOForTags extends CameraIO {
 
     @Override
     public void refreshData(CameraIO.RawData data) {
-        Tracer.trace("Simulation", () -> sim.update(SharedData.truePoseInSim));
+        if (SharedData.numSimulatedRobots > 1) { // don't simulate vision if there are multiple robots
+            Tracer.trace("Simulation", () -> sim.update(SharedData.visionSimPose));
+        }
         super.refreshData(data);
     }
 }
