@@ -18,7 +18,7 @@ public class VortexClimberHardware extends ClimberHardware {
     private final SparkClosedLoopController pid = motor.getClosedLoopController();
     private final RelativeEncoder encoder = motor.getEncoder();
 
-    
+    // To set gear ratio:
     // config.encoder.positionConversionFactor(1).velocityConversionFactor(1);
 
     public VortexClimberHardware() {

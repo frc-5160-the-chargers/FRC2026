@@ -26,7 +26,6 @@ public class SimClimberHardware extends ClimberHardware {
         if (DriverStation.isDisabled()) {
             motor.setInputVoltage(0);
         }
-        
     }
 
     @Override

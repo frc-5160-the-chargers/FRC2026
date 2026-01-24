@@ -4,11 +4,9 @@ import org.littletonrobotics.junction.AutoLog;
 
 
 @AutoLog
-public class ClimberData{
+public class ClimberData {
     public double volts = 0.0;
     public double radians = 0.0;
-
-
     // @Override
     // public void toLog(LogTable table) {
     //     table.put("volts", volts);
