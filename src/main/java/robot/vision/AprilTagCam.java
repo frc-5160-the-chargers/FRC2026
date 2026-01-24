@@ -112,8 +112,8 @@ public class AprilTagCam {
         }
 
         // logs relevant data
-        boolean shouldLog = RobotMode.get() == RobotMode.REPLAY || !DriverStation.isFMSAttached();
-        if (!inputs.results.isEmpty() || shouldLog) {
+        boolean shouldLog = !inputs.results.isEmpty() && !DriverStation.isFMSAttached();
+        if (shouldLog || RobotMode.get() == RobotMode.REPLAY) {
             int[] ids = new int[fiducialIds.size()];
             for (int i = 0; i < fiducialIds.size(); i++) {
                 ids[i] = fiducialIds.get(i);

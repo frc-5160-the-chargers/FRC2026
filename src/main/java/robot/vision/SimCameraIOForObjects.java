@@ -58,7 +58,7 @@ public class SimCameraIOForObjects extends CameraIO {
                 sim.addVisionTargets(type, new VisionTargetSim(pose, model));
             }
         }
-        if (SharedData.numSimulatedRobots > 1) { // don't simulate vision if there are multiple robots
+        if (SharedData.numSimulatedRobots <= 1) { // don't simulate vision if there are multiple robots
             Tracer.trace("Simulation", () -> sim.update(SharedData.visionSimPose));
         }
         super.refreshData(inputs);
