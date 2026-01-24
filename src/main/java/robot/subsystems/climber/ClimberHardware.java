@@ -12,4 +12,12 @@ public class ClimberHardware {
     public void setRadians(double radians) {
 
     }
+
+    public void configureMotor() {
+        
+    }
+
+    public void setPDGains(double p, double d) {
+
+    }
 }
