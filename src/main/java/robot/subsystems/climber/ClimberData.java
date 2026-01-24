@@ -1,24 +1,26 @@
 package robot.subsystems.climber;
 
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+import org.littletonrobotics.junction.AutoLog;
 
-public class ClimberData implements LoggableInputs{
+
+@AutoLog
+public class ClimberData{
     public double volts = 0.0;
     public double radians = 0.0;
 
-    @Override
-    public void toLog(LogTable table) {
-        table.put("volts", volts);
-        table.put("radians", radians);
-    }
 
-    // Used to replace the values we saved from a previous run
-    // so we can treat it as though the robot is going through
-    // the same circumstances again
-    @Override
-    public void fromLog(LogTable table) {
-        volts = table.get("volts", 0.0);
-        radians = table.get("radians", 0.0);
-    }
+    // @Override
+    // public void toLog(LogTable table) {
+    //     table.put("volts", volts);
+    //     table.put("radians", radians);
+    // }
+
+    // // Used to replace the values we saved from a previous run
+    // // so we can treat it as though the robot is going through
+    // // the same circumstances again
+    // @Override
+    // public void fromLog(LogTable table) {
+    //     volts = table.get("volts", 0.0);
+    //     radians = table.get("radians", 0.0);
+    // }
 }

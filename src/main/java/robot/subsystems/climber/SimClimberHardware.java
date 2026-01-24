@@ -30,6 +30,11 @@ public class SimClimberHardware extends ClimberHardware {
     }
 
     @Override
+    public void setPDGains(double p, double d) {
+        pid.setPID(p, 0, d);
+    }
+
+    @Override
     public void setVoltage(double volts) {
         motor.setInputVoltage(volts);
     }

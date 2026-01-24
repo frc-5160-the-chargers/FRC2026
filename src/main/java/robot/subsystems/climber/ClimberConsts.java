@@ -17,6 +17,6 @@ public class ClimberConsts {
     static final Distance MAX_HEIGHT = Meters.of(1.285);
     static final Distance MIN_HEIGHT = Meters.of(-0.01);
 
-    static final Tunable<Double> KP = Tunable.of("Elevator/KP", 0.5);
-    static final Tunable<Double> KD = Tunable.of("Elevator/KD", 0);
+    static final Tunable<Double> KP = Tunable.of("Climber/KP", 0.5);
+    static final Tunable<Double> KD = Tunable.of("Climber/KD", 0);
 }

@@ -22,7 +22,6 @@ public class VortexClimberHardware extends ClimberHardware {
     // config.encoder.positionConversionFactor(1).velocityConversionFactor(1);
 
     public VortexClimberHardware() {
-        config.closedLoop.pid(ClimberConsts.KP.get(), 0, ClimberConsts.KD.get()); // Assign PID Consts
         configureMotor();
     }
 
@@ -39,7 +38,7 @@ public class VortexClimberHardware extends ClimberHardware {
 
     @Override
     public void setRadians(double radians) {
-        pid.setSetpoint(radians * (2/Math.PI), SparkBase.ControlType.kPosition, ClosedLoopSlot.kSlot0);
+        pid.setSetpoint(radians * Convert.RADIANS_TO_ROTATIONS, SparkBase.ControlType.kPosition, ClosedLoopSlot.kSlot0);
     }
 
     @Override
@@ -49,6 +48,6 @@ public class VortexClimberHardware extends ClimberHardware {
 
     @Override
     public void setPDGains(double p, double d) {
-        config.closedLoop.pid(p, 0, d, ClosedLoopSlot.kSlot0);
+        config.closedLoop.pid(p / Convert.RADIANS_TO_ROTATIONS, 0, d / Convert.RADIANS_TO_DEGREES, ClosedLoopSlot.kSlot0);
     }
 }

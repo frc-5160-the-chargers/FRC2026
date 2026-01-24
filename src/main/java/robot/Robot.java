@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import lib.Tunable;
 import lib.commands.CmdLogger;
@@ -16,6 +17,7 @@ import org.ironmaple.simulation.SimulatedArena;
 import robot.constants.ChoreoTraj;
 import robot.constants.LoggingConfig;
 import robot.controllers.DriverController;
+import robot.subsystems.climber.Climber;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -23,6 +25,8 @@ import org.littletonrobotics.junction.Logger;
 import robot.subsystems.drive.TunerConstants;
 
 import static lib.commands.TriggerUtil.doubleClicked;
+
+import java.sql.Driver;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
@@ -37,33 +41,26 @@ public class Robot extends LoggedRobot {
         TunerConstants.BackLeft, TunerConstants.BackRight
     );
     private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
+    private final Climber climber = new Climber();
     private final DriverController controller = new DriverController(swerveCfg);
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
+
+    private final CommandXboxController xbox = new CommandXboxController(1);
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         drive.setDefaultCommand(
             drive.driveCmd(controller::getSwerveRequest)
         );
-        doubleClicked(controller.touchpad()).onTrue(
-            Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero))
+
+        climber.setDefaultCommand(
+            climber.stop()
         );
-        var f = drive.createAutoFactory();
-        controller.triangle().whileTrue(
-            f.resetOdometry(ChoreoTraj.ShortPath.name())
-                .andThen(f.trajectoryCmd(ChoreoTraj.ShortPath.name()))
-        );
-        if (RobotMode.isSim()) {
-            SimulatedArena.getInstance().placeGamePiecesOnField();
-        }
+
+        xbox.a().whileTrue(climber.setVoltage(6.0));                    
+        xbox.b().whileTrue(climber.setPos(3));
+
         Tunable.setEnabled(true);
-        demoPose.onChange(drive::resetPose);
-        RobotModeTriggers.autonomous().whileTrue(
-            drive.characterizeWheelRadiusCmd()
-        );
-        RobotModeTriggers.test().onTrue(
-            Commands.runOnce(() -> controller.setRumble(GenericHID.RumbleType.kBothRumble, 0.2))
-        );
     }
 
     @Override
