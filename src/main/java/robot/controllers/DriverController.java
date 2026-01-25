@@ -10,11 +10,12 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import lib.Tunable;
-import robot.subsystems.drive.SwerveConfig;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import robot.subsystems.drive.SwerveConfig;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.Alert.AlertType.kWarning;
 import static lib.commands.TriggerUtil.bind;
 

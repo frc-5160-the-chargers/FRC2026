@@ -23,14 +23,14 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
+import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import robot.vision.DataTypes.CamPoseEstimate;
+import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.drive.hardware.MapleSimSwerveHardware;
 import robot.subsystems.drive.hardware.SwerveDataAutoLogged;
 import robot.subsystems.drive.hardware.SwerveHardware;
-import lombok.Getter;
-import org.littletonrobotics.junction.Logger;
+import robot.vision.DataTypes.CamPoseEstimate;
 
 import java.text.DecimalFormat;
 import java.util.Optional;

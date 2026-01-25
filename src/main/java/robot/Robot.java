@@ -1,32 +1,24 @@
 package robot;
 
-import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import lib.RobotMode;
+import lib.Tracer;
 import lib.Tunable;
 import lib.commands.CmdLogger;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
-import lib.RobotMode;
-import lib.Tracer;
 import org.ironmaple.simulation.SimulatedArena;
-import robot.constants.ChoreoTraj;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
 import robot.constants.LoggingConfig;
 import robot.controllers.DriverController;
 import robot.subsystems.climber.Climber;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
 import robot.subsystems.drive.TunerConstants;
-
-import static lib.commands.TriggerUtil.doubleClicked;
-
-import java.sql.Driver;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
@@ -49,13 +41,9 @@ public class Robot extends LoggedRobot {
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
-        drive.setDefaultCommand(
-            drive.driveCmd(controller::getSwerveRequest)
-        );
-
-        climber.setDefaultCommand(
-            climber.stop()
-        );
+        demoPose.onChange(drive::resetPose);
+        drive.setDefaultCommand(drive.driveCmd(controller::getSwerveRequest));
+        climber.setDefaultCommand(climber.stop());
 
         xbox.a().whileTrue(climber.setVoltage(6.0));                    
         xbox.b().whileTrue(climber.setPos(3));

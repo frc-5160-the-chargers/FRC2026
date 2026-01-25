@@ -21,10 +21,11 @@ import lib.hardware.SignalRefresh;
 import org.littletonrobotics.junction.Logger;
 import robot.SharedData;
 import robot.subsystems.drive.SwerveConfig;
-import robot.vision.DataTypes.CamPoseEstimate;
 import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
+import robot.vision.DataTypes.CamPoseEstimate;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 /** A class that wraps CTRE's {@link SwerveDrivetrain} with replay support. */
 public class SwerveHardware {

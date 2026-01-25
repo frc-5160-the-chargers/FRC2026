@@ -1,15 +1,12 @@
 package robot.subsystems.climber;
 
-import org.littletonrobotics.junction.Logger;
-
-
-
 import edu.wpi.first.wpilibj2.command.Command;
+import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
 
 public class Climber extends ChargerSubsystem{
-    private ClimberDataAutoLogged data = new ClimberDataAutoLogged();
-    private SimClimberHardware io = new SimClimberHardware();
+    private final ClimberDataAutoLogged data = new ClimberDataAutoLogged();
+    private final SimClimberHardware io = new SimClimberHardware();
 
     public Climber() {
         io.setPDGains(ClimberConsts.KP.get(), ClimberConsts.KD.get());  // Assign PID Consts

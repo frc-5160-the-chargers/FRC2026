@@ -1,14 +1,12 @@
 package robot.constants;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import java.util.Map;
-import java.util.OptionalInt;
-
-// If these imports cause errors because you're not using ChoreoLib,
-// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+
+import java.util.Map;
+import java.util.OptionalInt;
 
 /**
  * A class containing the name, start pose, end pose, and total time of every Choreo trajectory.

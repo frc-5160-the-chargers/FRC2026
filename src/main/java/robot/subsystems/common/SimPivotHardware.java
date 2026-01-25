@@ -5,7 +5,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import lib.hardware.MotorStats;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.KilogramSquareMeters;
+import static edu.wpi.first.units.Units.Meters;
 
 public class SimPivotHardware extends PivotHardware {
     private final PivotSimConfig config;

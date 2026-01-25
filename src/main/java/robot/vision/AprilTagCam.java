@@ -5,11 +5,11 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import lib.Tracer;
-import robot.vision.DataTypes.CamPoseEstimate;
-import robot.vision.DataTypes.AprilTagCamConsts;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import robot.vision.DataTypes.AprilTagCamConsts;
+import robot.vision.DataTypes.CamPoseEstimate;
 
 import java.util.ArrayList;
 import java.util.List;
