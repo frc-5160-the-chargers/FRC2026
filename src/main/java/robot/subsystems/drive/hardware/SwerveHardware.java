@@ -71,7 +71,8 @@ public class SwerveHardware {
 
     /** Configures neutral mode(brake or coast) on this drivetrain. */
     public void setCoastMode(boolean enabled) {
-        drivetrain.configNeutralMode(enabled ? NeutralModeValue.Coast : NeutralModeValue.Brake, 0.015);
+        System.out.println("AAAAAAAAAA");
+        drivetrain.configNeutralMode(enabled ? NeutralModeValue.Coast : NeutralModeValue.Brake, 0.5);
     }
 
     // Fetches pose estimation data from the latest drivetrain state,
@@ -131,13 +132,13 @@ public class SwerveHardware {
 
     private void applySteerGains(Slot0Configs configs) {
         for (var module: drivetrain.getModules()) {
-            module.getSteerMotor().getConfigurator().apply(configs, 0.015);
+            module.getSteerMotor().getConfigurator().apply(configs, 0.2);
         }
     }
 
     private void applyDriveGains(Slot0Configs configs) {
         for (var module: drivetrain.getModules()) {
-            module.getDriveMotor().getConfigurator().apply(configs, 0.015);
+            module.getDriveMotor().getConfigurator().apply(configs, 0.2);
         }
     }
 
