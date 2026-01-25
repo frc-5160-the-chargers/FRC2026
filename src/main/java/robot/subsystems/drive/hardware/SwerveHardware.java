@@ -70,10 +70,10 @@ public class SwerveHardware {
         drivetrain.addVisionMeasurement(estimate.pose(), time, estimate.deviations());
     }
 
-    /** Configures neutral mode(brake or coast) on this drivetrain. */
+    /** Configures neutral mode(brake or coast) on this drivetrain with an async delay. */
     public void setCoastMode(boolean enabled) {
-        System.out.println("AAAAAAAAAA");
-        drivetrain.configNeutralMode(enabled ? NeutralModeValue.Coast : NeutralModeValue.Brake, 0.5);
+        var target = enabled ? NeutralModeValue.Coast : NeutralModeValue.Brake;
+        new Thread(() -> drivetrain.configNeutralMode(target)).start();
     }
 
     // Fetches pose estimation data from the latest drivetrain state,
