@@ -14,7 +14,7 @@ public class Shooter extends ChargerSubsystem {
         case REPLAY -> new FlywheelHardware();
     };
     private PivotHardware hoodIO = switch (RobotMode.get()) {
-        case REAL -> new HoodHardware();
+        case REAL -> new NeoShooterHood();
         case SIM, REPLAY -> new PivotHardware();
     };
 }

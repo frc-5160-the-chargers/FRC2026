@@ -37,8 +37,8 @@ public class GroundIntake extends ChargerSubsystem {
     public GroundIntake() {
         switch (RobotMode.get()) {
             case REAL -> {
-                pivotIO = new IntakePivotHardware();
-                rollerIO = new IntakeRollersHardware();
+                pivotIO = new NeoIntakePivot();
+                rollerIO = new VortexIntakeRollers();
             }
             case REPLAY -> {
                 pivotIO = new PivotHardware();
