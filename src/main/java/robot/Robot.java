@@ -1,8 +1,10 @@
 package robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import lib.RobotMode;
 import lib.Tracer;
@@ -44,6 +46,8 @@ public class Robot extends LoggedRobot {
         demoPose.onChange(drive::resetPose);
         drive.setDefaultCommand(drive.driveCmd(controller::getSwerveRequest));
         climber.setDefaultCommand(climber.stop());
+        controller.touchpad().multiPress(2, 0.3)
+            .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
 
         xbox.a().whileTrue(climber.setVoltage(6.0));                    
         xbox.b().whileTrue(climber.setPos(3));
