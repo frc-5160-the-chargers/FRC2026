@@ -119,18 +119,17 @@ public class SwerveSubsystem extends ChargerSubsystem {
         return inputs.poseEstFrames[inputs.poseEstFrames.length - 1].positions();
     }
 
-    private void updatePathFollowReq(ChassisSpeeds goalSpeed, Pose2d goalPose, double transKP) {
+    private void updatePathFollowReq(ChassisSpeeds goalVel, Pose2d goalPose, double transKP) {
         xPoseController.setP(transKP);
         yPoseController.setP(transKP);
         rotationController.setP(rotationKP.get());
-        var target = ChassisSpeeds.discretize(goalSpeed, 0.02);
-        target.vxMetersPerSecond += xPoseController.calculate(pose.getX(), goalPose.getX());
-        target.vyMetersPerSecond += yPoseController.calculate(pose.getY(), goalPose.getY());
-        target.omegaRadiansPerSecond += rotationController.calculate(
+        goalVel.vxMetersPerSecond += xPoseController.calculate(pose.getX(), goalPose.getX());
+        goalVel.vyMetersPerSecond += yPoseController.calculate(pose.getY(), goalPose.getY());
+        goalVel.omegaRadiansPerSecond += rotationController.calculate(
             angleModulus(pose.getRotation().getRadians()),
             angleModulus(goalPose.getRotation().getRadians())
         );
-        pathFollowReq.Speeds = target;
+        pathFollowReq.Speeds = goalVel;
     }
 
     @Override
