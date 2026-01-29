@@ -24,10 +24,7 @@ public class NonBlockingCmds {
         for (var command: commands) {
             var requirementsToIdle = new HashSet<>(allReqs);
             requirementsToIdle.removeAll(command.getRequirements());
-            group.addCommands(
-                new IdleAll(requirementsToIdle)
-                    .withDeadline(CmdLogger.logNestedCmd(command))
-            );
+            group.addCommands(new IdleAll(requirementsToIdle).withDeadline(command));
         }
         return group.withName("NonBlockingSequence");
     }
@@ -44,7 +41,7 @@ public class NonBlockingCmds {
         var numEnded = new AtomicInteger();
         for (var command: commands) {
             group.addCommands(
-                CmdLogger.logNestedCmd(command)
+                command
                     .finallyDo(numEnded::getAndIncrement)
                     .andThen(new IdleAll(command.getRequirements()))
             );

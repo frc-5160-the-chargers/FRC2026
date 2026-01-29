@@ -50,6 +50,7 @@ public class SwerveHardware {
         }};
         // Makes the addPoseEstFrame() method execute every 0.004 secs(or 250hz).
         dataLogger.JNI_RegisterTelemetry(cachedDrivetrainId, this::addPoseEstFrame);
+        drivetrain.getOdometryThread().setThreadPriority(2);
         initDashboardTuning(config);
         initDebugSignals();
     }

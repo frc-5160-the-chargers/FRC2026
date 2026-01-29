@@ -1,12 +1,15 @@
+
 package robot.constants;
 
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-
 import java.util.Map;
 import java.util.OptionalInt;
+
+// If these imports cause errors because you're not using ChoreoLib,
+// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
+import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
 
 /**
  * A class containing the name, start pose, end pose, and total time of every Choreo trajectory.
@@ -25,15 +28,15 @@ public record ChoreoTraj(
 	    "BorderLineTests",
 	    OptionalInt.empty(),
 	    4.35683,
-	    new Pose2d(3.08779, 5.70991, Rotation2d.fromRadians(0)),
+	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
 	    new Pose2d(0, 0, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NewPath = new ChoreoTraj(
 	    "NewPath",
 	    OptionalInt.empty(),
 	    4.97994,
-	    new Pose2d(3.17442, 3.63336, Rotation2d.fromRadians(0)),
-	    new Pose2d(7.49661, 2.12059, Rotation2d.fromRadians(0))
+	    new Pose2d(3.174, 3.633, Rotation2d.fromRadians(0)),
+	    new Pose2d(7.497, 2.121, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj ShortPath = new ChoreoTraj(
 	    "ShortPath",
@@ -46,8 +49,8 @@ public record ChoreoTraj(
 	    "SimplePath",
 	    OptionalInt.empty(),
 	    7.61439,
-	    new Pose2d(2.87727, 3.7144, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.54318, 5.94601, Rotation2d.fromRadians(0))
+	    new Pose2d(2.877, 3.714, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.543, 5.946, Rotation2d.fromRadians(0))
 	);
 
     /**

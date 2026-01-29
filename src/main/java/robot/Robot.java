@@ -2,10 +2,12 @@ package robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import lib.RobotMode;
 import lib.Tracer;
 import lib.Tunable;
@@ -16,7 +18,6 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import robot.constants.LoggingConfig;
-import robot.controllers.DriverController;
 import robot.subsystems.climber.Climber;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
@@ -36,10 +37,19 @@ public class Robot extends LoggedRobot {
     );
     private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
     private final Climber climber = new Climber();
-    private final DriverController controller = new DriverController(swerveCfg);
+    private final DriverController controller = new DriverController(0, swerveCfg);
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
 
     private final CommandXboxController xbox = new CommandXboxController(1);
+
+    record Test(
+        double hi,
+        Testing testEnum
+    ) {}
+
+    enum Testing {
+        A, B, C
+    }
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -49,11 +59,18 @@ public class Robot extends LoggedRobot {
         controller.touchpad().multiPress(2, 0.3)
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
 
-        xbox.a().whileTrue(climber.setVoltage(6.0));                    
+        xbox.a().whileTrue(climber.setVoltage(6.0));
         xbox.b().whileTrue(climber.setPos(3));
+        RobotModeTriggers.test()
+            .whileTrue(drive.driveCmd(() -> controller.getFacingHubSwerveRequest(drive.getPose())));
 
         Tunable.setEnabled(true);
+        Logger.recordOutput("Test", new Test(0, Testing.A));
+        new Translation2d(5, 7);
+        double x = 5 + 5;
     }
+
+
 
     @Override
     public void robotPeriodic() {

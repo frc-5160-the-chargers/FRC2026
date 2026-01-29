@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.math.MathUtil.angleModulus;
 import static edu.wpi.first.units.Units.*;
+import static lib.commands.CmdLogger.logged;
 
 /**
  * A subsystem that controls the driving of the robot. In each corner of the robot, there is
@@ -98,15 +99,12 @@ public class SwerveSubsystem extends ChargerSubsystem {
      * Will implicitly inject PID constants into the {@link FieldCentricFacingAngle} request.
      */
     public Command driveCmd(Supplier<SwerveRequest> requestSupplier) {
-        return this.run(() -> {
+        var cmd = this.run(() -> {
             var request = requestSupplier.get();
-            if (request instanceof FieldCentricFacingAngle r && r.HeadingController.getP() == 0) {
-                request = r.withHeadingPID(rotationKP.get(), 0, 0);
-            }
             io.setControl(request);
             Logger.recordOutput(key("Request"), request.getClass().getSimpleName());
-        })
-            .withName("SwerveDriveCmd");
+        });
+        return logged(cmd.withName("SwerveDriveCmd"));
     }
 
     private SwerveModulePosition[] getModPositions() {
@@ -196,7 +194,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
     /** Returns a command that aligns the robot to a specified pose. */
     public Command alignCmd(Supplier<Pose2d> targetPoseSupplier) {
         var state = new AutoAlignState();
-        return this.run(() -> {
+        var cmd = this.run(() -> {
             var goal = targetPoseSupplier.get();
             state.setpoint = alignment.calculate(0.02, state.setpoint, goal);
             state.distToGoal = Math.hypot(goal.getX() - pose.getX(), goal.getY() - pose.getY());
@@ -208,6 +206,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
             .beforeStarting(() -> state.setpoint = new LinearPath.State(pose, getFieldSpeeds()))
             .finallyDo(() -> io.setControl(new SwerveRequest.SwerveDriveBrake()))
             .withName("AutoAlignCmd");
+        return logged(cmd);
     }
 
     /** Adds a vision measurement to this drivetrain's pose estimator. */
