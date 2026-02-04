@@ -1,66 +1,80 @@
 package lib;
 
 import java.util.ArrayList;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.Collections;
 
-/** A linear interpolation table with tuning support. */
+/** A {@link edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap} that supports tuning. */
 public class TunableLerpTable {
-    private record Entry(Tunable<Double> x, Tunable<Double> y) implements Comparable<Entry> {
-        public double interpolate(Entry other, double x) {
-            double thisY = this.y.get();
-            double thisX = this.x.get();
-            double proportion = (other.y.get() - thisY) / (other.x.get() - thisX);
-            return thisY + proportion * (x - thisX);
-        }
-
+    private record Entry(Tunable<Double> key, Tunable<Double> value) implements Comparable<Entry> {
         @Override
         public int compareTo(Entry other) {
-            return Double.compare(this.x.get(), other.x.get());
+            return Double.compare(this.key.get(), other.key.get());
         }
     }
 
-    private final SortedSet<Entry> entrySet = new TreeSet<>();
-    private ArrayList<Entry> entries = new ArrayList<>();
-    private final String name, xName, yName;
+    private final ArrayList<Entry> entries = new ArrayList<>();
+    private final String name;
 
-    public TunableLerpTable(String xName, String yName) {
-        this.name = "Linear Interpolation/" + xName + " to " + yName + "/";
-        this.xName = xName;
-        this.yName = yName;
+    public TunableLerpTable(String name) {
+        this.name = name;
         // Since AdvantageScope displays tunable booleans as a red/green button,
         // We ignore the actual boolean value and just use it as a toggle.
         Tunable.of(name + "/Add Entry Button", false)
             .onChange(() -> {
                 var last = entries.get(entries.size() - 1);
-                put(last.x.get(), last.y.get());
+                put(last.key.get(), last.value.get());
             });
     }
 
     /** Adds an entry for linear interpolation. */
     public TunableLerpTable put(double key, double value) {
         String prefix = name + "/" + entries.size() + "/";
-        var x = Tunable.of(prefix + xName, key);
-        var y = Tunable.of(prefix + yName, value);
-        entrySet.add(new Entry(x, y)); // ensures that values are sorted.
-        entries = new ArrayList<>(entrySet);
+        var x = Tunable.of(prefix + "key", key)
+            .onChange(() -> Collections.sort(entries));
+        var y = Tunable.of(prefix + "value", value)
+            .onChange(() -> Collections.sort(entries));
+        entries.add(new Entry(x, y)); // ensures that values are sorted.
+        Collections.sort(entries);
         return this;
     }
 
-    /** Fetches a number from the interpolation table. */
-    public double get(double x) {
+    public double get(double key) {
         var first = entries.get(0);
         var last = entries.get(entries.size() - 1);
-        if (x <= first.x.get()) {
-            return first.y.get();
-        } else if (x >= last.x.get()) {
-            return last.y.get();
+        if (key <= first.key.get()) {
+            return first.value.get();
+        } else if (key >= last.key.get()) {
+            return last.value.get();
         }
         for (int i = 0; i < entries.size() - 1; i++) {
             var e1 = entries.get(i);
             var e2 = entries.get(i + 1);
-            if (x >= e1.x.get() && x <= e2.x.get()) {
-                return e1.interpolate(e2, x);
+            double lowerBound = e1.key.get();
+            double upperBound = e2.key.get();
+            if (key >= lowerBound && key <= upperBound) {
+                double proportion = (key - lowerBound) / (upperBound - lowerBound);
+                return e1.value.get() + proportion * (e2.value.get() - e1.value.get());
+            }
+        }
+        return 0;
+    }
+
+    public double getKey(double value) {
+        var first = entries.get(0);
+        var last = entries.get(entries.size() - 1);
+        if (value <= first.value.get()) {
+            return first.key.get();
+        } else if (value >= last.value.get()) {
+            return last.key.get();
+        }
+        for (int i = 0; i < entries.size() - 1; i++) {
+            var e1 = entries.get(i);
+            var e2 = entries.get(i + 1);
+            double lowerBound = e1.value.get();
+            double upperBound = e2.value.get();
+            if (value >= lowerBound && value <= upperBound) {
+                double proportion = (value - lowerBound) / (upperBound - lowerBound);
+                return e1.key.get() + proportion * (e2.key.get() - e1.key.get());
             }
         }
         return 0;

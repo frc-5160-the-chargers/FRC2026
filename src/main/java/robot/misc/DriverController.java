@@ -1,10 +1,10 @@
-package robot;
+package robot.misc;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -14,6 +14,8 @@ import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import robot.subsystems.drive.SwerveConfig;
+
+import java.util.Optional;
 
 import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -37,7 +39,6 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
     private final double maxVelMetersPerSec, maxVelRadPerSec;
 
     @AutoLogOutput private double forward = 0, strafe = 0, rotation = 0;
-    @AutoLogOutput private Rotation2d targetAngle = Rotation2d.kZero;
 
     public DriverController(int port, SwerveConfig config) {
         super(port);
@@ -54,32 +55,30 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         return output * SPEED_REDUCTION.get();
     }
 
-    public FieldCentric getSwerveRequest() {
+    public SwerveRequest getSwerveRequest() {
+        return getSwerveRequest(Optional.empty());
+    }
+
+    public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle) {
         double scalar = speedReductionScalar();
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
         rotation = -getRightX() * scalar;
-        return swerveReq
-            .withVelocityX(forward * maxVelMetersPerSec)
-            .withVelocityY(strafe * maxVelMetersPerSec)
-            .withRotationalRate(rotation * maxVelRadPerSec)
-            .withDeadband(0.1 * scalar * maxVelMetersPerSec)
-            .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
-    }
-
-    public FieldCentricFacingAngle getFacingHubSwerveRequest(Pose2d currentPose) {
-        var hub = SharedData.redAlliance() ? flip(HUB_BLUE) : HUB_BLUE;
-        targetAngle = hub.minus(currentPose.getTranslation()).getAngle();
-        if (SharedData.redAlliance()) targetAngle = targetAngle.plus(Rotation2d.k180deg);
-        double scalar = speedReductionScalar();
-        forward = -getLeftY() * scalar;
-        strafe = -getLeftX() * scalar;
-        return facingHubSwerveReq
-            .withVelocityX(forward * maxVelMetersPerSec)
-            .withVelocityY(strafe * maxVelMetersPerSec)
-            .withDeadband(0.1 * scalar * maxVelMetersPerSec)
-            .withTargetDirection(targetAngle)
-            .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
+        if (targetAngle.isEmpty()) {
+            return swerveReq
+                .withVelocityX(forward * maxVelMetersPerSec)
+                .withVelocityY(strafe * maxVelMetersPerSec)
+                .withDeadband(0.1 * scalar * maxVelMetersPerSec)
+                .withRotationalRate(rotation * maxVelRadPerSec)
+                .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
+        } else {
+            return facingHubSwerveReq
+                .withVelocityX(forward * maxVelMetersPerSec)
+                .withVelocityY(strafe * maxVelMetersPerSec)
+                .withDeadband(0.1 * scalar * maxVelMetersPerSec)
+                .withTargetDirection(targetAngle.get())
+                .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
+        }
     }
 
     // For Rumble to work on PS5 Controllers, we have to run a custom script on the driver station computer.

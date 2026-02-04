@@ -77,8 +77,9 @@ public class Tunable<T> extends LoggedNetworkInput {
     }
 
     /** Adds a function that listens to changes to this tunable value. */
-    public void onChange(Runnable listener) {
+    public Tunable<T> onChange(Runnable listener) {
         listeners.add(ignored -> listener.run());
+        return this;
     }
 
     @Override

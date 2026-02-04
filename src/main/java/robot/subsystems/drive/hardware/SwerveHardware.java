@@ -19,7 +19,7 @@ import lib.Tunable;
 import lib.hardware.MotorStats;
 import lib.hardware.SignalRefresh;
 import org.littletonrobotics.junction.Logger;
-import robot.SharedData;
+import robot.misc.SharedData;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
 import robot.vision.DataTypes.CamPoseEstimate;

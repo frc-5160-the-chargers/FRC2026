@@ -1,8 +1,6 @@
 package robot.subsystems.drive;
 
-import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
-import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ApplyFieldSpeeds;
@@ -17,7 +15,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -59,7 +56,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
     private final PIDController
         xPoseController = new PIDController(0, 0, 0),
         yPoseController = new PIDController(0, 0, 0),
-        rotationController = new PIDController(0, 0, 0);
+        rotController = new PIDController(0, 0, 0);
     private final ApplyFieldSpeeds pathFollowReq =
         new ApplyFieldSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     private boolean poseEstInitialized = false;
@@ -84,7 +81,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         configureAlignment();
         alignMaxAccel.onChange(this::configureAlignment);
         alignMaxAngularAccel.onChange(this::configureAlignment);
-        rotationController.enableContinuousInput(-Math.PI, Math.PI);
+        rotController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     private void configureAlignment() {
@@ -120,10 +117,10 @@ public class SwerveSubsystem extends ChargerSubsystem {
     private void updatePathFollowReq(ChassisSpeeds goalVel, Pose2d goalPose, double transKP) {
         xPoseController.setP(transKP);
         yPoseController.setP(transKP);
-        rotationController.setP(rotationKP.get());
+        rotController.setP(rotationKP.get());
         goalVel.vxMetersPerSecond += xPoseController.calculate(pose.getX(), goalPose.getX());
         goalVel.vyMetersPerSecond += yPoseController.calculate(pose.getY(), goalPose.getY());
-        goalVel.omegaRadiansPerSecond += rotationController.calculate(
+        goalVel.omegaRadiansPerSecond += rotController.calculate(
             angleModulus(pose.getRotation().getRadians()),
             angleModulus(goalPose.getRotation().getRadians())
         );
@@ -228,28 +225,24 @@ public class SwerveSubsystem extends ChargerSubsystem {
         );
     }
 
-    /** Creates an AutoFactory, a utility class for following choreo trajectories. */
-    public AutoFactory createAutoFactory() {
-        return new AutoFactory(
-            () -> pose, this::resetPose, this::followChoreoTraj,
-            true, this, this::logTrajectory
-        );
+    /**
+     * Follows a trajectory sample provided from choreo.
+     * Use this method within a {@link choreo.auto.AutoFactory}.
+     */
+    public void followChoreoTraj(SwerveSample target) {
+        followChoreoTraj(target, Optional.empty());
     }
 
-    private void followChoreoTraj(SwerveSample target) {
-        updatePathFollowReq(target.getChassisSpeeds(), target.getPose(), choreoKP.get());
+    /** Follows a choreo trajectory with a rotation override. */
+    public void followChoreoTraj(SwerveSample target, Optional<Rotation2d> rotOverride) {
+        var targetPose = target.getPose();
+        if (rotOverride.isPresent()) {
+            targetPose = new Pose2d(targetPose.getX(), targetPose.getY(), rotOverride.get());
+        }
+        updatePathFollowReq(target.getChassisSpeeds(), targetPose, choreoKP.get());
         pathFollowReq.WheelForceFeedforwardsX = target.moduleForcesX();
         pathFollowReq.WheelForceFeedforwardsY = target.moduleForcesY();
         io.setControl(pathFollowReq);
-    }
-
-    private void logTrajectory(Trajectory<SwerveSample> trajectory, boolean isStart) {
-        Logger.recordOutput(key("CurrentTraj/Name"), trajectory.name());
-        if (RobotMode.get() != RobotMode.REPLAY && DriverStation.isFMSAttached()) {
-            return; // don't log trajectory during matches, use replay mode to do so instead
-        }
-        var samples = trajectory.samples().toArray(new SwerveSample[0]);
-        Logger.recordOutput(key("CurrentTraj/Samples"), samples);
     }
 
     private static class CharacterizationState {

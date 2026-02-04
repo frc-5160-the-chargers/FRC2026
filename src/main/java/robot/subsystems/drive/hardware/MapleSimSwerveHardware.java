@@ -16,7 +16,7 @@ import org.ironmaple.simulation.motorsims.SimulatedBattery;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 import org.jetbrains.annotations.Nullable;
 import org.littletonrobotics.junction.Logger;
-import robot.SharedData;
+import robot.misc.SharedData;
 import robot.subsystems.drive.SwerveConfig;
 
 import static edu.wpi.first.units.Units.Seconds;

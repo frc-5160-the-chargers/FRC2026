@@ -8,7 +8,7 @@ import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.simulation.VisionTargetSim;
-import robot.SharedData;
+import robot.misc.SharedData;
 import robot.vision.DataTypes.MLCamConsts;
 
 import java.util.Map;

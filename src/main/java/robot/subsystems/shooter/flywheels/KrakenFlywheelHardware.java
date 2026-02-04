@@ -2,6 +2,7 @@ package robot.subsystems.shooter.flywheels;
 
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 public class KrakenFlywheelHardware extends FlywheelHardware {
     private final TalonFX talon = new TalonFX(/*id */ 1);
@@ -13,7 +14,7 @@ public class KrakenFlywheelHardware extends FlywheelHardware {
     }
 
     @Override
-    public void setVelocity(double radiansPerSecond) {
+    public void setVelocity(AngularVelocity radiansPerSecond) {
         super.setVelocity(radiansPerSecond);
     }
 }
