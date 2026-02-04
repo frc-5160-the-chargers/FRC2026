@@ -17,7 +17,7 @@ public final class ChoreoVars {
     public static final Distance moduleY = Units.Meters.of(0.279);
     public static final MomentOfInertia robotMOI = Units.KilogramSquareMeters.of(5.8);
     public static final Mass robotMass = Units.Kilograms.of(63.5);
-    public static final Distance wheelRadius = Units.Meters.of(0.051);
+    public static final Distance wheelRadius = Units.Meters.of(0.048);
 
     private ChoreoVars() {}
 }
