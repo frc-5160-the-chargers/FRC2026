@@ -1,5 +1,6 @@
 package robot.subsystems.climber;
 
+import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
 
 public class ClimberHardware {
@@ -7,6 +8,7 @@ public class ClimberHardware {
     public static class ClimberData {
         public double volts = 0.0;
         public double radians = 0.0;
+        public MotorStats motorStats = MotorStats.EMPTY;
     }
 
     public void refreshData(ClimberData data) {}

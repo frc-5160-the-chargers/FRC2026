@@ -11,25 +11,26 @@ import robot.subsystems.shooter.ShooterConsts.*
 import kotlin.math.exp
 
 fun computeSetpoint(
-    location: ShotLocation,
+    target: Translation2d,
+    shotMap: ShotMap,
     robotPose: Pose2d,
     fieldCentricVel: ChassisSpeeds,
     currentShooterVel: AngularVelocity
 ): ShooterSetpoint {
     val fieldOriginToShooter = (robotPose + ROBOT_TO_SHOOTER).translation
     val robotToShooter = fieldOriginToShooter - robotPose.translation
-    var shooterToTarget = location.position() - fieldOriginToShooter
+    var shooterToTarget = target - fieldOriginToShooter
 
     val omega = fieldCentricVel.omegaRadiansPerSecond
     val shooterVx = fieldCentricVel.vxMetersPerSecond + omega * robotToShooter.x
     val shooterVy = fieldCentricVel.vyMetersPerSecond - omega * robotToShooter.y
     val nextDesiredVel = ANGULAR_TO_LINEAR_VEL.get(currentShooterVel.`in`(RadiansPerSecond))
-    val finalDesiredVel = location.shotMap().maxVelocityAt(shooterToTarget.norm)
-    val shotValid = location.shotMap().canShoot(shooterToTarget.norm, nextDesiredVel)
+    val finalDesiredVel = shotMap.maxVelocityAt(shooterToTarget.norm)
+    val shotValid = shotMap.canShoot(shooterToTarget.norm, nextDesiredVel)
 
     lateinit var solve: ShotMapResult
     repeat(10) {
-        solve = location.shotMap().get(shooterToTarget.norm, nextDesiredVel)
+        solve = shotMap.get(shooterToTarget.norm, nextDesiredVel)
         val dragComp = DRAG_COMPENSATION.get()
         val timeCompensation = LOOKAHEAD_SECS.get() +
             (1 - exp(-solve.airTimeSecs * dragComp)) / dragComp

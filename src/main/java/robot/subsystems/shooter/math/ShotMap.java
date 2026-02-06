@@ -1,11 +1,11 @@
 package robot.subsystems.shooter.math;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import robot.subsystems.shooter.ShooterConsts.ShotMapResult;
 
+import java.util.Map;
 import java.util.TreeMap;
 
 import static robot.subsystems.shooter.ShooterConsts.SPEED_TOLERANCE_MPS;
@@ -31,14 +31,14 @@ public class ShotMap {
      * @param entries The velocity to hood angle mappings.
      */
     @SafeVarargs
-    public final ShotMap put(double distanceMeters, Pair<Double, ShotMapResult>... entries) {
+    public final ShotMap put(double distanceMeters, Map.Entry<Double, ShotMapResult>... entries) {
         var speedToAngleMap = new InterpolatingTreeMap<>(MathUtil::inverseInterpolate, ShotMap::interpolateShot);
         for (var entry : entries) {
-            speedToAngleMap.put(entry.getFirst(), entry.getSecond());
+            speedToAngleMap.put(entry.getKey(), entry.getValue());
         }
         resultsMap.put(distanceMeters, speedToAngleMap);
-        distanceToMinVelocity.put(distanceMeters, entries[0].getFirst());
-        distanceToMaxVelocity.put(distanceMeters, entries[entries.length - 1].getFirst());
+        distanceToMinVelocity.put(distanceMeters, entries[0].getKey());
+        distanceToMaxVelocity.put(distanceMeters, entries[entries.length - 1].getKey());
         return this;
     }
 
