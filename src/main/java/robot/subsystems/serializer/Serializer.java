@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import robot.subsystems.ChargerSubsystem;
 
 public class Serializer extends ChargerSubsystem {
-    public Command run() {
+    public Command runCmd() {
         return this.run(() -> {});
     }
 }

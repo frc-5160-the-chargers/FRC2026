@@ -8,6 +8,8 @@ import lib.Tunable;
 import lib.TunableLerpTable;
 import robot.subsystems.shooter.math.ShotMap;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 public class ShooterConsts {
     /** The yaw, pitch, and shooter speed for launched balls to reach the target. */
     public record ShooterSetpoint(
@@ -19,6 +21,9 @@ public class ShooterConsts {
 
     /** The optimal hood angle and travel time calculated from a {@link ShotMap}. */
     public record ShotMapResult(double pitchRad, double airTimeSecs) {}
+
+    public static final ShooterSetpoint NULL_SHOOTER_SETPOINT =
+        new ShooterSetpoint(true, Rotation2d.kZero, Rotation2d.kZero, RadiansPerSecond.zero());
 
     // TODO all of these have to be tuned:
     public static final TrapezoidProfile.Constraints HOOD_MOTION_CONSTRAINTS =

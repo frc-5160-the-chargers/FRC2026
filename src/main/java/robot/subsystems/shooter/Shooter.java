@@ -1,9 +1,8 @@
 package robot.subsystems.shooter;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.measure.AngularVelocity;
 import lib.RobotMode;
-import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
@@ -15,7 +14,6 @@ import robot.subsystems.shooter.flywheels.FlywheelHardware;
 import robot.subsystems.shooter.flywheels.KrakenFlywheelHardware;
 import robot.subsystems.shooter.flywheels.SimFlywheelHardware;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static robot.subsystems.shooter.ShooterConsts.HOOD_MOTION_CONSTRAINTS;
 
 public class Shooter extends ChargerSubsystem {
@@ -34,12 +32,19 @@ public class Shooter extends ChargerSubsystem {
     private final TrapezoidProfile hoodProfile = new TrapezoidProfile(HOOD_MOTION_CONSTRAINTS);
     @AutoLogOutput private TrapezoidProfile.State hoodSetpoint = new TrapezoidProfile.State();
 
-    /** The current setpoint of the shooter. */
-    @Setter
-    @AutoLogOutput
-    private ShooterSetpoint target = new ShooterSetpoint(
-        false, Rotation2d.kZero, Rotation2d.kZero, RadiansPerSecond.zero()
-    );
+    /** The current flywheel velocity. */
+    public AngularVelocity getVelocity() {
+        return flywheelInputs.velocity;
+    }
+
+    /** Modifies the shooter's setpoint. */
+    public void setTarget(ShooterSetpoint target) {
+        if (!target.valid()) return;
+        flywheelIO.setVelocity(target.targetVelocity());
+        var hoodGoal = new TrapezoidProfile.State(target.pitch().getRadians(), 0);
+        hoodSetpoint = hoodProfile.calculate(0.02, hoodSetpoint, hoodGoal);
+        hoodIO.setRadians(hoodSetpoint.position, hoodSetpoint.velocity);
+    }
 
     @Override
     public void loggedPeriodic() {
@@ -47,13 +52,5 @@ public class Shooter extends ChargerSubsystem {
         hoodIO.refreshData(hoodInputs);
         Logger.processInputs("Shooter/Flywheels", flywheelInputs);
         Logger.processInputs("Shooter/Hood", hoodInputs);
-    }
-
-    // Must be called manually in robotPeriodic().
-    public void periodicAfterCommands() {
-        flywheelIO.setVelocity(target.targetVelocity());
-        var hoodGoal = new TrapezoidProfile.State(target.pitch().getRadians(), 0);
-        hoodSetpoint = hoodProfile.calculate(0.02, hoodSetpoint, hoodGoal);
-        hoodIO.setRadians(hoodSetpoint.position, hoodSetpoint.velocity);
     }
 }

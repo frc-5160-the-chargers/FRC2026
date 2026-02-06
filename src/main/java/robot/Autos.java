@@ -12,7 +12,7 @@ public class Autos {
     public Autos(SwerveSubsystem drive, Superstructure superstructure) {
         autoFactory = new AutoFactory(
             drive::getPose, drive::resetPose,
-            traj -> drive.followChoreoTraj(traj, SharedData.getRotOverride()),
+            traj -> drive.followChoreoTraj(traj, SharedData.rotOverride),
             true, drive, LoggingConfig::logTrajectory
         );
     }

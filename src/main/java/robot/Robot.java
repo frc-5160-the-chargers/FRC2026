@@ -47,7 +47,7 @@ public class Robot extends LoggedRobot {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         demoPose.onChange(drive::resetPose);
         drive.setDefaultCommand(
-            drive.driveCmd(() -> controller.getSwerveRequest(SharedData.getRotOverride()))
+            drive.driveCmd(() -> controller.getSwerveRequest(SharedData.rotOverride))
         );
         climber.setDefaultCommand(climber.stop());
         controller.touchpad().multiPress(2, 0.3)
