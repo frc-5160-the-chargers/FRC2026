@@ -3,7 +3,7 @@ plugins {
     id "com.peterabeles.gversion" version "1.10"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
     id "com.diffplug.spotless" version "7.0.0.BETA2"
-    id "io.freefair.lombok" version "8.11"
+    id "io.freefair.lombok" version "8.14.4"
     id 'org.jetbrains.kotlin.jvm' version '2.0.21'
 }
 
@@ -115,7 +115,6 @@ dependencies {
 
     def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 tasks.register('replayWatch', JavaExec) {
