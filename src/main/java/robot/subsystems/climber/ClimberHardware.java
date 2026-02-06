@@ -3,10 +3,12 @@ package robot.subsystems.climber;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
 
+import lib.hardware.MotorStats;
+
 public class ClimberHardware {
     @AutoLog
     public static class ClimberData {
-        public double volts = 0.0;
+        public MotorStats motorStats = MotorStats.EMPTY;
         public double radians = 0.0;
         public MotorStats motorStats = MotorStats.EMPTY;
     }

@@ -10,6 +10,7 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import lib.Convert;
+import lib.hardware.MotorStats;
 
 public class VortexClimberHardware extends ClimberHardware {
     private final SparkFlex motor = new SparkFlex(1, MotorType.kBrushless);
@@ -27,7 +28,7 @@ public class VortexClimberHardware extends ClimberHardware {
     @Override
     public void refreshData(ClimberData data) {
         data.radians = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
-        data.volts = motor.getBusVoltage() * motor.getAppliedOutput();
+        data.motorStats = MotorStats.from(motor);
     }
 
     @Override

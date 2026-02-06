@@ -7,6 +7,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import lib.hardware.MotorStats;
 
 
 public class SimClimberHardware extends ClimberHardware {
@@ -20,7 +21,7 @@ public class SimClimberHardware extends ClimberHardware {
     @Override
     public void refreshData(ClimberData data) {
         motor.update(0.02);
-        data.volts = motor.getInputVoltage();
+        data.motorStats = MotorStats.from(motor);
         data.radians = motor.getAngularPositionRad();
 
         if (DriverStation.isDisabled()) {
