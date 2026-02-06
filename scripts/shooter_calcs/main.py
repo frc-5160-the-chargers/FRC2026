@@ -68,12 +68,12 @@ def iterate_distance(file: TextIO, distance: float, target_height: float):
 
 
 def write(
-        name: str,
-        target_height: float,
-        min_distance: float,
-        max_distance: float,
-        distance_samples: int,
-        distance_exponent: float
+    name: str,
+    target_height: float,
+    min_distance: float,
+    max_distance: float,
+    distance_samples: int,
+    distance_exponent: float
 ):
     filename = "../../src/main/java/robot/subsystems/shooter/math/" + name + ".java"
     with open(filename, "w") as file:
