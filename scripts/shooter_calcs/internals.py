@@ -15,6 +15,8 @@ g = 9.81  # m/s²
 max_shooter_velocity = 14.5  # m/s
 ball_mass = 0.5 / 2.205  # kg
 ball_diameter = 5.91 * 0.0254  # m
+rho = 1.204  # Density of air, kg/m³
+C_D = 0.4 # Coefficient of drag, unitless
 min_pitch = np.deg2rad(40)
 
 # Solve settings
@@ -40,11 +42,9 @@ def f(x):
     #
     # where a_D(v) = ½ρv² C_D A / m
     # (see https://en.wikipedia.org/wiki/Drag_(physics)#The_drag_equation)
-    rho = 1.204  # kg/m³
-    C_D = 0.4
-    m = ball_mass
     A = math.pi * ((ball_diameter / 2) ** 2)
-    a_D = lambda v: 0.5 * rho * v**2 * C_D * A / m
+    drag_force = lambda v: 0.5 * rho * v**2 * C_D * A
+    a_D = lambda v: drag_force(v) / ball_mass
 
     v_x = x[3, 0]
     v_y = x[4, 0]
