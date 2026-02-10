@@ -16,9 +16,9 @@ max_shooter_velocity = 14.5  # m/s
 ball_mass = 0.5 / 2.205  # kg
 ball_diameter = 5.91 * 0.0254  # m
 rho = 1.204  # Density of air, kg/m³
+wheel_radius = 2 * 0.0254 # m
 C_D = 0.4 # Coefficient of drag, unitless
 C_L = 0.5 # Coefficient of lift, unitless
-omega = np.array([0.0, 0.0, 2.0]) # angular velocity, rad/s
 min_pitch = np.deg2rad(40)
 
 # Solve settings
@@ -53,8 +53,8 @@ def f(x):
     v_z = x[5, 0]
 
     # Magnus force: F_L(v) = ½ρv² C_L A |ω x v|
-    lift_force = 0.5 * rho * magnitude_squared(np.array([v_x, v_y, v_z])) * C_L * A * np.cross(omega, [v_x, v_y, v_z])
-    a_L = lift_force / ball_mass
+    lift_force = lambda v: 0.5 * rho * magnitude_squared(v) * C_L * A * np.cross(np.array([0, v[1]/wheel_radius, 0]), v)
+    a_L = lift_force(np.array([v_x, v_y, v_z])) / ball_mass
 
     return VariableMatrix(
         [[v_x], [v_y], [v_z], [-a_D(v_x) - a_L[0]], [-a_D(v_y) - a_L[1]], [-g - a_D(v_z) - a_L[2]]]
