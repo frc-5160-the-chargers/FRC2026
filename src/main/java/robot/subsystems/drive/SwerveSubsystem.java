@@ -135,7 +135,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         Logger.processInputs(getName(), inputs);
         // Syncs the replay pose estimator with the robot's state.
         if (inputs.bufferOverflow) return;
-        if (!poseEstInitialized) {
+        if (!poseEstInitialized && inputs.poseEstFrames.length > 0) {
             poseEstInitialized = true;
             var fm = inputs.poseEstFrames[inputs.poseEstFrames.length - 1];
             replayPoseEst.resetPosition(fm.heading(), fm.positions(), inputs.pose);
