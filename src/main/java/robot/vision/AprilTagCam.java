@@ -5,12 +5,11 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import lib.Tracer;
-import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
-import robot.vision.DataTypes.CamPoseEstimate;
-import robot.vision.DataTypes.AprilTagCamConsts;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import robot.vision.DataTypes.AprilTagCamConsts;
+import robot.vision.DataTypes.CamPoseEstimate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,18 +41,6 @@ public class AprilTagCam {
     
     private String key(String path) {
         return "Cameras/" + consts.name() + "/" + path;
-    }
-
-    public void addHeadingData(OdometryFrame[] odoFrames, double timeOffsetSecs) {
-        poseEst.setMultiTagFallbackStrategy(
-            DriverStation.isDisabled() || odoFrames.length == 0
-                ? PoseStrategy.LOWEST_AMBIGUITY
-                : PoseStrategy.PNP_DISTANCE_TRIG_SOLVE
-        );
-        for (var frame: odoFrames) {
-            // we have to convert back from phoenix 6 timestamp to FPGA timestamp
-            poseEst.addHeadingData(frame.timestampSecs() - timeOffsetSecs, frame.heading());
-        }
     }
 
     /** Fetches the latest pose estimates from this camera. */
@@ -125,8 +112,8 @@ public class AprilTagCam {
         }
 
         // logs relevant data
-        boolean shouldLog = RobotMode.get() == RobotMode.REPLAY || !DriverStation.isFMSAttached();
-        if (!inputs.results.isEmpty() || shouldLog) {
+        boolean shouldLog = !inputs.results.isEmpty() && !DriverStation.isFMSAttached();
+        if (shouldLog || RobotMode.get() == RobotMode.REPLAY) {
             int[] ids = new int[fiducialIds.size()];
             for (int i = 0; i < fiducialIds.size(); i++) {
                 ids[i] = fiducialIds.get(i);

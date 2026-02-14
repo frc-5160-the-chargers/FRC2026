@@ -1,5 +1,7 @@
 package robot.constants;
 
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -14,6 +16,16 @@ import java.io.File;
 
 @SuppressWarnings("DataFlowIssue")
 public class LoggingConfig {
+    /** Logs a choreo trajectory. */
+    public static void logTrajectory(Trajectory<SwerveSample> rawTraj, boolean isStart) {
+        Logger.recordOutput("CurrentTraj/Name", rawTraj.name());
+        if (RobotMode.get() != RobotMode.REPLAY && DriverStation.isFMSAttached()) {
+            return; // don't log trajectory during matches, use replay mode to do so instead
+        }
+        var samples = rawTraj.samples().toArray(new SwerveSample[0]);
+        Logger.recordOutput("CurrentTraj/Samples", samples);
+    }
+
     /** Logging config for the main robot. */
     public static void initForMainRobot() {
         if (System.getenv("test") != null) {

@@ -8,7 +8,7 @@ import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.simulation.VisionTargetSim;
-import robot.SharedData;
+import robot.misc.SharedData;
 import robot.vision.DataTypes.MLCamConsts;
 
 import java.util.Map;
@@ -58,7 +58,9 @@ public class SimCameraIOForObjects extends CameraIO {
                 sim.addVisionTargets(type, new VisionTargetSim(pose, model));
             }
         }
-        Tracer.trace("Simulation", () -> sim.update(SharedData.truePoseInSim));
+        if (SharedData.numSimulatedRobots <= 1) { // don't simulate vision if there are multiple robots
+            Tracer.trace("Simulation", () -> sim.update(SharedData.visionSimPose));
+        }
         super.refreshData(inputs);
     }
 }

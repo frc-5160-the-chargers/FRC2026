@@ -18,6 +18,7 @@ public class SimRollerHardware extends RollerHardware {
 
     @Override
     public void refreshData(RollerDataAutoLogged data) {
+        sim.update(0.02);
         data.radiansPerSec = sim.getAngularVelocityRadPerSec();
         data.motorStats[0] = MotorStats.from(sim);
     }

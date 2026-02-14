@@ -49,8 +49,8 @@
    "wheelRadius":{
     "dimension":"Length",
     "var":{
-     "exp":"2 in",
-     "val":0.0508
+     "exp":"1.9004 in",
+     "val":0.04827016
     }
    }
   },
@@ -91,7 +91,7 @@
   },
   "radius":{
    "exp":"wheelRadius",
-   "val":0.0508
+   "val":0.04827016
   },
   "vmax":{
    "exp":"6000 rpm",

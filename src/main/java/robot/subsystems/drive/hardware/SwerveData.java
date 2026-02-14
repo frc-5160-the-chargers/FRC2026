@@ -14,8 +14,8 @@ import org.littletonrobotics.junction.AutoLog;
 @AutoLog
 public class SwerveData {
     public OdometryFrame[] poseEstFrames = {};
-    public SwerveModuleState[] currentStates = {};
-    public SwerveModuleState[] desiredStates = {};
+    public SwerveModuleState[] currentStates = new SwerveModuleState[4];
+    public SwerveModuleState[] desiredStates = new SwerveModuleState[4];
     public ChassisSpeeds robotRelativeSpeeds = new ChassisSpeeds();
     public Pose2d pose = Pose2d.kZero; // Won't be replayed; do not directly use.
     public double timeOffsetSecs = 0.0; // Conversion factor from FPGA to Phoenix 6 timestamp.
@@ -23,7 +23,7 @@ public class SwerveData {
 
     /** Data used for estimating pose in replay mode. */
     public record OdometryFrame(
-        Rotation2d heading,
+        double headingRadians,
         double timestampSecs, // uses Phoenix 6 native timestamp instead of FPGA.
         SwerveModulePosition frontL,
         SwerveModulePosition frontR,
@@ -32,6 +32,10 @@ public class SwerveData {
     ) {
         public SwerveModulePosition[] positions() {
             return new SwerveModulePosition[] {frontL, frontR, backL, backR};
+        }
+
+        public Rotation2d heading() {
+            return Rotation2d.fromRadians(headingRadians);
         }
     }
 }

@@ -9,11 +9,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A utility class for logging commands - inspired by FRC 1683.
- * The "Flowchart" field should be dragged into the "discrete fields" section on AdvantageScope's line graph,
+ * A utility class for logging commands - inspired by FRC 1683. <br />
+ * - The "Flowchart" field should be dragged into the "discrete fields" section on AdvantageScope's line graph,
  * while the "InterruptMsgs" and "DuplicateNameMsgs" fields should be dragged into the console section
- * (click +, then "Console", then drag the field in).
- * Green commands are default commands, while yellow commands are non-default ones.
+ * (click +, then "Console", then drag the field in). <br />
+ * - Green commands are default commands, while yellow commands are non-default ones.
+ * - This class will log all scheduled commands. Commands that are in a sequence or parallel group
+ * (Commands.parallel, Commands.sequence, NonBlockingCmds.sequence) will not be logged; rather,
+ * use the {@link CmdLogger#logged} method to create a logged command.
  */
 public class CmdLogger {
     private static boolean hasStarted = false, logDupeNames = false;
@@ -28,8 +31,8 @@ public class CmdLogger {
 
     /**
      * Runs the logger. This must be run periodically, before CommandScheduler.getInstance.run().
-     * Note that commands that finish instantly don't appear in the flowchart;
-     * rather, see the RanAtLeastOnce field.
+     * Note that commands that finish instantly don't appear in the flowchart, but will appear
+     * in the FinishedAtLeastOnce field.
      */
     public static void periodic(boolean logDuplicateNames) {
         if (!hasStarted) {
@@ -52,14 +55,14 @@ public class CmdLogger {
     }
 
     /**
-     * Creates a new command that will be logged inside a command group.
-     * This is not necessary if you're using one of the NonBlockingCmds.
+     * Creates a new command that will log itself even if it begins
+     * inside a sequence or parallel group.
      */
-    public static Command logNestedCmd(Command cmd) {
+    public static Command logged(Command cmd) {
         return new WrapperCommand(cmd) {
             @Override
             public void initialize() {
-                register(cmd);
+                if (!isScheduled()) register(cmd);
                 super.initialize();
             }
 

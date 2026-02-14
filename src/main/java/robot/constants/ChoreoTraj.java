@@ -1,3 +1,4 @@
+
 package robot.constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,15 +28,15 @@ public record ChoreoTraj(
 	    "BorderLineTests",
 	    OptionalInt.empty(),
 	    4.35683,
-	    new Pose2d(3.08779, 5.70991, Rotation2d.fromRadians(0)),
+	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
 	    new Pose2d(0, 0, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NewPath = new ChoreoTraj(
 	    "NewPath",
 	    OptionalInt.empty(),
 	    4.97994,
-	    new Pose2d(3.17442, 3.63336, Rotation2d.fromRadians(0)),
-	    new Pose2d(7.49661, 2.12059, Rotation2d.fromRadians(0))
+	    new Pose2d(3.174, 3.633, Rotation2d.fromRadians(0)),
+	    new Pose2d(7.497, 2.121, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj ShortPath = new ChoreoTraj(
 	    "ShortPath",
@@ -48,8 +49,8 @@ public record ChoreoTraj(
 	    "SimplePath",
 	    OptionalInt.empty(),
 	    7.61439,
-	    new Pose2d(2.87727, 3.7144, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.54318, 5.94601, Rotation2d.fromRadians(0))
+	    new Pose2d(2.877, 3.714, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.543, 5.946, Rotation2d.fromRadians(0))
 	);
 
     /**

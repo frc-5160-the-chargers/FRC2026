@@ -22,8 +22,9 @@ def main():
             inst.setServerTeam(5160)
         inst.startClient4("PS5 Controller Rumble Client")
         print("NetworkTables client has started.")
-        left_rumble_sub = inst.getIntegerTopic("ControllerRumble/LeftRequest").subscribe(0)
-        right_rumble_sub = inst.getIntegerTopic("ControllerRumble/RightRequest").subscribe(0)
+        inst.getBooleanTopic("Rumble/Connected").publish().set(False)
+        left_rumble_sub = inst.getIntegerTopic("Rumble/Left").subscribe(0)
+        right_rumble_sub = inst.getIntegerTopic("Rumble/Right").subscribe(0)
         time.sleep(5)
         while True:
             controller.setLeftMotor(left_rumble_sub.get())

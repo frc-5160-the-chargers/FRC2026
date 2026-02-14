@@ -1,0 +1,23 @@
+package robot.misc;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+
+import java.util.Optional;
+
+/**
+ * Data(constants and global mutable state) shared across different components of the robot.
+ * Avoid accessing this class from a hardware/IO layer (as that behavior will not be replayed).
+ */
+public class SharedData {
+    // Mutable State
+    public static Pose2d visionSimPose = Pose2d.kZero;
+    public static int numSimulatedRobots = 0;
+    public static Optional<Rotation2d> rotOverride = Optional.empty();
+
+    /** Returns true when the current alliance is red. */
+    public static boolean redAlliance() {
+        return DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Red;
+    }
+}

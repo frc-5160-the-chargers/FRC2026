@@ -16,6 +16,7 @@ import robot.subsystems.common.PivotHardware.PivotSimConfig;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
+import static lib.commands.CmdLogger.logged;
 
 public class GroundIntake extends ChargerSubsystem {
     private final Tunable<Double>
@@ -37,8 +38,8 @@ public class GroundIntake extends ChargerSubsystem {
     public GroundIntake() {
         switch (RobotMode.get()) {
             case REAL -> {
-                pivotIO = new IntakePivotHardware();
-                rollerIO = new IntakeRollersHardware();
+                pivotIO = new NeoIntakePivot();
+                rollerIO = new VortexIntakeRollers();
             }
             case REPLAY -> {
                 pivotIO = new PivotHardware();
@@ -80,15 +81,17 @@ public class GroundIntake extends ChargerSubsystem {
     }
 
     public Command stowCmd() {
-        return setAngleCmd(stowPos::get)
+        var cmd = setAngleCmd(stowPos::get)
             .alongWith(Commands.run(() -> rollerIO.setVolts(0)))
             .withName("GroundIntakeStow");
+        return logged(cmd);
     }
 
     public Command intakeCmd() {
-        return setAngleCmd(intakePos::get)
+        var cmd = setAngleCmd(intakePos::get)
             .alongWith(Commands.run(() -> rollerIO.setVolts(intakeVolts.get())))
-            .withName("IntakePivotIntake");
+            .withName("GroundIntakeDeploy");
+        return logged(cmd);
     }
 
     @Override
