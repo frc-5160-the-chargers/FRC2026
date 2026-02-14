@@ -10,7 +10,6 @@ public class ClimberHardware {
     public static class ClimberData {
         public MotorStats motorStats = MotorStats.EMPTY;
         public double radians = 0.0;
-        public MotorStats motorStats = MotorStats.EMPTY;
     }
 
     public void refreshData(ClimberData data) {}

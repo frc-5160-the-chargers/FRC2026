@@ -2,17 +2,15 @@ package robot;
 
 import org.littletonrobotics.junction.LoggedRobot;
 
-import edu.wpi.first.wpilibj.PS5Controller;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.commands.CmdLogger;
 import robot.constants.LoggingConfig;
+import robot.misc.DriverController;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.TunerConstants;
-
-
 
 public class ControllerTesting extends LoggedRobot {
     static {
