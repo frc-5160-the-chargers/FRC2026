@@ -2,7 +2,7 @@ package robot.subsystems.drive.hardware;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -120,28 +120,32 @@ public class SwerveHardware {
     }
 
     private void initDashboardTuning(SwerveConfig config) {
+        // Front left, front right, back left, back right
         var driveGains = config.moduleConsts()[0].DriveMotorGains;
-        var steerGains = config.moduleConsts()[0].SteerMotorGains;
-        Tunable.of(name + "DriveMotor/KP", driveGains.kP)
-            .onChange(kP -> applyDriveGains(driveGains.withKP(kP)));
-        Tunable.of(name + "SteerMotor/KP", steerGains.kP)
-            .onChange(kP -> applySteerGains(steerGains.withKP(kP)));
-        Tunable.of(name + "SteerMotor/KD", steerGains.kD)
-            .onChange(kD -> applySteerGains(steerGains.withKD(kD)));
-        Tunable.of(name + "CoastMode", false)
-            .onChange(this::setCoastMode);
+        var steerGainsF = config.moduleConsts()[0].SteerMotorGains;
+        var steerGainsB = config.moduleConsts()[2].SteerMotorGains;
+        Tunable.of(name + "DriveMotor/KP", driveGains.kP).onChange(kP -> {
+            for (int i = 0; i < 4; i++) {
+                getDriveConfigurator(i).apply(driveGains.withKP(kP));
+            }
+        });
+        Tunable.of(name + "FrontSteerMotor/KP", steerGainsF.kP).onChange(kP -> {
+            getSteerConfigurator(0).apply(steerGainsF.withKP(kP));
+            getSteerConfigurator(1).apply(steerGainsF.withKP(kP));
+        });
+        Tunable.of(name + "BackSteerMotor/KP", steerGainsB.kP).onChange(kP -> {
+            getSteerConfigurator(2).apply(steerGainsB.withKP(kP));
+            getSteerConfigurator(3).apply(steerGainsB.withKP(kP));
+        });
+        Tunable.of(name + "CoastMode", false).onChange(this::setCoastMode);
     }
 
-    private void applySteerGains(Slot0Configs configs) {
-        for (var module: drivetrain.getModules()) {
-            module.getSteerMotor().getConfigurator().apply(configs, 0.2);
-        }
+    private TalonFXConfigurator getSteerConfigurator(int moduleIndex) {
+        return drivetrain.getModule(moduleIndex).getSteerMotor().getConfigurator();
     }
 
-    private void applyDriveGains(Slot0Configs configs) {
-        for (var module: drivetrain.getModules()) {
-            module.getDriveMotor().getConfigurator().apply(configs, 0.2);
-        }
+    private TalonFXConfigurator getDriveConfigurator(int moduleIndex) {
+        return drivetrain.getModule(moduleIndex).getDriveMotor().getConfigurator();
     }
 
     private void initDebugSignals() {
