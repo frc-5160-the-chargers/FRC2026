@@ -1,5 +1,9 @@
 """
+A background script that listens to messages broadcasted over networktables
+to activate rumble on a ps5 controller connected to the driver station laptop.
 
+This is a workaround for the driver station application not supporting PS5 controller rumble
+natively. There is some added latency that should be considered, however.
 """
 import sys
 import time
