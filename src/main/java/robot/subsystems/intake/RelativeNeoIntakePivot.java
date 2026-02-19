@@ -1,7 +1,7 @@
 package robot.subsystems.intake;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.*;
 import com.revrobotics.spark.config.SparkFlexConfig;
@@ -10,24 +10,27 @@ import lib.hardware.MotorStats;
 import robot.subsystems.common.PivotDataAutoLogged;
 import robot.subsystems.common.PivotHardware;
 
-/** The hardware powering the intake pivot on the real robot. */
-public class NeoIntakePivot extends PivotHardware {
+/**
+ * The hardware powering the intake pivot on the real robot,
+ * using the neo's onboard relative encoder.
+ */
+public class RelativeNeoIntakePivot extends PivotHardware {
     private final SparkMax motor = new SparkMax(1, SparkLowLevel.MotorType.kBrushless);
     private final SparkFlexConfig config = new SparkFlexConfig();
     private final SparkClosedLoopController pid = motor.getClosedLoopController();
-    private final AbsoluteEncoder encoder = motor.getAbsoluteEncoder();
+    private final RelativeEncoder encoder = motor.getEncoder();
 
-    public NeoIntakePivot() {
+    public RelativeNeoIntakePivot() {
         config.encoder
             .positionConversionFactor(1 / GroundIntake.PIVOT_REDUCTION)
             .velocityConversionFactor(1 / GroundIntake.PIVOT_REDUCTION);
-        config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     @Override
     public void refreshData(PivotDataAutoLogged data) {
         data.radians = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
+        data.radiansPerSec = encoder.getVelocity() * Convert.RPM_TO_RADIANS_PER_SECOND;
         data.motorStats = MotorStats.from(motor);
     }
 
@@ -57,4 +60,10 @@ public class NeoIntakePivot extends PivotHardware {
         config.smartCurrentLimit((int) amps);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
+
+    @Override
+    public void zeroEncoder(double radians) {
+        encoder.setPosition(radians * Convert.RADIANS_TO_ROTATIONS);
+    }
 }
+

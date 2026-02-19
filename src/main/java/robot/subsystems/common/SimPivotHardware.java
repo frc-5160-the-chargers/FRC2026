@@ -8,13 +8,10 @@ import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Meters;
 
 public class SimPivotHardware extends PivotHardware {
-    private final PivotSimConfig config;
     private final SingleJointedArmSim sim;
     private final PIDController pidController = new PIDController(0, 0, 0);
-    private double currentLimit = 300.0;
 
     public SimPivotHardware(PivotSimConfig config) {
-        this.config = config;
         sim = new SingleJointedArmSim(
             config.motorKind(), config.reduction(),
             config.moi().in(KilogramSquareMeters),
@@ -49,12 +46,7 @@ public class SimPivotHardware extends PivotHardware {
     }
 
     @Override
-    public void setCurrentLimit(double amps) {
-        this.currentLimit = amps;
-    }
-
-    @Override
-    public void zeroEncoder() {
-        sim.setState(0, 0);
+    public void zeroEncoder(double radians) {
+        sim.setState(radians, 0);
     }
 }

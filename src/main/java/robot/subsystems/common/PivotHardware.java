@@ -36,5 +36,5 @@ public class PivotHardware {
 
     public void setCurrentLimit(double amps) {}
 
-    public void zeroEncoder() {}
+    public void zeroEncoder(double radians) {}
 }

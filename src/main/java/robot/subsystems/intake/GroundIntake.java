@@ -1,5 +1,6 @@
 package robot.subsystems.intake;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
@@ -42,7 +43,9 @@ public class GroundIntake extends ChargerSubsystem {
         pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0),
         pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), 1.48),
         pivotKp = Tunable.of(key("Pivot/Gains/KP"), 10.0),
-        pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40);
+        pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
+        pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
+        pivotCurrentZeroLimit = Tunable.of(key("Pivot/CurrentZeroing/Limit (amps)"), 20.0);
     private final Tunable<Angle>
         stowPos = Tunable.of(key("Positions/Stow"), Radians.of(-100)),
         intakePos = Tunable.of(key("Positions/Intake"), Radians.of(0));
@@ -58,7 +61,7 @@ public class GroundIntake extends ChargerSubsystem {
     public GroundIntake() {
         switch (RobotMode.get()) {
             case REAL -> {
-                pivotIO = new NeoIntakePivot();
+                pivotIO = new AbsoluteNeoIntakePivot();
                 rollerIO = new VortexIntakeRollers();
             }
             case REPLAY -> {
@@ -127,6 +130,21 @@ public class GroundIntake extends ChargerSubsystem {
     public Command manualPivotCmd(DoubleSupplier volts) {
         var cmd = this.run(() -> pivotIO.setVolts(volts.getAsDouble()));
         return logged(cmd, "ManualPivot");
+    }
+
+    public Command currentZeroCmd(boolean resetEncoder) {
+        var debouncer = new Debouncer(0.2);
+        var cmd = this.run(() -> pivotIO.setVolts(pivotCurrentZeroVolts.get()))
+            .until(() -> debouncer.calculate(hardStopHit()))
+            .finallyDo(wasInterrupted -> {
+                pivotIO.setVolts(0);
+                if (resetEncoder && !wasInterrupted) pivotIO.zeroEncoder(0);
+            });
+        return logged(cmd, "PivotCurrentZero");
+    }
+
+    private boolean hardStopHit() {
+        return pivotInputs.motorStats.appliedAmps() > pivotCurrentZeroLimit.get();
     }
 
     @Override
