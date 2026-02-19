@@ -10,3 +10,6 @@ To the left of the run button, there should be a dropdown. From there,
 you can run "Simulate Code", "Deploy Roborio", and "Replay Log File"
 
 ### How to Run: WPILib VScode
+Press Ctrl+Shift+P, then search for "simulate java" and "deploy robot code"
+for running code in sim and the real robot, respectively. For replay, search
+for "run tasks", select it, and click the appropriate replay task.

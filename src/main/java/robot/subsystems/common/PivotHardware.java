@@ -21,7 +21,6 @@ public class PivotHardware {
     public record PivotSimConfig(
         double reduction,
         MomentOfInertia moi,
-        double currentLimit,
         Distance pivotLength,
         DCMotor motorKind,
         boolean simulateGravity
@@ -34,6 +33,8 @@ public class PivotHardware {
     public void setVolts(double volts) {}
 
     public void setPDGains(double p, double d) {}
+
+    public void setCurrentLimit(double amps) {}
 
     public void zeroEncoder() {}
 }

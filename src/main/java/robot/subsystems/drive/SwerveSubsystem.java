@@ -35,7 +35,6 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.math.MathUtil.angleModulus;
 import static edu.wpi.first.units.Units.*;
-import static lib.commands.CmdLogger.logged;
 
 /**
  * A subsystem that controls the driving of the robot. In each corner of the robot, there is
@@ -101,7 +100,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
             io.setControl(request);
             Logger.recordOutput(key("Request"), request.getClass().getSimpleName());
         });
-        return logged(cmd.withName("SwerveDriveCmd"));
+        return logged(cmd, "Drive");
     }
 
     private SwerveModulePosition[] getModPositions() {
@@ -201,9 +200,8 @@ public class SwerveSubsystem extends ChargerSubsystem {
         })
             .until(() -> state.distToGoal < alignTolerance.get())
             .beforeStarting(() -> state.setpoint = new LinearPath.State(pose, getFieldSpeeds()))
-            .finallyDo(() -> io.setControl(new SwerveRequest.SwerveDriveBrake()))
-            .withName("AutoAlignCmd");
-        return logged(cmd);
+            .finallyDo(() -> io.setControl(new SwerveRequest.SwerveDriveBrake()));
+        return logged(cmd, "AutoAlign");
     }
 
     /** Adds a vision measurement to this drivetrain's pose estimator. */

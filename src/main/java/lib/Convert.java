@@ -1,7 +1,11 @@
 package lib;
 
+import edu.wpi.first.units.MomentOfInertiaUnit;
+
+import static edu.wpi.first.units.Units.*;
+
 /**
- * A compilation of useful unit conversion factors.
+ * A compilation of useful unit conversion factors and custom units.
  * A couple of notes:
  * 1. Positions fetched from motors are always in rotations.
  * 2. Velocities for CTRE motors are in rotations/sec, while for REV motors,
@@ -16,4 +20,10 @@ public class Convert {
     public static final double RPM_TO_RADIANS_PER_SECOND = 2 * Math.PI / 60.0;
     public static final double RADIANS_TO_DEGREES = 180.0 / Math.PI;
     public static final double RADIANS_TO_ROTATIONS = 1.0 / (2 * Math.PI);
+
+    public static class CustomUnits {
+        // This is so cursed bruh
+        public static final MomentOfInertiaUnit PoundSquareInches =
+            Pounds.mult(InchesPerSecond).mult(Inches).per(RadiansPerSecond);
+    }
 }

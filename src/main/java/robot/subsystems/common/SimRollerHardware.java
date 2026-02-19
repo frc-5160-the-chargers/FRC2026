@@ -2,17 +2,14 @@ package robot.subsystems.common;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import lib.hardware.MotorStats;
-
-import static edu.wpi.first.units.Units.KilogramSquareMeters;
 
 public class SimRollerHardware extends RollerHardware {
     private final DCMotorSim sim;
 
-    public SimRollerHardware(DCMotor motorKind, MomentOfInertia moi, double gearing) {
-        var system = LinearSystemId.createDCMotorSystem(motorKind, moi.in(KilogramSquareMeters), gearing);
+    public SimRollerHardware(DCMotor motorKind, double gearing) {
+        var system = LinearSystemId.createDCMotorSystem(motorKind, 0.001, gearing);
         sim = new DCMotorSim(system, motorKind);
     }
 
@@ -20,7 +17,7 @@ public class SimRollerHardware extends RollerHardware {
     public void refreshData(RollerDataAutoLogged data) {
         sim.update(0.02);
         data.radiansPerSec = sim.getAngularVelocityRadPerSec();
-        data.motorStats[0] = MotorStats.from(sim);
+        data.motorStats = new MotorStats[] {MotorStats.from(sim)};
     }
 
     @Override

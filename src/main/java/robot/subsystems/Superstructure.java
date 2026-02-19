@@ -2,11 +2,15 @@ package robot.subsystems;
 
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.commands.NonBlockingCmds;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import robot.constants.FieldConstants;
 import robot.misc.SharedData;
 import robot.subsystems.climber.Climber;
@@ -25,12 +29,21 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static choreo.util.ChoreoAllianceFlipUtil.flip;
+import static edu.wpi.first.units.Units.Meters;
 import static lib.commands.CmdLogger.logged;
 import static robot.subsystems.shooter.ShooterConsts.NULL_SHOOTER_SETPOINT;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class Superstructure {
+    // Constructor Parameters
+    private final SwerveSubsystem drive;
+    private final GroundIntake groundIntake;
+    private final Climber climber;
+    private final Shooter shooter;
+    private final Serializer serializer;
+
+    // Constants
     private final List<Rectangle2d>
         hubNoShootZones = List.of(
             new Rectangle2d(new Translation2d(3.8, 8), new Translation2d(5.3, 0))
@@ -47,13 +60,17 @@ public class Superstructure {
         redTopFerry = flip(blueTopFerry),
         redBottomFerry = flip(blueBottomFerry);
 
+    // Persistent State
     @AutoLogOutput private ShooterSetpoint shotSetpoint = NULL_SHOOTER_SETPOINT;
 
-    private final SwerveSubsystem drive;
-    private final GroundIntake groundIntake;
-    private final Climber climber;
-    private final Shooter shooter;
-    private final Serializer serializer;
+    @AutoLogOutput
+    private final LoggedMechanism2d mainViz = new LoggedMechanism2d(3.0, 3.0);
+    private final LoggedMechanismLigament2d groundIntakeViz =
+        mainViz.getRoot("GroundIntake", 2.0, 0.0)
+            .append(new LoggedMechanismLigament2d(
+                "Pivot", GroundIntake.PIVOT_LENGTH.in(Meters),
+                0, 0.2, new Color8Bit(Color.kRed)
+            ));
 
     private Command shootCmd(
         ShotMap shotMap,
@@ -87,7 +104,7 @@ public class Superstructure {
             hubShotMap, hubNoShootZones,
             () -> SharedData.redAlliance() ? redHub : blueHub
         );
-        return logged(cmd.withName("ShootAtHub"));
+        return logged(cmd, "ShootAtHub");
     }
 
     public Command ferryCmd() {
@@ -99,6 +116,6 @@ public class Superstructure {
                 return drive.getPose().getY() > 4 ? topLoc : bottomLoc;
             }
         );
-        return logged(cmd.withName("FerryShoot"));
+        return logged(cmd, "FerryShoot");
     }
 }

@@ -17,7 +17,6 @@ import robot.subsystems.drive.SwerveConfig;
 
 import java.util.Optional;
 
-import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -37,7 +36,6 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
     private final FieldCentricFacingAngle facingHubSwerveReq = new FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.Velocity);
     private final double maxVelMetersPerSec, maxVelRadPerSec;
-
     @AutoLogOutput private double forward = 0, strafe = 0, rotation = 0;
 
     public DriverController(int port, SwerveConfig config) {
@@ -48,7 +46,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
     }
 
     @AutoLogOutput
-    private double speedReductionScalar() {
+    private double swerveSpeedModifier() {
         double output = getL2Axis();
         output = MathUtil.applyDeadband(output, 0.2, 1);
         output = (2 - output) / 2;
@@ -60,7 +58,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
     }
 
     public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle) {
-        double scalar = speedReductionScalar();
+        double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
         rotation = -getRightX() * scalar;

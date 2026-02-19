@@ -1,6 +1,5 @@
 package robot.subsystems.common;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import lib.hardware.MotorStats;
@@ -12,6 +11,7 @@ public class SimPivotHardware extends PivotHardware {
     private final PivotSimConfig config;
     private final SingleJointedArmSim sim;
     private final PIDController pidController = new PIDController(0, 0, 0);
+    private double currentLimit = 300.0;
 
     public SimPivotHardware(PivotSimConfig config) {
         this.config = config;
@@ -19,7 +19,7 @@ public class SimPivotHardware extends PivotHardware {
             config.motorKind(), config.reduction(),
             config.moi().in(KilogramSquareMeters),
             config.pivotLength().in(Meters),
-            0, 2 * Math.PI,
+            -2 * Math.PI, 2 * Math.PI,
             config.simulateGravity(), 0
         );
     }
@@ -45,12 +45,12 @@ public class SimPivotHardware extends PivotHardware {
 
     @Override
     public void setVolts(double volts) {
-        // applies a current limit
-        var rawVelocity = sim.getAngleRads() * config.reduction();
-        double torque = config.motorKind().getTorque(config.currentLimit());
-        double minVolts = config.motorKind().getVoltage(-torque, rawVelocity);
-        double maxVolts = config.motorKind().getVoltage(torque, rawVelocity);
-        sim.setInputVoltage(MathUtil.clamp(volts, minVolts, maxVolts));
+        sim.setInputVoltage(volts);
+    }
+
+    @Override
+    public void setCurrentLimit(double amps) {
+        this.currentLimit = amps;
     }
 
     @Override

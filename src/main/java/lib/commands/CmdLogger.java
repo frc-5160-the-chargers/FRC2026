@@ -58,18 +58,18 @@ public class CmdLogger {
      * Creates a new command that will log itself even if it begins
      * inside a sequence or parallel group.
      */
-    public static Command logged(Command cmd) {
-        return new WrapperCommand(cmd) {
+    public static Command logged(Command cmd, String cmdName) {
+        return new WrapperCommand(cmd.withName(cmdName)) {
             @Override
             public void initialize() {
-                if (!isScheduled()) register(cmd);
+                if (!isScheduled()) register(this);
                 super.initialize();
             }
 
             @Override
             public void end(boolean interrupted) {
                 super.end(interrupted);
-                unregister(cmd);
+                unregister(this);
             }
         };
     }
