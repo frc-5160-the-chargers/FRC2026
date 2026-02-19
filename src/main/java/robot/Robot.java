@@ -56,8 +56,10 @@ public class Robot extends LoggedRobot {
         Tunable.setEnabled(true);
 
         groundIntake.setDefaultCommand(groundIntake.manualPivotCmd(manualController::getManualPivotVolts));
-//        manualController.x()
-//            .whileTrue(Commands.waitSeconds(2).andThen(groundIntake.intakeCmd()));
+        manualController.x()
+            .whileTrue(Commands.waitSeconds(2).andThen(groundIntake.intakeCmd()));
+        manualController.y()
+            .whileTrue(groundIntake.manualPivotCmd(pivotDebugVolts::get));
         if (RobotMode.isSim()) {
             RobotModeTriggers.test().onTrue(groundIntake.intakeCmd());
         }
