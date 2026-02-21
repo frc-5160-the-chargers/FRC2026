@@ -13,7 +13,7 @@ import robot.subsystems.common.RollerHardware;
 
 /** The hardware powering the intake rollers on the real robot. */
 public class VortexIntakeRollers extends RollerHardware {
-    private final SparkMax motor = new SparkMax(1, SparkLowLevel.MotorType.kBrushless);
+    private final SparkMax motor = new SparkMax(7, SparkLowLevel.MotorType.kBrushless);
     private final SparkFlexConfig config = new SparkFlexConfig();
     private final RelativeEncoder encoder = motor.getEncoder();
 

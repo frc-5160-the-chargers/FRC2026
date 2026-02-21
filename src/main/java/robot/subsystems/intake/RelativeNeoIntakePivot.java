@@ -15,7 +15,7 @@ import robot.subsystems.common.PivotHardware;
  * using the neo's onboard relative encoder.
  */
 public class RelativeNeoIntakePivot extends PivotHardware {
-    private final SparkMax motor = new SparkMax(1, SparkLowLevel.MotorType.kBrushless);
+    private final SparkMax motor = new SparkMax(15, SparkLowLevel.MotorType.kBrushless);
     private final SparkFlexConfig config = new SparkFlexConfig();
     private final SparkClosedLoopController pid = motor.getClosedLoopController();
     private final RelativeEncoder encoder = motor.getEncoder();
