@@ -127,9 +127,9 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "Idle");
     }
 
-    public Command manualPivotCmd(DoubleSupplier volts) {
+    public Command manualPivotCmd(boolean gravityCompensate, DoubleSupplier volts) {
         var cmd = this.run(() -> pivotIO.setVolts(volts.getAsDouble()));
-        return logged(cmd, "ManualPivot");
+        return logged(cmd, "ManualPivot(gravityCompensate=" + gravityCompensate + ")");
     }
 
     public Command currentZeroCmd(boolean resetEncoder) {

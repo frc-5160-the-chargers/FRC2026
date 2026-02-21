@@ -3,11 +3,13 @@ package robot.subsystems.shooter.math;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.wpilibj.Alert;
 import robot.subsystems.shooter.ShooterConsts.ShotMapResult;
 
 import java.util.Map;
 import java.util.TreeMap;
 
+import static edu.wpi.first.wpilibj.Alert.AlertType.kError;
 import static robot.subsystems.shooter.ShooterConsts.SPEED_TOLERANCE_MPS;
 
 public class ShotMap {
@@ -31,7 +33,11 @@ public class ShotMap {
      * @param entries The velocity to hood angle mappings.
      */
     @SafeVarargs
-    public final ShotMap put(double distanceMeters, Map.Entry<Double, ShotMapResult>... entries) {
+    public final void put(double distanceMeters, Map.Entry<Double, ShotMapResult>... entries) {
+        if (entries.length == 0) {
+            new Alert("ShotMap#put called with zero entries", kError).set(true);
+            return;
+        }
         var speedToAngleMap = new InterpolatingTreeMap<>(MathUtil::inverseInterpolate, ShotMap::interpolateShot);
         for (var entry : entries) {
             speedToAngleMap.put(entry.getKey(), entry.getValue());
@@ -39,7 +45,6 @@ public class ShotMap {
         resultsMap.put(distanceMeters, speedToAngleMap);
         distanceToMinVelocity.put(distanceMeters, entries[0].getKey());
         distanceToMaxVelocity.put(distanceMeters, entries[entries.length - 1].getKey());
-        return this;
     }
 
     /**

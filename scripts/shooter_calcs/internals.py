@@ -15,9 +15,11 @@ g = 9.81  # m/s²
 max_shooter_velocity = 14.5  # m/s
 ball_mass = 0.5 / 2.205  # kg
 ball_diameter = 5.91 * 0.0254  # m
+hub_diameter = 47 * 0.0254 # m; The hub is the target we are scoring in.
 rho = 1.204  # Density of air, kg/m³
 C_D = 0.4 # Coefficient of drag, unitless
 min_pitch = np.deg2rad(40)
+dont_hit_hub_constraint_wiggle_room = 0.05 # m
 
 # Solve settings
 N = 40 # The number of iterations per solve
@@ -118,6 +120,16 @@ def setup_problem(distance: float, target_height: float):
     problem.subject_to(autodiff.hypot(v_x[-1], v_y[-1]) <= v_z[-1] * -5)
     # Pitch must be higher than min pitch
     problem.subject_to(find_pitch(v0_wrt_shooter) >= min_pitch)
+    # Make sure that the ball doesn't hit the
+    ball_radius = ball_diameter / 2
+    hub_radius = hub_diameter / 2
+    sigma = dont_hit_hub_constraint_wiggle_room
+    for k in range(N):
+        dx = X[0, k] - target_wrt_field[0, 0]
+        dy = X[1, k] - target_wrt_field[1, 0]
+        dz = X[2, k] - (target_wrt_field[2, 0] + ball_radius + sigma)
+        radius_outside = autodiff.hypot(dx, dy) - (hub_radius + ball_radius + sigma)
+        problem.subject_to(autodiff.max(autodiff.max(radius_outside, dz), -v_z[k]) >= 0)
 
     return problem, shooter_wrt_field, target_wrt_field, v0_wrt_shooter, T, X
 

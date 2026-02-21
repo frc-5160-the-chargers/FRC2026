@@ -20,6 +20,8 @@ public class Convert {
     public static final double RPM_TO_RADIANS_PER_SECOND = 2 * Math.PI / 60.0;
     public static final double RADIANS_TO_DEGREES = 180.0 / Math.PI;
     public static final double RADIANS_TO_ROTATIONS = 1.0 / (2 * Math.PI);
+    public static final double POUNDS_TO_KG = 0.453592;
+    public static final double KG_TO_POUNDS = 1 / POUNDS_TO_KG;
 
     public static class CustomUnits {
         // This is so cursed bruh

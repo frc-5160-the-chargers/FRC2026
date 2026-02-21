@@ -55,11 +55,11 @@ public class Robot extends LoggedRobot {
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
         Tunable.setEnabled(true);
 
-        groundIntake.setDefaultCommand(groundIntake.manualPivotCmd(manualController::getManualPivotVolts));
+        groundIntake.setDefaultCommand(groundIntake.manualPivotCmd(true, manualController::getManualPivotVolts));
         manualController.x()
             .whileTrue(Commands.waitSeconds(2).andThen(groundIntake.intakeCmd()));
         manualController.y()
-            .whileTrue(groundIntake.manualPivotCmd(pivotDebugVolts::get));
+            .whileTrue(groundIntake.manualPivotCmd(false, pivotDebugVolts::get));
         if (RobotMode.isSim()) {
             RobotModeTriggers.test().onTrue(groundIntake.intakeCmd());
         }
