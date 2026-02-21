@@ -54,8 +54,8 @@ public class Robot extends LoggedRobot {
         controller.touchpad().multiPress(2, 0.3)
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
         controller.triangle().whileTrue(
-            groundIntake
-        )
+            groundIntake.manualRollers(() -> 0.2)
+        );
         Tunable.setEnabled(true);
 
         groundIntake.setDefaultCommand(groundIntake.manualPivotCmd(true, manualController::getManualPivotVolts));
