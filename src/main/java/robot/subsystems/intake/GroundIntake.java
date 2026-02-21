@@ -84,6 +84,11 @@ public class GroundIntake extends ChargerSubsystem {
         rollerCurrentLimit.onChange(this::applyConfigs);
     }
 
+    public Command manualRollers(DoubleSupplier output) {
+        var cmd = this.run(() -> rollerIO.setVolts(output.getAsDouble()));
+        return logged(cmd, "ManualRollers");
+    }
+
     private void applyConfigs() {
         var constraints = new TrapezoidProfile.Constraints(
             pivotMaxVel.get(), pivotMaxAccel.get()
