@@ -17,7 +17,6 @@ import static lib.Convert.CustomUnits.PoundSquareInches;
 public class ShooterConsts {
     /** The yaw, pitch, and shooter speed for launched balls to reach the target. */
     public record ShooterSetpoint(
-        boolean valid,
         Rotation2d yaw,
         Rotation2d pitch,
         AngularVelocity targetVelocity
@@ -27,7 +26,7 @@ public class ShooterConsts {
     public record ShotMapResult(double pitchRad, double airTimeSecs) {}
 
     public static final ShooterSetpoint NULL_SHOOTER_SETPOINT =
-        new ShooterSetpoint(true, Rotation2d.kZero, Rotation2d.kZero, RadiansPerSecond.zero());
+        new ShooterSetpoint(Rotation2d.kZero, Rotation2d.kZero, RadiansPerSecond.zero());
 
     static final double HOOD_REDUCTION = 1.0; // TODO
     static final PivotHardware.PivotSimConfig HOOD_SIM_CFG = new PivotHardware.PivotSimConfig(
@@ -42,7 +41,8 @@ public class ShooterConsts {
     public static final Transform2d ROBOT_TO_SHOOTER = new Transform2d(0.0, 0.0, Rotation2d.kZero);
     public static final Tunable<Double>
         DRAG_COMPENSATION = Tunable.of("Shooter/Drag Compensations(secs^-1)", 0.2),
-        LOOKAHEAD_SECS = Tunable.of("Shooter/Lookahead time(secs)", 0);
+        LOOKAHEAD_SECS = Tunable.of("Shooter/Lookahead time(secs)", 0),
+        NEWTONS_METHOD_ITERATIONS = Tunable.of("Shooter/Newtons Method Iterations", 10);
     // Because of energy loss, the linear velocity of the ball isn't exactly
     // omega * r; so, we compensate for that with a lerp table.
     public static final TunableLerpTable ANGULAR_TO_LINEAR_VEL =

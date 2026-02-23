@@ -29,7 +29,7 @@ public class NeoShooterHood extends PivotHardware {
 
     @Override
     public void refreshData(PivotDataAutoLogged data) {
-        data.radians = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
+        data.positionRad = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
         data.motorStats = MotorStats.from(motor);
     }
 

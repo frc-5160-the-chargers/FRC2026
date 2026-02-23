@@ -4,6 +4,7 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.*;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import lib.Convert;
 import lib.hardware.MotorStats;
@@ -24,13 +25,14 @@ public class RelativeNeoIntakePivot extends PivotHardware {
         config.encoder
             .positionConversionFactor(1 / GroundIntake.PIVOT_REDUCTION)
             .velocityConversionFactor(1 / GroundIntake.PIVOT_REDUCTION);
+        config.idleMode(SparkBaseConfig.IdleMode.kBrake);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     @Override
     public void refreshData(PivotDataAutoLogged data) {
-        data.radians = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
-        data.radiansPerSec = encoder.getVelocity() * Convert.RPM_TO_RADIANS_PER_SECOND;
+        data.positionRad = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
+        data.velocityRadPerSec = encoder.getVelocity() * Convert.RPM_TO_RADIANS_PER_SECOND;
         data.motorStats = MotorStats.from(motor);
     }
 

@@ -2,8 +2,6 @@ package robot.constants;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
-import com.ctre.phoenix6.SignalLogger;
-import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -48,9 +46,6 @@ public class LoggingConfig {
             Logger.addDataReceiver(
                 logToUsbDrive ? new WPILOGWriter() : new WPILOGWriter("/home/lvuser/logs")
             );
-            // Disable REV and CTRE logging because we don't really use them
-            SignalLogger.enableAutoLogging(false);
-            StatusLogger.disableAutoLogging();
             Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
             Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
             Logger.recordMetadata("Timestamp", BuildConstants.BUILD_DATE);

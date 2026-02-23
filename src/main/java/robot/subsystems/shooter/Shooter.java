@@ -71,7 +71,7 @@ public class Shooter extends ChargerSubsystem {
 
     /** Modifies the shooter's setpoint. */
     public void setTarget(ShooterSetpoint target) {
-        if (!target.valid()) return;
+//        if (!target.valid()) return;
         flywheelIO.setVelocity(target.targetVelocity());
         var hoodGoal = new TrapezoidProfile.State(target.pitch().getRadians(), 0);
         hoodSetpoint = hoodProfile.calculate(0.02, hoodSetpoint, hoodGoal);

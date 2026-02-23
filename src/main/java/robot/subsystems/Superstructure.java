@@ -78,10 +78,10 @@ public class Superstructure {
         Supplier<Translation2d> target
     ) {
         var waitForShot = Commands.waitUntil(() -> {
-            if (!shotSetpoint.valid()) return false;
-            for (var zone: noShootZones) {
-                if (zone.contains(drive.getPose().getTranslation())) return false;
-            }
+//            if (!shotSetpoint.valid()) return false;
+//            for (var zone: noShootZones) {
+//                if (zone.contains(drive.getPose().getTranslation())) return false;
+//            }
             return true;
         });
         var runSerializer = NonBlockingCmds.sequence(

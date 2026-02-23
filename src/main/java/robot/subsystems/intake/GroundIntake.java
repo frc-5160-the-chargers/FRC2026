@@ -101,12 +101,12 @@ public class GroundIntake extends ChargerSubsystem {
 
     private Command setAngleCmd(Supplier<Angle> target) {
         var goal = new TrapezoidProfile.State(0, 0);
-        return this.runOnce(() -> setpoint = new TrapezoidProfile.State(pivotInputs.radians, pivotInputs.radiansPerSec))
+        return this.runOnce(() -> setpoint = new TrapezoidProfile.State(pivotInputs.positionRad, pivotInputs.velocityRadPerSec))
             .andThen(
                 this.run(() -> {
                     goal.position = target.get().in(Radians);
                     setpoint = motionProfile.calculate(0.02, setpoint, goal);
-                    double ff = pivotKg.get() * Math.cos(pivotInputs.radians); // pivotInputs.radians must be 0 degrees when horizontal.
+                    double ff = pivotKg.get() * Math.cos(pivotInputs.positionRad); // pivotInputs.radians must be 0 degrees when horizontal.
                     ff += Math.signum(setpoint.velocity) * pivotKs.get();
                     ff += PIVOT_KV * setpoint.velocity;
                     Logger.recordOutput(key("PivotFF"), ff);

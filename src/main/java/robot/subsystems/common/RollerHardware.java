@@ -9,7 +9,7 @@ import org.littletonrobotics.junction.AutoLog;
 public class RollerHardware {
     @AutoLog
     static class RollerData {
-        public double radiansPerSec = 0;
+        public double velocityRadPerSec = 0;
         public MotorStats[] motorStats = {MotorStats.EMPTY};
     }
 

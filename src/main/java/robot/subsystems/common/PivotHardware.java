@@ -13,7 +13,7 @@ public class PivotHardware {
     /** Data read from a pivoting mechanism every 0.02 secs. */
     @AutoLog
     static class PivotData {
-        public double radians = 0, radiansPerSec = 0;
+        public double positionRad = 0, velocityRadPerSec = 0;
         public MotorStats motorStats = MotorStats.EMPTY;
     }
 

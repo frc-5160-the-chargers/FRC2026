@@ -29,8 +29,8 @@ public class SimPivotHardware extends PivotHardware {
     @Override
     public void refreshData(PivotDataAutoLogged data) {
         sim.update(0.02);
-        data.radians = sim.getAngleRads();
-        data.radiansPerSec = sim.getVelocityRadPerSec();
+        data.positionRad = sim.getAngleRads();
+        data.velocityRadPerSec = sim.getVelocityRadPerSec();
         data.motorStats = MotorStats.from(sim);
     }
 

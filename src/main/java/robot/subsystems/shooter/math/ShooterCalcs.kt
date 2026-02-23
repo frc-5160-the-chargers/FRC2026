@@ -6,18 +6,23 @@ import edu.wpi.first.math.Vector
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Pose3d
 import edu.wpi.first.math.geometry.Rotation2d
+import edu.wpi.first.math.geometry.Transform2d
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.math.geometry.Twist2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.numbers.N3
 import edu.wpi.first.math.numbers.N6
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.AngularVelocity
 import lib.Convert
+import org.littletonrobotics.junction.Logger
 import robot.subsystems.shooter.ShooterConsts.*
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+// We use the Translation2d class to represent a velocity vector for calculation simplicity.
+typealias Velocity2d = Translation2d
 
 fun computeSetpoint(
     target: Translation2d,
@@ -26,33 +31,56 @@ fun computeSetpoint(
     fieldCentricVel: ChassisSpeeds,
     currentShooterVel: AngularVelocity
 ): ShooterSetpoint {
-    val fieldOriginToShooter = (robotPose + ROBOT_TO_SHOOTER).translation
-    var shooterToTarget = target - fieldOriginToShooter
-
+    val numIterations = NEWTONS_METHOD_ITERATIONS.get().toInt()
+    val iterations = Array(numIterations + 1) { Pose2d.kZero }
+    val dragComp = DRAG_COMPENSATION.get()
+    val lookaheadSecs = LOOKAHEAD_SECS.get()
+    val vx = fieldCentricVel.vxMetersPerSecond
+    val vy = fieldCentricVel.vyMetersPerSecond
     val omega = fieldCentricVel.omegaRadiansPerSecond
-    val shooterVx = fieldCentricVel.vxMetersPerSecond + omega * ROBOT_TO_SHOOTER.x
-    val shooterVy = fieldCentricVel.vyMetersPerSecond - omega * ROBOT_TO_SHOOTER.y
-    val nextDesiredVel = ANGULAR_TO_LINEAR_VEL.get(currentShooterVel.`in`(RadiansPerSecond))
-    val finalDesiredVel = shotMap.maxVelocityAt(shooterToTarget.norm)
-    val shotValid = shotMap.canShoot(shooterToTarget.norm, nextDesiredVel)
 
-    lateinit var solve: ShotMapResult
-    repeat(10) {
-        solve = shotMap.get(shooterToTarget.norm, nextDesiredVel)
-        val dragComp = DRAG_COMPENSATION.get()
-        val timeCompensation = LOOKAHEAD_SECS.get() +
-            (1 - exp(-solve.airTimeSecs * dragComp)) / dragComp
-        shooterToTarget += Translation2d(shooterVx * timeCompensation, shooterVy * timeCompensation)
+    val lookaheadComp = Transform2d(
+        vx * lookaheadSecs,
+        vy * lookaheadSecs,
+        Rotation2d.fromRadians(omega * lookaheadSecs)
+    )
+    val fieldOriginToShooter = (robotPose + lookaheadComp + ROBOT_TO_SHOOTER).translation
+    val shooterToTarget = target - fieldOriginToShooter
+    iterations[0] = Pose2d(fieldOriginToShooter, shooterToTarget.angle)
+    val shooterVel = Velocity2d(
+        vx + omega * ROBOT_TO_SHOOTER.x,
+        vy - omega * ROBOT_TO_SHOOTER.y
+    )
+    val desiredVel = ANGULAR_TO_LINEAR_VEL.get(currentShooterVel.`in`(RadiansPerSecond))
+
+    var airTime = shotMap.get(shooterToTarget.norm, desiredVel).airTimeSecs
+    repeat(numIterations) { i ->
+        val a = (1 - exp(dragComp * airTime)) / dragComp
+        val futureFieldOriginToShooter = fieldOriginToShooter + shooterVel * airTime * a
+        val futureShooterToTarget = target - futureFieldOriginToShooter
+        val norm = futureShooterToTarget.norm
+        iterations[i + 1] = Pose2d(futureFieldOriginToShooter, futureShooterToTarget.angle)
+
+        // newton's method
+        val dt_dD = shotMap.getAirTimeDerivative(futureShooterToTarget.norm, desiredVel)
+        val da_dt = exp(-dragComp * airTime)
+        val error = airTime - shotMap.get(norm, desiredVel).airTimeSecs
+        val derror_dt = 1 + da_dt * dt_dD * futureShooterToTarget.dot(shooterVel) / norm
+        airTime -= error / derror_dt
     }
-
+    val wantedShooterToTarget = shooterToTarget - shooterVel * airTime
+    Logger.recordOutput("ShooterCalcs/Iterations", *iterations)
+    Logger.recordOutput("ShooterCalcs/WantedShooterToTarget", wantedShooterToTarget)
     return ShooterSetpoint(
-        shotValid, shooterToTarget.angle, Rotation2d.fromRadians(solve.pitchRad),
-        RadiansPerSecond.of(ANGULAR_TO_LINEAR_VEL.getKey(finalDesiredVel))
+        wantedShooterToTarget.angle,
+        Rotation2d.fromRadians(shotMap.get(wantedShooterToTarget.norm, desiredVel).pitchRad),
+        RadiansPerSecond.of(
+            ANGULAR_TO_LINEAR_VEL.getKey(shotMap.maxVelocityAt(wantedShooterToTarget.norm))
+        )
     )
 }
 
-fun simulateShot(): Array<Pose3d> {
-    return arrayOf()
+fun simulateShot() {
 }
 
 

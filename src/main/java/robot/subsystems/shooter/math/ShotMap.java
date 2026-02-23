@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import static edu.wpi.first.wpilibj.Alert.AlertType.kError;
-import static robot.subsystems.shooter.ShooterConsts.SPEED_TOLERANCE_MPS;
 
 public class ShotMap {
     // t is a fraction between 0 and 1.
@@ -78,6 +77,20 @@ public class ShotMap {
         );
     }
 
+    /**
+     * Gets the derivative of the air time with respect to the distance traveled,
+     * while air time stays constant.
+     * Imagine if you chose a random velocity (let's say 5 m/s), then
+     * plotted air time on the y axis and distance travelled on the x axis.
+     * The derivative would be the slope of the curve at the specific distance
+     * you specified.
+     */
+    public double getAirTimeDerivative(double distanceM, double speedMPS) {
+        double airTimeUpperBound = get(distanceM + 0.01, speedMPS).airTimeSecs();
+        double airTimeLowerBound = get(distanceM - 0.01, speedMPS).airTimeSecs();
+        return (airTimeUpperBound - airTimeLowerBound) / 0.02;
+    }
+
     /** Fetches the max velocity of the shooter at the given distance. */
     public double maxVelocityAt(double distanceM) {
         return distanceToMaxVelocity.get(distanceM);
@@ -86,11 +99,5 @@ public class ShotMap {
     /** Fetches the min velocity of the shooter at the given distance. */
     public double minVelocityAt(double distanceM) {
         return distanceToMaxVelocity.get(distanceM);
-    }
-
-    /** Whether a ball can be viably shot into the target. */
-    public boolean canShoot(double distanceM, double speedMPS) {
-        return speedMPS >= (minVelocityAt(distanceM) - SPEED_TOLERANCE_MPS)
-            && speedMPS <= (maxVelocityAt(distanceM) + SPEED_TOLERANCE_MPS);
     }
 }

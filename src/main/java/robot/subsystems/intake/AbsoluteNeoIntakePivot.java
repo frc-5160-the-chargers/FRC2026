@@ -30,8 +30,8 @@ public class AbsoluteNeoIntakePivot extends PivotHardware {
 
     @Override
     public void refreshData(PivotDataAutoLogged data) {
-        data.radians = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
-        data.radiansPerSec = encoder.getVelocity() * Convert.ROTATIONS_TO_RADIANS;
+        data.positionRad = encoder.getPosition() * Convert.ROTATIONS_TO_RADIANS;
+        data.velocityRadPerSec = encoder.getVelocity() * Convert.ROTATIONS_TO_RADIANS;
         data.motorStats = MotorStats.from(motor);
     }
 

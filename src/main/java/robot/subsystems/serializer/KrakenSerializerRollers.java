@@ -28,7 +28,7 @@ public class KrakenSerializerRollers extends RollerHardware {
     @Override
     public void refreshData(RollerDataAutoLogged inputs) {
         inputs.motorStats = new MotorStats[] {MotorStats.from(motor)};
-        inputs.radiansPerSec = angularVel.getValueAsDouble() * Convert.ROTATIONS_TO_RADIANS;
+        inputs.velocityRadPerSec = angularVel.getValueAsDouble() * Convert.ROTATIONS_TO_RADIANS;
     }
 
     @Override

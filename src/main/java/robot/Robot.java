@@ -71,7 +71,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void robotPeriodic() {
         // TODO Disable setCurrentThreadPriority() if loop times are consistently over 20 ms
-        Threads.setCurrentThreadPriority(true, 1);
+//        Threads.setCurrentThreadPriority(true, 1);
         Tracer.trace("Signal Refresh", SignalRefresh::refreshAll);
         Tracer.trace("Cmd Scheduler", CommandScheduler.getInstance()::run);
         Logger.recordOutput(
@@ -84,6 +84,6 @@ public class Robot extends LoggedRobot {
         canBusLogger.periodic();
         CmdLogger.periodic(true);
         Tracer.endCycle();
-        Threads.setCurrentThreadPriority(false, 0);
+//        Threads.setCurrentThreadPriority(false, 0);
     }
 }
