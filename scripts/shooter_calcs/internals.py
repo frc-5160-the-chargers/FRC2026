@@ -4,7 +4,7 @@ import numpy as np
 
 from numpy.linalg import norm
 from sleipnir import autodiff
-from sleipnir.autodiff import VariableMatrix
+from sleipnir.autodiff import VariableMatrix, sqrt
 from sleipnir.optimization import ExitStatus, Problem
 
 from shooter_calcs.data_types import ShooterSolution
@@ -17,7 +17,9 @@ ball_mass = 0.5 / 2.205  # kg
 ball_diameter = 5.91 * 0.0254  # m
 hub_diameter = 47 * 0.0254 # m; The hub is the target we are scoring in.
 rho = 1.204  # Density of air, kg/m³
+wheel_radius = 2 * 0.0254 # m
 C_D = 0.4 # Coefficient of drag, unitless
+C_L = 0.5 # Coefficient of lift, unitless
 min_pitch = np.deg2rad(40)
 dont_hit_hub_constraint_wiggle_room = 0.05 # m
 
@@ -51,8 +53,13 @@ def f(x):
     v_x = x[3, 0]
     v_y = x[4, 0]
     v_z = x[5, 0]
+
+    # Magnus force: F_L(v) = ½ρv² C_L A |ω x v|
+    lift_force = lambda v: 0.5 * rho * magnitude_squared(v) * C_L * A * np.cross(np.array([0, v[1]/wheel_radius, 0]), v)
+    a_L = lift_force(np.array([v_x, v_y, v_z])) / ball_mass
+
     return VariableMatrix(
-        [[v_x], [v_y], [v_z], [-a_D(v_x)], [-a_D(v_y)], [-g - a_D(v_z)]]
+        [[v_x], [v_y], [v_z], [-a_D(v_x) - a_L[0]], [-a_D(v_y) - a_L[1]], [-g - a_D(v_z) - a_L[2]]]
     )
 
 
