@@ -4,6 +4,9 @@
 ### Java ###
 src/main/java/robot/constants/BuildConstants.java
 
+### Kotlin ###
+.kotlin/*
+
 ### C++ ###
 # Prerequisites
 *.d
