@@ -4,7 +4,7 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.*;
-import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import lib.Convert;
 import lib.hardware.MotorStats;
 import robot.subsystems.common.PivotDataAutoLogged;
@@ -12,15 +12,15 @@ import robot.subsystems.common.PivotHardware;
 
 /**
  * The hardware powering the intake pivot on the real robot,
- * using an absolute encoder connected to the neo.
+ * using an absolute encoder connected via the absolute encoder adapter.
  */
-public class AbsoluteNeoIntakePivot extends PivotHardware {
-    private final SparkMax motor = new SparkMax(1, SparkLowLevel.MotorType.kBrushless);
-    private final SparkFlexConfig config = new SparkFlexConfig();
+public class OnboardAENeoIntakePivot extends PivotHardware {
+    private final SparkMax motor = new SparkMax(15, SparkLowLevel.MotorType.kBrushless);
+    private final SparkMaxConfig config = new SparkMaxConfig();
     private final SparkClosedLoopController pid = motor.getClosedLoopController();
     private final AbsoluteEncoder encoder = motor.getAbsoluteEncoder();
 
-    public AbsoluteNeoIntakePivot() {
+    public OnboardAENeoIntakePivot() {
         config.encoder
             .positionConversionFactor(1 / GroundIntake.PIVOT_REDUCTION)
             .velocityConversionFactor(1 / GroundIntake.PIVOT_REDUCTION);

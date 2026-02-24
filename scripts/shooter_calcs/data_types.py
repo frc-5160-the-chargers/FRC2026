@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from sleipnir.autodiff import VariableMatrix
+from typing import Union, Literal
+
+import numpy as np
 
 
 @dataclass
@@ -10,10 +12,20 @@ class ShooterSolution:
     velocity_mps: float
     pitch_rad: float
     time_secs: float
-    X: VariableMatrix
+    X: np.ndarray
 
     def format(self) -> str:
-        vel = round(self.velocity_mps, 8)
-        pitch = round(self.pitch_rad, 8)
-        time = round(self.time_secs, 8)
-        return f"entry({vel}, new ShotMapResult({pitch}, {time}))"
+        vel = self.velocity_mps
+        pitch = self.pitch_rad
+        time = self.time_secs
+        return f"entry({vel:.08f}, new ShotMapResult({pitch:.08f}, {time:.08f}))"
+
+
+@dataclass
+class MinVelocityWithPitch:
+    """ A solve mode for sleipnir that constrains the pitch to a certain value.  """
+    pitch_rad: float
+
+
+# Represents a possible solve mode for sleipnir.
+SolveMode = Union[MinVelocityWithPitch, Literal["min_velocity", "max_velocity"]]

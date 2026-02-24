@@ -15,8 +15,6 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import robot.subsystems.drive.SwerveConfig;
 
-import java.util.Optional;
-
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -54,29 +52,28 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
     }
 
     public SwerveRequest getSwerveRequest() {
-        return getSwerveRequest(Optional.empty());
-    }
-
-    public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle) {
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
         rotation = -getRightX() * scalar;
-        if (targetAngle.isEmpty()) {
-            return swerveReq
-                .withVelocityX(forward * maxVelMetersPerSec)
-                .withVelocityY(strafe * maxVelMetersPerSec)
-                .withDeadband(0.1 * scalar * maxVelMetersPerSec)
-                .withRotationalRate(rotation * maxVelRadPerSec)
-                .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
-        } else {
-            return facingHubSwerveReq
-                .withVelocityX(forward * maxVelMetersPerSec)
-                .withVelocityY(strafe * maxVelMetersPerSec)
-                .withDeadband(0.1 * scalar * maxVelMetersPerSec)
-                .withTargetDirection(targetAngle.get())
-                .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
-        }
+        return swerveReq
+            .withVelocityX(forward * maxVelMetersPerSec)
+            .withVelocityY(strafe * maxVelMetersPerSec)
+            .withDeadband(0.1 * scalar * maxVelMetersPerSec)
+            .withRotationalRate(rotation * maxVelRadPerSec)
+            .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
+    }
+
+    public SwerveRequest getSwerveRequest(Rotation2d targetAngle) {
+        double scalar = swerveSpeedModifier();
+        forward = -getLeftY() * scalar;
+        strafe = -getLeftX() * scalar;
+        return facingHubSwerveReq
+            .withVelocityX(forward * maxVelMetersPerSec)
+            .withVelocityY(strafe * maxVelMetersPerSec)
+            .withDeadband(0.1 * scalar * maxVelMetersPerSec)
+            .withTargetDirection(targetAngle)
+            .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
     }
 
     // For Rumble to work on PS5 Controllers, we have to run a custom script on the driver station computer.

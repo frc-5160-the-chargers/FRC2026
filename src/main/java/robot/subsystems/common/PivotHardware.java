@@ -1,6 +1,7 @@
 package robot.subsystems.common;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import lib.hardware.MotorStats;
@@ -15,6 +16,10 @@ public class PivotHardware {
     static class PivotData {
         public double positionRad = 0, velocityRadPerSec = 0;
         public MotorStats motorStats = MotorStats.EMPTY;
+
+        public TrapezoidProfile.State getMotionState() {
+            return new TrapezoidProfile.State(positionRad, velocityRadPerSec);
+        }
     }
 
     /** Hardware-level config for a pivoting mechanism. */

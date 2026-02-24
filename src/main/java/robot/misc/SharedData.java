@@ -14,7 +14,6 @@ public class SharedData {
     // Mutable State
     public static Pose2d visionSimPose = Pose2d.kZero;
     public static int numSimulatedRobots = 0;
-    public static Optional<Rotation2d> rotOverride = Optional.empty();
 
     /** Returns true when the current alliance is red. */
     public static boolean redAlliance() {

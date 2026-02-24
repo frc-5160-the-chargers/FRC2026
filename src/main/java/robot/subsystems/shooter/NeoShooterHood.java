@@ -22,8 +22,8 @@ public class NeoShooterHood extends PivotHardware {
 
     public NeoShooterHood() {
         config.encoder
-            .positionConversionFactor(1 / ShooterConsts.HOOD_REDUCTION)
-            .velocityConversionFactor(1 / ShooterConsts.HOOD_REDUCTION);
+            .positionConversionFactor(1 / Shooter.HOOD_REDUCTION)
+            .velocityConversionFactor(1 / Shooter.HOOD_REDUCTION);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 

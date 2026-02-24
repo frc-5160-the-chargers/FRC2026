@@ -9,34 +9,35 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import lib.commands.NonBlockingCmds;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import robot.constants.FieldConstants;
+import robot.misc.DriverController;
 import robot.misc.SharedData;
 import robot.subsystems.climber.Climber;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
+import robot.subsystems.shooter.DataTypes.ShooterSetpoint;
 import robot.subsystems.shooter.Shooter;
-import robot.subsystems.shooter.ShooterConsts.ShooterSetpoint;
 import robot.subsystems.shooter.math.GroundShotMap;
 import robot.subsystems.shooter.math.HubShotMap;
 import robot.subsystems.shooter.math.ShooterCalcsKt;
 import robot.subsystems.shooter.math.ShotMap;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static edu.wpi.first.units.Units.Meters;
 import static lib.commands.CmdLogger.logged;
-import static robot.subsystems.shooter.ShooterConsts.NULL_SHOOTER_SETPOINT;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class Superstructure {
     // Constructor Parameters
+    private final DriverController controller;
     private final SwerveSubsystem drive;
     private final GroundIntake groundIntake;
     private final Climber climber;
@@ -60,9 +61,6 @@ public class Superstructure {
         redTopFerry = flip(blueTopFerry),
         redBottomFerry = flip(blueBottomFerry);
 
-    // Persistent State
-    @AutoLogOutput private ShooterSetpoint shotSetpoint = NULL_SHOOTER_SETPOINT;
-
     @AutoLogOutput
     private final LoggedMechanism2d mainViz = new LoggedMechanism2d(3.0, 3.0);
     private final LoggedMechanismLigament2d groundIntakeViz =
@@ -72,6 +70,9 @@ public class Superstructure {
                 0, 0.2, new Color8Bit(Color.kRed)
             ));
 
+    @AutoLogOutput
+    private ShooterSetpoint shotSetpoint = ShooterSetpoint.NULL;
+
     private Command shootCmd(
         ShotMap shotMap,
         List<Rectangle2d> noShootZones,
@@ -79,24 +80,26 @@ public class Superstructure {
     ) {
         var waitForShot = Commands.waitUntil(() -> {
 //            if (!shotSetpoint.valid()) return false;
-//            for (var zone: noShootZones) {
-//                if (zone.contains(drive.getPose().getTranslation())) return false;
-//            }
+            for (var zone: noShootZones) {
+                if (zone.contains(drive.getPose().getTranslation())) return false;
+            }
             return true;
         });
         var runSerializer = NonBlockingCmds.sequence(
             waitForShot, Commands.waitSeconds(0.5), serializer.runCmd()
         );
-        var runShooter = Commands.run(() -> {
+        var aimAndShoot = shooter.runCmd(() -> {
             shotSetpoint = ShooterCalcsKt.computeSetpoint(
                 target.get(), shotMap, drive.getPose(),
                 drive.getFieldSpeeds(), shooter.getVelocity()
             );
-            shooter.setTarget(shotSetpoint);
-            SharedData.rotOverride = Optional.of(shotSetpoint.yaw());
-        }, shooter);
-        return NonBlockingCmds.parallel(runShooter, runSerializer)
-            .finallyDo(() -> shotSetpoint = NULL_SHOOTER_SETPOINT);
+            return shotSetpoint;
+        });
+        var driveWhileAiming = drive.driveCmd(
+            () -> controller.getSwerveRequest(shotSetpoint.yaw())
+        );
+        return NonBlockingCmds.parallel(aimAndShoot, runSerializer, driveWhileAiming)
+            .finallyDo(() -> shotSetpoint = ShooterSetpoint.NULL);
     }
 
     public Command shootAtHubCmd() {

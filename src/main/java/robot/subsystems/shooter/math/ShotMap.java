@@ -4,7 +4,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.Alert;
-import robot.subsystems.shooter.ShooterConsts.ShotMapResult;
+import robot.subsystems.shooter.DataTypes.ShotMapResult;
 
 import java.util.Map;
 import java.util.TreeMap;

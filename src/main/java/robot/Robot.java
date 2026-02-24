@@ -18,7 +18,6 @@ import org.littletonrobotics.junction.Logger;
 import robot.constants.LoggingConfig;
 import robot.misc.DriverController;
 import robot.misc.ManualOverrideController;
-import robot.misc.SharedData;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.drive.TunerConstants;
@@ -48,21 +47,19 @@ public class Robot extends LoggedRobot {
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         demoPose.onChange(drive::resetPose);
-        drive.setDefaultCommand(
-            drive.driveCmd(() -> controller.getSwerveRequest(SharedData.rotOverride))
-        );
+        drive.setDefaultCommand(drive.driveCmd(controller::getSwerveRequest));
         controller.touchpad().multiPress(2, 0.3)
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
         controller.triangle().whileTrue(
-            groundIntake.manualRollers(() -> 0.2)
+            groundIntake.manualPivotCmd(true, pivotDebugVolts::get)
         );
+        controller.circle().whileTrue(groundIntake.stowCmd());
+        controller.square().whileTrue(groundIntake.intakeCmd());
         Tunable.setEnabled(true);
 
-        groundIntake.setDefaultCommand(groundIntake.manualPivotCmd(true, manualController::getManualPivotVolts));
-        manualController.x()
-            .whileTrue(Commands.waitSeconds(2).andThen(groundIntake.intakeCmd()));
-        manualController.y()
-            .whileTrue(groundIntake.manualPivotCmd(false, pivotDebugVolts::get));
+        groundIntake.setDefaultCommand(
+            groundIntake.manualPivotCmd(true, manualController::getManualPivotVolts)
+        );
         if (RobotMode.isSim()) {
             RobotModeTriggers.test().onTrue(groundIntake.intakeCmd());
         }
