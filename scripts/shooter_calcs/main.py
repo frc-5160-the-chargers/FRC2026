@@ -39,7 +39,7 @@ max_pitch = np.deg2rad(85)  # rad
 max_shooter_speed = 14.5  # m/s
 
 # Solve Settings
-print_results = True
+print_results = False
 N = 40 # The number of steps the solver takes to arrive to a solution.
 delta_pitch = np.deg2rad(2.5) # The pitch difference between every attempted solve.
 
@@ -381,10 +381,10 @@ if __name__ == "__main__":
         base_delta_distance=0.5,
         name="HubShotMap",
     )
-    write(
-        target_height=0,
-        min_distance=0.5,
-        max_distance=15.5,
-        base_delta_distance=0.5,
-        name="GroundShotMap"
-    )
+    # write(
+    #     target_height=0,
+    #     min_distance=0.5,
+    #     max_distance=15.5,
+    #     base_delta_distance=0.5,
+    #     name="GroundShotMap"
+    # )

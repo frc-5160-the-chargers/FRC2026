@@ -31,9 +31,9 @@ public class TunerConstants {
         .withKS(0).withKV(0).withKA(0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     private static final Slot0Configs steerGainsBack = new Slot0Configs()
-            .withKP(40).withKI(0).withKD(0.2)
-            .withKS(0).withKV(0).withKA(0)
-            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
+        .withKP(40).withKI(0).withKD(0.2)
+        .withKS(0).withKV(0).withKA(0)
+        .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
@@ -109,13 +109,11 @@ public class TunerConstants {
         .withPigeon2Id(kPigeonId)
         .withPigeon2Configs(pigeonConfigs);
 
-    private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> ConstantCreatorFront =
+    private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> ConstantCreator =
         new SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
             .withDriveMotorGearRatio(kDriveGearRatio)
-            .withSteerMotorGearRatio(kSteerGearRatioFront)
             .withCouplingGearRatio(kCoupleRatio)
             .withWheelRadius(kWheelRadius)
-            .withSteerMotorGains(steerGainsFront)
             .withDriveMotorGains(driveGains)
             .withSteerMotorClosedLoopOutput(kSteerClosedLoopOutput)
             .withDriveMotorClosedLoopOutput(kDriveClosedLoopOutput)
@@ -132,30 +130,15 @@ public class TunerConstants {
             .withSteerFrictionVoltage(kSteerFrictionVoltage)
             .withDriveFrictionVoltage(kDriveFrictionVoltage);
 
+    private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> ConstantCreatorFront =
+        ConstantCreator
+            .withSteerMotorGearRatio(kSteerGearRatioFront)
+            .withSteerMotorGains(steerGainsFront);
+
     private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> ConstantCreatorBack =
-            new SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
-                    .withDriveMotorGearRatio(kDriveGearRatio)
-                    .withSteerMotorGearRatio(kSteerGearRatioBack)
-                    .withCouplingGearRatio(kCoupleRatio)
-                    .withWheelRadius(kWheelRadius)
-                    .withSteerMotorGains(steerGainsBack)
-                    .withDriveMotorGains(driveGains)
-                    .withSteerMotorClosedLoopOutput(kSteerClosedLoopOutput)
-                    .withDriveMotorClosedLoopOutput(kDriveClosedLoopOutput)
-                    .withSlipCurrent(kSlipCurrent)
-                    .withSpeedAt12Volts(kSpeedAt12Volts)
-                    .withDriveMotorType(kDriveMotorType)
-                    .withSteerMotorType(kSteerMotorType)
-                    .withFeedbackSource(kSteerFeedbackType)
-                    .withDriveMotorInitialConfigs(driveInitialConfigs)
-                    .withSteerMotorInitialConfigs(steerInitialConfigs)
-                    .withEncoderInitialConfigs(encoderInitialConfigs)
-                    .withSteerInertia(kSteerInertia)
-                    .withDriveInertia(kDriveInertia)
-                    .withSteerFrictionVoltage(kSteerFrictionVoltage)
-                    .withDriveFrictionVoltage(kDriveFrictionVoltage);
-
-
+        ConstantCreator
+            .withSteerMotorGearRatio(kSteerGearRatioBack)
+            .withSteerMotorGains(steerGainsBack);
 
     // Front Left
     private static final int kFrontLeftDriveMotorId = 3;
@@ -166,7 +149,7 @@ public class TunerConstants {
     private static final boolean kFrontLeftEncoderInverted = false;
 
     private static final Distance kFrontLeftXPos = Inches.of(13.6875);
-    private static final Distance kFrontLeftYPos = Inches.of(-11);
+    private static final Distance kFrontLeftYPos = Inches.of(11);
 
     // Front Right
     private static final int kFrontRightDriveMotorId = 6;
@@ -177,7 +160,7 @@ public class TunerConstants {
     private static final boolean kFrontRightEncoderInverted = false;
 
     private static final Distance kFrontRightXPos = Inches.of(13.6875);
-    private static final Distance kFrontRightYPos = Inches.of(11);
+    private static final Distance kFrontRightYPos = Inches.of(-11);
 
     // Back Left
     private static final int kBackLeftDriveMotorId = 2;

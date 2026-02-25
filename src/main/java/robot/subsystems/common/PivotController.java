@@ -1,6 +1,5 @@
 package robot.subsystems.common;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -60,7 +59,7 @@ public class PivotController {
         io.setRadians(setpoint.position, ff);
     }
 
-    public double getGravityComp(double pivotPositionRad) {
+    public double getAntiGravityVolts(double pivotPositionRad) {
         return kG.get() * Math.cos(pivotPositionRad);
     }
 }

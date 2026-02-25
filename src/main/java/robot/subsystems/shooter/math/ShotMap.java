@@ -11,6 +11,9 @@ import java.util.TreeMap;
 
 import static edu.wpi.first.wpilibj.Alert.AlertType.kError;
 
+/**
+ * A class that stores shot information
+ */
 public class ShotMap {
     // t is a fraction between 0 and 1.
     private static ShotMapResult interpolateShot(ShotMapResult start, ShotMapResult end, double t) {

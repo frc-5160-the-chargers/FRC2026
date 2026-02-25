@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import lib.Convert;
 import lib.RobotMode;
 import lib.Tunable;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.common.*;
@@ -55,6 +56,7 @@ public class GroundIntake extends ChargerSubsystem {
     private final RollerDataAutoLogged rollerInputs = new RollerDataAutoLogged();
 
     private final PivotController pivotController;
+    private final Debouncer hardStopDebouncer = new Debouncer(0.2);
 
     public GroundIntake() {
         switch (RobotMode.get()) {
@@ -115,19 +117,18 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "Idle");
     }
 
-    public Command manualPivotCmd(boolean gravityCompensate, DoubleSupplier volts) {
+    public Command manualPivotCmd(DoubleSupplier volts) {
         var cmd = this.run(() -> {
-            double ff = gravityCompensate ? pivotController.getGravityComp(pivotInputs.positionRad) : 0;
-            pivotIO.setVolts(volts.getAsDouble() + ff);
+            double antiGravityVolts = pivotController.getAntiGravityVolts(pivotInputs.positionRad);
+            pivotIO.setVolts(volts.getAsDouble() + antiGravityVolts);
             rollerIO.setVolts(0);
         });
-        return logged(cmd, "ManualPivot(gravityCompensate=" + gravityCompensate + ")");
+        return logged(cmd, "ManualPivot");
     }
 
     public Command currentZeroCmd(boolean resetEncoder) {
-        var debouncer = new Debouncer(0.2);
         var cmd = this.run(() -> pivotIO.setVolts(pivotCurrentZeroVolts.get()))
-            .until(() -> debouncer.calculate(hardStopHit()))
+            .until(this::hardStopHit)
             .finallyDo(wasInterrupted -> {
                 pivotIO.setVolts(0);
                 if (resetEncoder && !wasInterrupted) pivotIO.zeroEncoder(0);
@@ -135,8 +136,10 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "PivotCurrentZero");
     }
 
+    @AutoLogOutput
     private boolean hardStopHit() {
-        return pivotInputs.motorStats.appliedAmps() > pivotCurrentZeroLimit.get();
+        boolean res = Math.abs(pivotInputs.motorStats.appliedAmps()) > pivotCurrentZeroLimit.get();
+        return hardStopDebouncer.calculate(res);
     }
 
     @Override

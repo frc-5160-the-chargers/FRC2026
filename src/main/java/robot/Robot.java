@@ -51,14 +51,14 @@ public class Robot extends LoggedRobot {
         controller.touchpad().multiPress(2, 0.3)
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
         controller.triangle().whileTrue(
-            groundIntake.manualPivotCmd(true, pivotDebugVolts::get)
+            groundIntake.manualPivotCmd(pivotDebugVolts::get)
         );
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
         Tunable.setEnabled(true);
 
         groundIntake.setDefaultCommand(
-            groundIntake.manualPivotCmd(true, manualController::getManualPivotVolts)
+            groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
         );
         if (RobotMode.isSim()) {
             RobotModeTriggers.test().onTrue(groundIntake.intakeCmd());
