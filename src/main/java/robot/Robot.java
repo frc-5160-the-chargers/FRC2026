@@ -1,11 +1,14 @@
 package robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import lib.Convert;
 import lib.RobotMode;
 import lib.Tracer;
 import lib.Tunable;
@@ -86,6 +89,10 @@ public class Robot extends LoggedRobot {
         canBusLogger.periodic();
         CmdLogger.periodic(true);
         Tracer.endCycle();
+        Logger.recordOutput("HoodPosition", new Pose3d(
+            9.06 * Convert.INCHES_TO_METERS, 0, 11.776 * Convert.INCHES_TO_METERS,
+            new Rotation3d(0, 0.5, 0))
+        );
         Threads.setCurrentThreadPriority(false, 0);
     }
 }

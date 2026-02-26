@@ -48,7 +48,7 @@ public class GroundIntake extends ChargerSubsystem {
         pivotCurrentZeroLimit = Tunable.of(key("Pivot/CurrentZeroing/Limit (amps)"), 20.0);
     private final Tunable<Angle>
         stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-140)),
-        intakePos = Tunable.of(key("Positions/Intake"), Radians.of(-0.25));
+        intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-10));
 
     private PivotHardware pivotIO;
     private RollerHardware rollerIO;

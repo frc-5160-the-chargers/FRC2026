@@ -216,7 +216,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
     }
 
     /** Fetches the field-relative speeds of this drivetrain. */
-    @AutoLogOutput
+    @AutoLogOutput(key = "FieldRelativeSpeeds")
     public ChassisSpeeds getFieldSpeeds() {
         return ChassisSpeeds.fromRobotRelativeSpeeds(
             inputs.robotRelativeSpeeds, pose.getRotation()

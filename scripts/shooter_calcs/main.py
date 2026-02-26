@@ -44,6 +44,7 @@ N = 40 # The number of steps the solver takes to arrive to a solution.
 delta_pitch = np.deg2rad(2.5) # The pitch difference between every attempted solve.
 
 
+# Performs linear interpolation.
 def lerp(a, b, t):
     return a + t * (b - a)
 
@@ -130,10 +131,10 @@ def solve(
     p = X[:3, :] # The position of the ball at every moment, as [x,y,z].
     v = X[3:, :] # The velocity of the ball at every moment, as [vx, vy, vz].
     v_z = X[5, :] # The z velocity of the ball at every moment.
-    # A vector representing the initial velocity of the ball.
+    # A vector representing the initial velocity of the ball, as [vx, vy, vz].
     v0_wrt_shooter = X[3:, :1] - shooter_wrt_field[3:, :]
 
-    # The ball's position(p) must start at the shooter's position(shooter_wrt_field).
+    # The ball's initial position(p) must be at the shooter(shooter_wrt_field).
     problem.subject_to(p[:, :1] == shooter_wrt_field[:3, :])
 
     # The initial angular velocity of the ball as [roll, pitch, yaw]. Don't ask me why it's a decision variable.
@@ -152,11 +153,11 @@ def solve(
     # The simplest way would be to use euler's method:
     # problem.subject_to(x_k1 == x_k + equation_of_motion(x_k, omega) * dt)
     # Here, we instead use something called RK4 integration, which is essentially
-    # a more accurate version of euler's method that takes the average of many iterations.
+    # a more accurate version of euler's method that takes the average of many euler's method steps.
     h = dt
     for k in range(N - 1):
-        x_k = X[:, k]
-        x_k1 = X[:, k + 1]
+        x_k = X[:, k] # The state [x,y,z,vx,vy,vz] at the current timestep.
+        x_k1 = X[:, k + 1] # The state [x,y,z,vx,vy,vz] at an infinitesimal timestep away from the current.
         k1 = equation_of_motion(x_k, omega)
         k2 = equation_of_motion(x_k + h / 2 * k1, omega)
         k3 = equation_of_motion(x_k + h / 2 * k2, omega)
@@ -380,10 +381,10 @@ if __name__ == "__main__":
         base_delta_distance=0.1,
         name="HubShotMap",
     )
-    # write(
-    #     target_height=0,
-    #     min_distance=0.5,
-    #     max_distance=15.5,
-    #     base_delta_distance=0.5,
-    #     name="GroundShotMap"
-    # )
+    write(
+        target_height=0,
+        min_distance=0.5,
+        max_distance=15.5,
+        base_delta_distance=0.5,
+        name="GroundShotMap"
+    )

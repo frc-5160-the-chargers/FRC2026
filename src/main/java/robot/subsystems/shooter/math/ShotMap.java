@@ -12,7 +12,7 @@ import java.util.TreeMap;
 import static edu.wpi.first.wpilibj.Alert.AlertType.kError;
 
 /**
- * A class that stores shot information
+ * A class that stores information necessary to shoot a piece of fuel into a goal.
  */
 public class ShotMap {
     // t is a fraction between 0 and 1.
@@ -82,7 +82,7 @@ public class ShotMap {
 
     /**
      * Gets the derivative of the air time with respect to the distance traveled,
-     * while air time stays constant.
+     * while velocity stays constant.
      * Imagine if you chose a random velocity (let's say 5 m/s), then
      * plotted air time on the y axis and distance travelled on the x axis.
      * The derivative would be the slope of the curve at the specific distance
