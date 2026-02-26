@@ -18,7 +18,7 @@ class ShooterSolution:
         vel = self.velocity_mps
         pitch = self.pitch_rad
         time = self.time_secs
-        return f"entry({vel:.08f}, new ShotMapResult({pitch:.08f}, {time:.08f}))"
+        return f"entry({vel:.05f}, new ShotMapResult({pitch:.05f}, {time:.05f}))"
 
 
 @dataclass

@@ -23,6 +23,8 @@ import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.drive.TunerConstants;
 import robot.subsystems.intake.GroundIntake;
 
+import static edu.wpi.first.units.Units.Inches;
+
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
     static { // This is run before subsystems are created
@@ -33,6 +35,9 @@ public class Robot extends LoggedRobot {
     private final Tunable<Double> pivotDebugVolts = Tunable.of("GroundIntake/Pivot/DemoVolts", 0);
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
     private final SwerveConfig swerveCfg = new SwerveConfig(
+        "Swerve",
+        Inches.of(27 + 2 * 3.5),
+        Inches.of(26 + 2 * 3.5),
         TunerConstants.DrivetrainConstants,
         TunerConstants.FrontLeft, TunerConstants.FrontRight,
         TunerConstants.BackLeft, TunerConstants.BackRight

@@ -1,10 +1,12 @@
 package robot.subsystems.shooter;
 
 import com.revrobotics.PersistMode;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.*;
-import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.wpilibj.Alert;
 import lib.Convert;
 import lib.hardware.MotorStats;
 import robot.subsystems.common.PivotDataAutoLogged;
@@ -16,9 +18,10 @@ import robot.subsystems.common.PivotHardware;
  */
 public class NeoShooterHood extends PivotHardware {
     private final SparkMax motor = new SparkMax(1, SparkLowLevel.MotorType.kBrushless);
-    private final SparkFlexConfig config = new SparkFlexConfig();
+    private final SparkMaxConfig config = new SparkMaxConfig();
     private final SparkClosedLoopController pid = motor.getClosedLoopController();
     private final RelativeEncoder encoder = motor.getEncoder();
+    private final Alert configError = new Alert("Intake Pivot failed to configure.", Alert.AlertType.kError);
 
     public NeoShooterHood() {
         config.encoder
@@ -51,13 +54,18 @@ public class NeoShooterHood extends PivotHardware {
     @Override
     public void setPDGains(double p, double d) {
         config.closedLoop.pid(p / Convert.RADIANS_TO_ROTATIONS, 0, d / Convert.RADIANS_TO_DEGREES, ClosedLoopSlot.kSlot0);
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        configureMotor();
     }
 
     @Override
     public void setCurrentLimit(double amps) {
         config.smartCurrentLimit((int) amps);
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        configureMotor();
+    }
+
+    private void configureMotor() {
+        var status = motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        configError.set(status != REVLibError.kError);
     }
 }
 

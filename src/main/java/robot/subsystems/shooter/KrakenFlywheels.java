@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.Alert;
 import lib.Convert;
 import lib.hardware.MotorStats;
 import lib.hardware.SignalRefresh;
@@ -15,16 +16,19 @@ public class KrakenFlywheels extends FlywheelHardware {
     private final TalonFX talon = new TalonFX(/*id */ 1);
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final StatusSignal<AngularVelocity> angularVel = talon.getVelocity();
-    private final StatusSignal<Double> pidErr = talon.getClosedLoopError();
+    private final StatusSignal<Double> pidError = talon.getClosedLoopError();
 
     private final TorqueCurrentFOC currentReq = new TorqueCurrentFOC(0);
     private final VelocityTorqueCurrentFOC velocityReq = new VelocityTorqueCurrentFOC(0);
 
+    private final Alert configError = new Alert("Kraken Flywheels failed to configure.", Alert.AlertType.kError);
+
     public KrakenFlywheels() {
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         config.CurrentLimits.SupplyCurrentLimit = 60.0;
-        talon.getConfigurator().apply(config);
-        SignalRefresh.register(100.0, talon.getNetwork(), angularVel, pidErr);
+        var status = talon.getConfigurator().apply(config);
+        configError.set(!status.isOK());
+        SignalRefresh.register(100.0, talon.getNetwork(), angularVel, pidError);
     }
 
     @Override
@@ -40,7 +44,7 @@ public class KrakenFlywheels extends FlywheelHardware {
     @Override
     public void refreshData(FlywheelDataAutoLogged inputs) {
         inputs.velocity = angularVel.getValue();
-        inputs.pidError = pidErr.getValueAsDouble();
+        inputs.pidError = pidError.getValueAsDouble();
         inputs.leaderStats = MotorStats.from(talon);
     }
 
@@ -49,6 +53,7 @@ public class KrakenFlywheels extends FlywheelHardware {
         config.Slot0.kP = kP / Convert.RADIANS_TO_ROTATIONS;
         config.Slot0.kD = kD / Convert.RADIANS_TO_ROTATIONS;
         config.Slot0.kV = kV / Convert.RADIANS_TO_ROTATIONS;
-        talon.getConfigurator().apply(config);
+        var status = talon.getConfigurator().apply(config);
+        configError.set(!status.isOK());
     }
 }

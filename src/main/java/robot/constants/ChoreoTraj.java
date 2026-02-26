@@ -31,13 +31,6 @@ public record ChoreoTraj(
 	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
 	    new Pose2d(0, 0, Rotation2d.fromRadians(0))
 	);
-	public static final ChoreoTraj NewPath = new ChoreoTraj(
-	    "NewPath",
-	    OptionalInt.empty(),
-	    4.97994,
-	    new Pose2d(3.174, 3.633, Rotation2d.fromRadians(0)),
-	    new Pose2d(7.497, 2.121, Rotation2d.fromRadians(0))
-	);
 	public static final ChoreoTraj ShortPath = new ChoreoTraj(
 	    "ShortPath",
 	    OptionalInt.empty(),
@@ -59,7 +52,6 @@ public record ChoreoTraj(
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
     	Map.entry("BorderLineTests", BorderLineTests),
-		Map.entry("NewPath", NewPath),
 		Map.entry("ShortPath", ShortPath),
 		Map.entry("SimplePath", SimplePath)
     );

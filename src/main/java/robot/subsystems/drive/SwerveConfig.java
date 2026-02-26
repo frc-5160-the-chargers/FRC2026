@@ -20,17 +20,11 @@ import static edu.wpi.first.units.Units.*;
  */
 public record SwerveConfig(
     String name,
-    Distance bumperThickness,
+    Distance robotWidthX, // The left-bumper-to-right-bumper distance.
+    Distance robotWidthY, // The top-bumper-to-bottom-bumper distance.
     SwerveDrivetrainConstants driveConsts,
     SwerveModuleConstants<?, ?, ?>... moduleConsts
 ) {
-    public SwerveConfig(
-        SwerveDrivetrainConstants driveConsts,
-        SwerveModuleConstants<?, ?, ?>... moduleConsts
-    ) {
-        this("SwerveSubsystem", Inches.of(3.5), driveConsts, moduleConsts);
-    }
-
     /**
      * Gets the position of every swerve module in the drivetrain,
      * as an array of {@link Translation2d} objects.
@@ -64,10 +58,7 @@ public record SwerveConfig(
             .withCustomModuleTranslations(moduleTranslations())
             .withGyro(COTS.ofPigeon2())
             .withSwerveModules(moduleConfigs)
-            .withBumperSize(
-                Meters.of(2 * (moduleConsts[0].LocationX + bumperThickness.in(Meters))),
-                Meters.of(2 * (moduleConsts[0].LocationY + bumperThickness.in(Meters)))
-            );
+            .withBumperSize(robotWidthX, robotWidthY);
     }
 
     /** The distance from the center of the robot to one of the modules. */

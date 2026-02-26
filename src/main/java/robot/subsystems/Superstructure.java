@@ -36,24 +36,16 @@ import static lib.commands.CmdLogger.logged;
 @SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class Superstructure {
-    // Constructor Parameters
-    private final DriverController controller;
-    private final SwerveSubsystem drive;
-    private final GroundIntake groundIntake;
-    private final Climber climber;
-    private final Shooter shooter;
-    private final Serializer serializer;
-
     // Constants
-    private final List<Rectangle2d>
+    private static final List<Rectangle2d>
         hubNoShootZones = List.of(
             new Rectangle2d(new Translation2d(3.8, 8), new Translation2d(5.3, 0))
         ),
         ferryNoShootZones = List.of();
-    private final ShotMap
+    private static final ShotMap
         ferryShotMap = new GroundShotMap(),
         hubShotMap = new HubShotMap();
-    private final Translation2d
+    private static final Translation2d
         blueHub = FieldConstants.Hub.topCenterPoint.toTranslation2d(),
         redHub = flip(blueHub),
         blueTopFerry = new Translation2d(1, 1),
@@ -61,14 +53,13 @@ public class Superstructure {
         redTopFerry = flip(blueTopFerry),
         redBottomFerry = flip(blueBottomFerry);
 
-    @AutoLogOutput
-    private final LoggedMechanism2d mainViz = new LoggedMechanism2d(3.0, 3.0);
-    private final LoggedMechanismLigament2d groundIntakeViz =
-        mainViz.getRoot("GroundIntake", 2.0, 0.0)
-            .append(new LoggedMechanismLigament2d(
-                "Pivot", GroundIntake.PIVOT_LENGTH.in(Meters),
-                0, 0.2, new Color8Bit(Color.kRed)
-            ));
+    // Constructor Parameters
+    private final DriverController controller;
+    private final SwerveSubsystem drive;
+    private final GroundIntake groundIntake;
+    private final Climber climber;
+    private final Shooter shooter;
+    private final Serializer serializer;
 
     @AutoLogOutput
     private ShooterSetpoint shotSetpoint = ShooterSetpoint.NULL;

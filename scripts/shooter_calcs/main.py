@@ -33,7 +33,7 @@ ball_diameter = 5.91 * 0.0254  # m
 
 C_D = 0.47 # Drag Coefficient; dimensionless
 C_L = 0.00025 # Lift Coefficient; dimensionless
-shooter_height = 18 * 0.0254  # m
+shooter_height = 14.9 * 0.0254  # m
 min_pitch = np.deg2rad(45)  # rad
 max_pitch = np.deg2rad(85)  # rad
 max_shooter_speed = 14.5  # m/s
@@ -263,8 +263,7 @@ def write_distance_entry(file, distance, target_height, last_min_vel_solve):
         return None
     file.write("\n")
     file.write(f"        put(\n")
-    file.write(f"            {distance:.06f},\n")
-    file.write(f"            {min_vel_solve.format()},\n")
+    file.write(f"            {distance:.05f},\n")
     write_velocity_entries(file, distance, target_height, min_vel_solve)
     file.write("        );")
     return min_vel_solve
@@ -376,9 +375,9 @@ public final class {name} extends ShotMap {{
 if __name__ == "__main__":
     write(
         target_height=72 * 0.0254,
-        min_distance=0.3,
-        max_distance=14,
-        base_delta_distance=0.5,
+        min_distance=0.8,
+        max_distance=6,
+        base_delta_distance=0.1,
         name="HubShotMap",
     )
     # write(
