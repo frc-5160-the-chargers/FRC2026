@@ -29,10 +29,10 @@ public class TunableLerpTable {
     /** Adds an entry for linear interpolation. */
     public TunableLerpTable put(double key, double value) {
         String prefix = name + "/" + entries.size() + "/";
-        var x = Tunable.of(prefix + "key", key)
-            .onChange(() -> Collections.sort(entries));
-        var y = Tunable.of(prefix + "value", value)
-            .onChange(() -> Collections.sort(entries));
+        var x = Tunable.of(prefix + "key", key);
+        var y = Tunable.of(prefix + "value", value);
+        x.onChange(() -> Collections.sort(entries));
+        y.onChange(() -> Collections.sort(entries));
         entries.add(new Entry(x, y)); // ensures that values are sorted.
         Collections.sort(entries);
         return this;

@@ -2,7 +2,6 @@ package robot;
 
 import choreo.auto.AutoFactory;
 import robot.constants.LoggingConfig;
-import robot.misc.SharedData;
 import robot.subsystems.Superstructure;
 import robot.subsystems.drive.SwerveSubsystem;
 
@@ -12,7 +11,7 @@ public class Autos {
     public Autos(SwerveSubsystem drive, Superstructure superstructure) {
         autoFactory = new AutoFactory(
             drive::getPose, drive::resetPose,
-            drive::followChoreoTraj,
+            target -> drive.followChoreoTraj(target, superstructure.getRotationOverride()),
             true, drive, LoggingConfig::logTrajectory
         );
     }

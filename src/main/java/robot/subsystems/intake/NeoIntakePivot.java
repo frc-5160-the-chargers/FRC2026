@@ -17,6 +17,8 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import robot.subsystems.common.PivotDataAutoLogged;
 import robot.subsystems.common.PivotHardware;
 
+import static edu.wpi.first.units.Units.Rotations;
+
 /**
  * The hardware powering the intake pivot on the real robot,
  * using a duty-cycle encoder to zero the neo's onboard relative encoder.
@@ -44,7 +46,7 @@ public class NeoIntakePivot extends PivotHardware {
 
     @AutoLogOutput(key = "GroundIntake/Pivot/AbsoluteRotations")
     private double getAbsoluteRot() {
-        return absoluteEncoder.get() + GroundIntake.PIVOT_OFFSET_ROTATIONS;
+        return absoluteEncoder.get() + GroundIntake.PIVOT_OFFSET.in(Rotations);
     }
 
     @Override

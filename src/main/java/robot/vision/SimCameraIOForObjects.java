@@ -1,5 +1,6 @@
 package robot.vision;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.Tracer;
@@ -8,10 +9,10 @@ import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.simulation.VisionTargetSim;
-import robot.misc.SharedData;
 import robot.vision.DataTypes.MLCamConsts;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static robot.vision.VisionConsts.DEFAULT_CAM_PROPERTIES;
 
@@ -22,12 +23,14 @@ import static robot.vision.VisionConsts.DEFAULT_CAM_PROPERTIES;
  */
 public class SimCameraIOForObjects extends CameraIO {
     private final VisionSystemSim sim;
+    private final Supplier<Pose2d> simPoseSupplier;
     private final Map<String, TargetModel> availableObjects;
 
-    public SimCameraIOForObjects(MLCamConsts consts) {
+    public SimCameraIOForObjects(Supplier<Pose2d> simPoseSupplier, MLCamConsts consts) {
         super(consts.name());
-        sim = new VisionSystemSim(consts.name());
-        availableObjects = consts.availableObjects();
+        this.sim = new VisionSystemSim(consts.name());
+        this.simPoseSupplier = simPoseSupplier;
+        this.availableObjects = consts.availableObjects();
         var properties = DEFAULT_CAM_PROPERTIES.copy();
         if (consts.intrinsics().isPresent()) {
             var i = consts.intrinsics().get();
@@ -58,9 +61,7 @@ public class SimCameraIOForObjects extends CameraIO {
                 sim.addVisionTargets(type, new VisionTargetSim(pose, model));
             }
         }
-        if (SharedData.numSimulatedRobots <= 1) { // don't simulate vision if there are multiple robots
-            Tracer.trace("Simulation", () -> sim.update(SharedData.visionSimPose));
-        }
+        Tracer.trace("Simulation", () -> sim.update(simPoseSupplier.get()));
         super.refreshData(inputs);
     }
 }

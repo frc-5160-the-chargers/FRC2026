@@ -11,16 +11,21 @@ public class DataTypes {
     public record ShooterSetpoint(
         Rotation2d yaw,
         Rotation2d pitch,
-        double velocityRadPerSec
+        double speedRadPerSec,
+        boolean flywheelsAreReady
     ) {
         /** Represents a ShooterSetpoint with no data. */
-        public static final ShooterSetpoint NULL = new ShooterSetpoint(Rotation2d.kZero, Rotation2d.kZero, 0);
+        public static final ShooterSetpoint NULL = new ShooterSetpoint(Rotation2d.kZero, Rotation2d.kZero, 0, false);
 
-        public AngularVelocity velocity() {
-            return RadiansPerSecond.of(velocityRadPerSec);
+        public AngularVelocity speed() {
+            return RadiansPerSecond.of(speedRadPerSec);
         }
     }
 
-    /** The optimal hood angle and travel time calculated from a {@link ShotMap}. */
+    /**
+     * The optimal hood angle and travel time calculated from a {@link ShotMap}.
+     * While ShooterSetpoint is directly used by the shooter, ShotMapResult
+     * is used for internal calculations.
+     */
     public record ShotMapResult(double pitchRad, double airTimeSecs) {}
 }

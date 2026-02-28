@@ -21,15 +21,15 @@
    "moduleX":{
     "dimension":"Length",
     "var":{
-     "exp":"13.7 in",
-     "val":0.34797999999999996
+     "exp":"13.5 in",
+     "val":0.3429
     }
    },
    "moduleY":{
     "dimension":"Length",
     "var":{
-     "exp":"11 in",
-     "val":0.2794
+     "exp":"13 in",
+     "val":0.3302
     }
    },
    "robotMOI":{
@@ -60,21 +60,21 @@
   "frontLeft":{
    "x":{
     "exp":"moduleX",
-    "val":0.34797999999999996
+    "val":0.3429
    },
    "y":{
     "exp":"moduleY",
-    "val":0.2794
+    "val":0.3302
    }
   },
   "backLeft":{
    "x":{
     "exp":"-moduleX",
-    "val":-0.34797999999999996
+    "val":-0.3429
    },
    "y":{
     "exp":"moduleY",
-    "val":0.2794
+    "val":0.3302
    }
   },
   "mass":{
@@ -108,15 +108,15 @@
   "bumper":{
    "front":{
     "exp":"moduleX + 3.5 in",
-    "val":0.43688
+    "val":0.4318
    },
    "side":{
     "exp":"moduleY + 3.5 in",
-    "val":0.3683
+    "val":0.4191
    },
    "back":{
     "exp":"moduleX + 3.5 in",
-    "val":0.43688
+    "val":0.4318
    }
   },
   "differentialTrackWidth":{

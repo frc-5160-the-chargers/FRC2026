@@ -19,7 +19,8 @@ public class PivotController {
     private final double kV, kD;
     private TrapezoidProfile motionProfile;
 
-    @AutoLogOutput private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
+    @AutoLogOutput(key = "{name}/setpoint")
+    private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
 
     public PivotController(String name, PivotGains gains, PivotConstraints constraints, PivotHardware io) {
         this.name = name;

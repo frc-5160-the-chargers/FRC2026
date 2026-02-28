@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
 import lombok.Getter;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
@@ -66,11 +67,15 @@ public class SwerveSubsystem extends ChargerSubsystem {
     /** A pose estimate that will be replayed correctly. */
     @Getter private Pose2d pose = Pose2d.kZero;
 
+    /** The simulation powering this drivetrain. */
+    @Getter private final SwerveDriveSimulation sim;
+
     public SwerveSubsystem(SwerveConfig config) {
         super(config.name());
         this.config = config;
+        this.sim = new SwerveDriveSimulation(config.mapleSimConfig(), new Pose2d(2.5, 4, Rotation2d.kZero));
         io = RobotMode.isSim()
-            ? MapleSimSwerveHardware.create(config)
+            ? MapleSimSwerveHardware.create(sim, config)
             : new SwerveHardware(config);
         replayPoseEst = new SwerveDrivePoseEstimator(
             new SwerveDriveKinematics(config.moduleTranslations()),

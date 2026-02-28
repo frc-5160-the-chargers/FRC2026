@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import lib.Convert;
 import lib.RobotMode;
 import lib.Tunable;
+import org.ironmaple.simulation.IntakeSimulation;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
@@ -27,18 +29,17 @@ import static lib.Convert.CustomUnits.PoundSquareInches;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class GroundIntake extends ChargerSubsystem {
-    public static final Distance PIVOT_LENGTH = Inches.of(12.4);
-    static final MomentOfInertia PIVOT_MOI = PoundSquareInches.of(1344.71);
     static final double PIVOT_REDUCTION = 25.0 * 24.0 / 22.0; // MaxPlanetary + Sprockets
-    static final double ROLLER_REDUCTION = 1.0;
-    static final double PIVOT_OFFSET_ROTATIONS = -0.2225;
-
-    static final DCMotor ROLLER_MOTOR_KIND = DCMotor.getNeoVortex(1);
+    static final Angle PIVOT_OFFSET = Rotations.of(-0.2225);
+    static final Distance PIVOT_LENGTH = Inches.of(12.4);
+    static final MomentOfInertia PIVOT_MOI = PoundSquareInches.of(1344.71);
     static final DCMotor PIVOT_MOTOR_KIND = DCMotor.getNEO(1);
     static final double PIVOT_KV = 1 / PIVOT_MOTOR_KIND.withReduction(PIVOT_REDUCTION).KvRadPerSecPerVolt;
+    static final PivotConstraints PIVOT_CONSTRAINTS = new PivotConstraints(4, 5);
+    static final PivotGains PIVOT_GAINS = new PivotGains(0.03, PIVOT_KV, -0.38, 5.0, 0);
 
-    static final PivotConstraints CONSTRAINTS = new PivotConstraints(4, 5);
-    static final PivotGains GAINS = new PivotGains(0.03, PIVOT_KV, -0.38, 5.0, 0);
+    static final DCMotor ROLLER_MOTOR_KIND = DCMotor.getNeoVortex(1);
+    static final double ROLLER_REDUCTION = 1.0;
 
     private final Tunable<Double>
         rollerVolts = Tunable.of(key("Rollers/Power(Volts)"), 3.5),
@@ -58,7 +59,9 @@ public class GroundIntake extends ChargerSubsystem {
     private final PivotController pivotController;
     private final Debouncer hardStopDebouncer = new Debouncer(0.2);
 
-    public GroundIntake() {
+    public final IntakeSimulation sim;
+
+    public GroundIntake(SwerveDriveSimulation swerveSim) {
         switch (RobotMode.get()) {
             case REAL -> {
                 pivotIO = new NeoIntakePivot();
@@ -78,17 +81,29 @@ public class GroundIntake extends ChargerSubsystem {
                 rollerIO = new SimRollerHardware(DCMotor.getNeoVortex(1), 3.0);
             }
         }
-        pivotController = new PivotController(key("Pivot"), GAINS, CONSTRAINTS, pivotIO);
+        sim = IntakeSimulation.OverTheBumperIntake(
+            "Fuel",
+            swerveSim,
+            Inches.of(27),
+            Inches.of(7.5),
+            IntakeSimulation.IntakeSide.BACK,
+            30
+        );
+        pivotController = new PivotController(key("Pivot"), PIVOT_GAINS, PIVOT_CONSTRAINTS, pivotIO);
+        pivotIO.setCurrentLimit(pivotCurrentLimit.get());
+        rollerIO.setCurrentLimit(rollerCurrentLimit.get());
         pivotCurrentLimit.onChange(pivotIO::setCurrentLimit);
         rollerCurrentLimit.onChange(rollerIO::setCurrentLimit);
     }
 
-    public Command manualRollersCmd(DoubleSupplier output) {
-        var cmd = this.run(() -> {
-            rollerIO.setVolts(output.getAsDouble());
-            pivotIO.setVolts(0);
-        });
-        return logged(cmd, "ManualRollers");
+    private void setRollerVolts(double volts) {
+        rollerIO.setVolts(volts);
+        if (!RobotMode.isSim()) return;
+        if (volts > 0.05) {
+            sim.startIntake();
+        } else {
+            sim.stopIntake();
+        }
     }
 
     private Command setAngleCmd(Supplier<Angle> target) {
@@ -100,20 +115,28 @@ public class GroundIntake extends ChargerSubsystem {
         return resetStateCmd.andThen(targetAngleCmd);
     }
 
+    public Command manualRollersCmd(DoubleSupplier desiredVolts) {
+        var cmd = this.run(() -> {
+            setRollerVolts(desiredVolts.getAsDouble());
+            pivotIO.setVolts(0);
+        });
+        return logged(cmd, "ManualRollers");
+    }
+
     public Command stowCmd() {
         var cmd = setAngleCmd(stowPos::get)
-            .alongWith(Commands.run(() -> rollerIO.setVolts(0)));
+            .alongWith(Commands.run(() -> setRollerVolts(0)));
         return logged(cmd, "Stow");
     }
 
     public Command intakeCmd() {
         var cmd = setAngleCmd(intakePos::get)
-            .alongWith(Commands.run(() -> rollerIO.setVolts(rollerVolts.get())));
+            .alongWith(Commands.run(() -> setRollerVolts(rollerVolts.get())));
         return logged(cmd, "Intake");
     }
 
     public Command idleCmd() {
-        var cmd = this.run(() -> rollerIO.setVolts(rollerVolts.get()));
+        var cmd = this.run(() -> setRollerVolts(rollerVolts.get()));
         return logged(cmd, "Idle");
     }
 
@@ -121,7 +144,7 @@ public class GroundIntake extends ChargerSubsystem {
         var cmd = this.run(() -> {
             double antiGravityVolts = pivotController.getAntiGravityVolts(pivotInputs.positionRad);
             pivotIO.setVolts(volts.getAsDouble() + antiGravityVolts);
-            rollerIO.setVolts(0);
+            setRollerVolts(0);
         });
         return logged(cmd, "ManualPivot");
     }

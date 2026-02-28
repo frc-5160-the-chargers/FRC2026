@@ -14,12 +14,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import lib.AllianceColor;
 import lib.RobotMode;
 import lib.Tunable;
 import lib.hardware.MotorStats;
 import lib.hardware.SignalRefresh;
 import org.littletonrobotics.junction.Logger;
-import robot.misc.SharedData;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.hardware.SwerveData.OdometryFrame;
 import robot.vision.DataTypes.CamPoseEstimate;
@@ -93,7 +93,7 @@ public class SwerveHardware {
     /** Updates a {@link SwerveDataAutoLogged} instance with the latest data. */
     public void refreshData(SwerveDataAutoLogged inputs) {
         drivetrain.setOperatorPerspectiveForward(
-            SharedData.redAlliance() ? Rotation2d.k180deg : Rotation2d.kZero
+            AllianceColor.isRed() ? Rotation2d.k180deg : Rotation2d.kZero
         );
         inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
         synchronized (this) {
@@ -126,7 +126,8 @@ public class SwerveHardware {
         var steerGainsB = config.moduleConsts()[2].SteerMotorGains;
         Tunable.of(name + "DriveMotor/KP", driveGains.kP).onChange(kP -> {
             for (int i = 0; i < 4; i++) {
-                getDriveConfigurator(i).apply(driveGains.withKP(kP));
+                var motor = drivetrain.getModule(i).getDriveMotor();
+                motor.getConfigurator().apply(driveGains.withKP(kP));
             }
         });
         Tunable.of(name + "FrontSteerMotor/KP", steerGainsF.kP).onChange(kP -> {
@@ -142,10 +143,6 @@ public class SwerveHardware {
 
     private TalonFXConfigurator getSteerConfigurator(int moduleIndex) {
         return drivetrain.getModule(moduleIndex).getSteerMotor().getConfigurator();
-    }
-
-    private TalonFXConfigurator getDriveConfigurator(int moduleIndex) {
-        return drivetrain.getModule(moduleIndex).getDriveMotor().getConfigurator();
     }
 
     private void initDebugSignals() {

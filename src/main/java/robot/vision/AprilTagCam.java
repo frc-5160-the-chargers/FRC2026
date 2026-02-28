@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import lib.Tracer;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
@@ -27,10 +28,10 @@ public class AprilTagCam {
     private final List<Integer> fiducialIds = new ArrayList<>();
     private final List<Pose3d> poses = new ArrayList<>();
 
-    public AprilTagCam(AprilTagCamConsts consts) {
+    public AprilTagCam(SwerveDriveSimulation swerveSim, AprilTagCamConsts consts) {
         this.consts = consts;
         this.io = RobotMode.isSim()
-            ? new SimCameraIOForTags(consts)
+            ? new SimCameraIOForTags(swerveSim::getSimulatedDriveTrainPose, consts)
             : new CameraIO(consts.name());
         this.poseEst = new PhotonPoseEstimator(
             consts.fieldLayout(),

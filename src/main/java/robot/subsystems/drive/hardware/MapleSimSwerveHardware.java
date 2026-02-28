@@ -16,7 +16,6 @@ import org.ironmaple.simulation.motorsims.SimulatedBattery;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 import org.jetbrains.annotations.Nullable;
 import org.littletonrobotics.junction.Logger;
-import robot.misc.SharedData;
 import robot.subsystems.drive.SwerveConfig;
 
 import static edu.wpi.first.units.Units.Seconds;
@@ -29,31 +28,30 @@ public class MapleSimSwerveHardware extends SwerveHardware {
         new Notifier(() -> SimulatedArena.getInstance().simulationPeriodic());
 
     private final Pigeon2SimState gyroSim;
-    private final SwerveDriveSimulation mapleSim;
+    private final SwerveDriveSimulation swerveSim;
 
-    private MapleSimSwerveHardware(SwerveConfig config) {
+    private MapleSimSwerveHardware(SwerveDriveSimulation swerveSim, SwerveConfig config) {
         super(config);
-        this.mapleSim = new SwerveDriveSimulation(config.mapleSimConfig(), INITIAL_POSE);
+        this.swerveSim = swerveSim;
         this.gyroSim = super.drivetrain.getPigeon2().getSimState();
         super.drivetrain.resetTranslation(INITIAL_POSE.getTranslation());
         // these values simulate drag.
-        mapleSim.setLinearDamping(0.7);
-        mapleSim.setAngularDamping(0.7);
-        SimulatedArena.getInstance().addDriveTrainSimulation(mapleSim);
+        swerveSim.setLinearDamping(0.7);
+        swerveSim.setAngularDamping(0.7);
+        SimulatedArena.getInstance().addDriveTrainSimulation(swerveSim);
         SimulatedArena.overrideSimulationTimings(Seconds.of(SIM_UPDATE_PERIOD), 1);
         DATA_UPDATER.startPeriodic(SIM_UPDATE_PERIOD);
         for (int i = 0; i < 4; i++) {
             var module = super.drivetrain.getModule(i);
-            var sim = mapleSim.getModules()[i];
+            var sim = swerveSim.getModules()[i];
             module.getSteerMotor().getSimState().setMotorType(MotorType.KrakenX44);
             sim.useDriveMotorController(new TalonFXSim(module.getDriveMotor(), null));
             sim.useSteerMotorController(new TalonFXSim(module.getSteerMotor(), module.getEncoder()));
         }
-        SharedData.numSimulatedRobots++;
     }
 
     /** Creates an instance of a {@link MapleSimSwerveHardware}. */
-    public static MapleSimSwerveHardware create(SwerveConfig config) {
+    public static MapleSimSwerveHardware create(SwerveDriveSimulation swerveSim, SwerveConfig config) {
         // offsets that aren't applicable to sim must be cleared before the swerve hardware is created.
         for (var moduleConfig: config.moduleConsts()) {
             moduleConfig.EncoderOffset = 0;
@@ -62,25 +60,20 @@ public class MapleSimSwerveHardware extends SwerveHardware {
             moduleConfig.EncoderInverted = false;
             moduleConfig.CouplingGearRatio = 0;
         }
-        return new MapleSimSwerveHardware(config);
+        return new MapleSimSwerveHardware(swerveSim, config);
     }
 
     @Override
     public void refreshData(SwerveDataAutoLogged data) {
         super.refreshData(data);
-        var truePose = mapleSim.getSimulatedDriveTrainPose();
+        var truePose = swerveSim.getSimulatedDriveTrainPose();
         Logger.recordOutput(super.name + "TruePose", truePose);
         gyroSim.setRawYaw(truePose.getRotation().getMeasure());
-        if (SharedData.numSimulatedRobots > 1) {
-            data.pose = truePose; // don't use vision sim if we have a sim defense bot
-        } else {
-            SharedData.visionSimPose = truePose;
-        }
     }
 
     @Override
     public void resetNotReplayedPose(Pose2d pose) {
-        mapleSim.setSimulationWorldPose(pose);
+        swerveSim.setSimulationWorldPose(pose);
         super.drivetrain.resetTranslation(pose.getTranslation());
     }
 

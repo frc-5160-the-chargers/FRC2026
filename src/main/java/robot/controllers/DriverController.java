@@ -1,4 +1,4 @@
-package robot.misc;
+package robot.controllers;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -14,6 +14,8 @@ import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import robot.subsystems.drive.SwerveConfig;
+
+import java.util.Optional;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -64,7 +66,8 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
             .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
     }
 
-    public SwerveRequest getSwerveRequest(Rotation2d targetAngle) {
+    public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle) {
+        if (targetAngle.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
@@ -72,7 +75,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
             .withVelocityX(forward * maxVelMetersPerSec)
             .withVelocityY(strafe * maxVelMetersPerSec)
             .withDeadband(0.1 * scalar * maxVelMetersPerSec)
-            .withTargetDirection(targetAngle)
+            .withTargetDirection(targetAngle.get())
             .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
     }
 

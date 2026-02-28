@@ -1,10 +1,12 @@
 package robot;
 
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -19,12 +21,15 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import robot.constants.LoggingConfig;
-import robot.misc.DriverController;
-import robot.misc.ManualOverrideController;
+import robot.controllers.DriverController;
+import robot.controllers.ManualOverrideController;
+import robot.subsystems.Superstructure;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.drive.TunerConstants;
 import robot.subsystems.intake.GroundIntake;
+import robot.subsystems.serializer.Serializer;
+import robot.subsystems.shooter.Shooter;
 
 import static edu.wpi.first.units.Units.Inches;
 
@@ -34,7 +39,6 @@ public class Robot extends LoggedRobot {
         LoggingConfig.initForMainRobot();
     }
 
-    private final Tunable<Pose2d> demoPose = Tunable.of("DemoPose", Pose2d.kZero);
     private final Tunable<Double> pivotDebugVolts = Tunable.of("GroundIntake/Pivot/DemoVolts", 0);
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
     private final SwerveConfig swerveCfg = new SwerveConfig(
@@ -47,15 +51,27 @@ public class Robot extends LoggedRobot {
     );
 
     private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
-    private final GroundIntake groundIntake = new GroundIntake();
+    private final GroundIntake groundIntake = new GroundIntake(drive.getSim());
+    private final Shooter shooter = new Shooter();
+    private final Serializer serializer = new Serializer();
 
     private final DriverController controller = new DriverController(0, swerveCfg);
     private final ManualOverrideController manualController = new ManualOverrideController(1);
 
+    private final Superstructure superstructure =
+        new Superstructure(controller, drive, groundIntake, shooter, serializer);
+
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
-        demoPose.onChange(drive::resetPose);
-        drive.setDefaultCommand(drive.driveCmd(controller::getSwerveRequest));
+        Tunable.setEnabled(true);
+        Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
+        serializer.setSimGamePieceRemover(groundIntake.sim::obtainGamePieceFromIntake);
+        serializer.setSimGamePiecesCounter(groundIntake.sim::getGamePiecesAmount);
+        setButtonBindings();
+        setDefaultCommands();
+    }
+
+    private void setButtonBindings() {
         controller.touchpad().multiPress(2, 0.3)
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
         controller.triangle().whileTrue(
@@ -63,14 +79,27 @@ public class Robot extends LoggedRobot {
         );
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
-        Tunable.setEnabled(true);
+        if (RobotMode.isSim()) {
+            RobotModeTriggers.test()
+                .whileTrue(superstructure.shootInHubCmd());
+            RobotModeTriggers.teleop().or(RobotModeTriggers.test())
+                .onTrue(Commands.runOnce(() -> DriverStationSim.setAllianceStationId(AllianceStationID.Blue1)));
 
+            var demoAngle = Tunable.of("DemoHoodAngleDeg", 90);
+            RobotModeTriggers.autonomous()
+                .whileTrue(shooter.setHoodAngleCmd(() -> Rotation2d.fromDegrees(demoAngle.get())));
+        }
+    }
+
+    private void setDefaultCommands() {
+        drive.setDefaultCommand(
+            drive.driveCmd(() -> controller.getSwerveRequest(superstructure.getRotationOverride()))
+        );
         groundIntake.setDefaultCommand(
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
         );
-        if (RobotMode.isSim()) {
-            RobotModeTriggers.test().onTrue(groundIntake.intakeCmd());
-        }
+        shooter.setDefaultCommand(shooter.stopCmd());
+        serializer.setDefaultCommand(serializer.stopCmd());
     }
 
     @Override
@@ -89,10 +118,6 @@ public class Robot extends LoggedRobot {
         canBusLogger.periodic();
         CmdLogger.periodic(true);
         Tracer.endCycle();
-        Logger.recordOutput("HoodPosition", new Pose3d(
-            9.06 * Convert.INCHES_TO_METERS, 0, 11.776 * Convert.INCHES_TO_METERS,
-            new Rotation3d(0, 0.5, 0))
-        );
         Threads.setCurrentThreadPriority(false, 0);
     }
 }

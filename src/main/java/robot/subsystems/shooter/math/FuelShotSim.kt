@@ -1,75 +1,25 @@
-// We use kotlin to write our shooter calculations code because it has operator overloading (w)
-@file:Suppress("LocalVariableName")
 package robot.subsystems.shooter.math
 
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.Vector
-import edu.wpi.first.math.geometry.*
-import edu.wpi.first.math.kinematics.ChassisSpeeds
+import edu.wpi.first.math.geometry.Pose3d
+import edu.wpi.first.math.geometry.Rotation2d
+import edu.wpi.first.math.geometry.Rotation3d
+import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.numbers.N3
 import edu.wpi.first.math.numbers.N6
-import edu.wpi.first.units.Units.RadiansPerSecond
-import edu.wpi.first.units.measure.AngularVelocity
 import lib.Convert
 import org.littletonrobotics.junction.Logger
 import robot.constants.FieldConstants
-import robot.subsystems.shooter.DataTypes.ShooterSetpoint
-import robot.subsystems.shooter.Shooter.*
-import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.pow
 
-fun computeSetpoint(
-    target: Translation2d,
-    shotMap: ShotMap,
-    robotPose: Pose2d,
-    fieldCentricVel: ChassisSpeeds,
-    currentShooterVel: AngularVelocity
-): ShooterSetpoint {
-    val numIterations = NEWTONS_METHOD_ITERATIONS.get().toInt()
-    val iterations = Array(numIterations + 1) { Pose2d.kZero }
-    val dragComp = DRAG_COMPENSATION.get()
-    val lookaheadSecs = LOOKAHEAD_SECS.get()
-    val vx = fieldCentricVel.vxMetersPerSecond
-    val vy = fieldCentricVel.vyMetersPerSecond
-    val omega = fieldCentricVel.omegaRadiansPerSecond
-
-    val lookaheadComp = Transform2d(vx, vy, Rotation2d.fromRadians(omega)) * lookaheadSecs
-    val fieldOriginToShooter = (robotPose + lookaheadComp + ROBOT_TO_SHOOTER).translation
-    Logger.recordOutput("BaseRobotToShooter", ROBOT_TO_SHOOTER)
-    Logger.recordOutput("SupposedExtraToCompute", fieldOriginToShooter - robotPose.translation)
-    val shooterToTarget = target - fieldOriginToShooter
-    iterations[0] = Pose2d(fieldOriginToShooter, shooterToTarget.angle)
-    val shooterVel = Translation2d(
-        vx + omega * ROBOT_TO_SHOOTER.x,
-        vy - omega * ROBOT_TO_SHOOTER.y
-    )
-    val desiredVel = ANGULAR_TO_LINEAR_VEL.get(currentShooterVel.`in`(RadiansPerSecond))
-
-    var airTime = shotMap.get(shooterToTarget.norm, desiredVel).airTimeSecs
-    repeat(numIterations) { i ->
-        val a = (1 - exp(dragComp * airTime)) / dragComp
-        val futureFieldOriginToShooter = fieldOriginToShooter + shooterVel * airTime * a
-        val futureShooterToTarget = target - futureFieldOriginToShooter
-        val norm = futureShooterToTarget.norm
-        iterations[i + 1] = Pose2d(futureFieldOriginToShooter, futureShooterToTarget.angle)
-
-        // newton's method
-        val dt_dD = shotMap.getAirTimeDerivative(futureShooterToTarget.norm, desiredVel)
-        val da_dt = exp(-dragComp * airTime)
-        val error = airTime - shotMap.get(norm, desiredVel).airTimeSecs
-        val derror_dt = 1 + da_dt * dt_dD * futureShooterToTarget.dot(shooterVel) / norm
-        airTime -= error / derror_dt
-    }
-    val wantedShooterToTarget = shooterToTarget - shooterVel * airTime
-    Logger.recordOutput("ShooterCalcs/Iterations", *iterations)
-    Logger.recordOutput("ShooterCalcs/WantedShooterToTarget", wantedShooterToTarget)
-    return ShooterSetpoint(
-        wantedShooterToTarget.angle,
-        Rotation2d.fromRadians(shotMap.get(wantedShooterToTarget.norm, desiredVel).pitchRad),
-        ANGULAR_TO_LINEAR_VEL.getKey(shotMap.maxVelocityAt(wantedShooterToTarget.norm))
-    )
-}
+private const val RHO = 1.221 // Fluid density of air; kg / m^3
+private const val C_D = 0.47 // Drag Coefficient
+private const val C_L = 0.00025 // Lift Coefficient
+private const val BALL_DIAMETER_M = 5.91 * Convert.INCHES_TO_METERS
+private const val BALL_MASS = 0.5 * Convert.POUNDS_TO_KG
+private val GRAVITATIONAL_ACCEL = VecBuilder.fill(0.0, 0.0, -9.81)
 
 /**
  * Simulates a shot with an initial shooter position + ball velocity.
@@ -101,14 +51,6 @@ fun simulateShot(pose: Translation3d, velocity: Translation3d) {
     poses.add(Pose3d(x[0], x[1], x[2], Rotation3d.kZero))
     Logger.recordOutput("Shooter/Simulated Shot", *poses.toTypedArray())
 }
-
-private const val RHO = 1.221 // Fluid density of air; kg / m^3
-private const val C_D = 0.47 // Drag Coefficient
-private const val C_L = 0.00025 // Lift Coefficient
-private const val BALL_DIAMETER_M = 5.91 * Convert.INCHES_TO_METERS
-private const val BALL_MASS = 0.5 * Convert.POUNDS_TO_KG
-private val GRAVITATIONAL_ACCEL = VecBuilder.fill(0.0, 0.0, -9.81)
-
 
 /**
  * Returns an array of [velocity x, velocity y, velocity z, accel x, accel y, accel z],

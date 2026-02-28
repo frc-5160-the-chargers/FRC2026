@@ -13,8 +13,8 @@ import edu.wpi.first.units.measure.*;
 public final class ChoreoVars {
     public static final double cof = 1.5;
     public static final double gearing = 6.2;
-    public static final Distance moduleX = Units.Meters.of(0.348);
-    public static final Distance moduleY = Units.Meters.of(0.279);
+    public static final Distance moduleX = Units.Meters.of(0.343);
+    public static final Distance moduleY = Units.Meters.of(0.33);
     public static final MomentOfInertia robotMOI = Units.KilogramSquareMeters.of(5.8);
     public static final Mass robotMass = Units.Kilograms.of(63.5);
     public static final Distance wheelRadius = Units.Meters.of(0.048);
