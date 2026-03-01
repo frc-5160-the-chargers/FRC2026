@@ -47,14 +47,14 @@ public class Robot extends LoggedRobot {
 
     private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
     private final GroundIntake groundIntake = new GroundIntake(drive.getSim());
-//    private final Shooter shooter = new Shooter();
-//    private final Serializer serializer = new Serializer();
+    private final Shooter shooter = new Shooter();
+    private final Serializer serializer = new Serializer();
 
     private final DriverController controller = new DriverController(0, swerveCfg);
     private final ManualOverrideController manualController = new ManualOverrideController(1);
 
-//    private final Superstructure superstructure =
-//        new Superstructure(controller, drive, groundIntake, shooter, serializer);
+    private final Superstructure superstructure =
+        new Superstructure(controller, drive, groundIntake, shooter, serializer);
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -74,6 +74,8 @@ public class Robot extends LoggedRobot {
         );
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
+        RobotModeTriggers.test()
+            .whileTrue(superstructure.shootInHubCmd());
     }
 
     private void setDefaultCommands() {
