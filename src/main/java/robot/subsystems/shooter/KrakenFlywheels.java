@@ -28,7 +28,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 // to make it easier to use torque current control.
 public class KrakenFlywheels {
     @AutoLog
-    public static class FlywheelData {
+    static class FlywheelData {
         public AngularVelocity velocity = RadiansPerSecond.zero();
         public AngularAcceleration accel = RadiansPerSecondPerSecond.zero();
         public double pidError = 0.0;

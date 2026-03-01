@@ -3,7 +3,7 @@ package robot.subsystems.shooter;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -20,16 +20,24 @@ import robot.subsystems.common.PivotDataAutoLogged;
 import robot.subsystems.common.PivotHardware;
 import robot.subsystems.common.PivotHardware.PivotSimConfig;
 import robot.subsystems.common.SimPivotHardware;
-import robot.subsystems.shooter.DataTypes.ShooterSetpoint;
 
 import java.util.function.DoubleSupplier;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 import static lib.Convert.CustomUnits.PoundSquareInches;
 
 public class Shooter extends ChargerSubsystem {
+    /** The yaw, pitch, and shooter speed for launched balls to reach the target. */
+    public record Setpoint(Rotation2d yaw, Rotation2d pitch, double radPerSec) {
+        /** Represents a Shooter setpoint with no data. */
+        public static final Setpoint NULL = new Setpoint(Rotation2d.kZero, Rotation2d.kZero, 0);
+
+        public AngularVelocity speed() {
+            return RadiansPerSecond.of(radPerSec);
+        }
+    }
+
     static final double HOOD_REDUCTION = 25.0;
     static final DCMotor HOOD_MOTOR_KIND = DCMotor.getNeo550(1);
     static final PivotSimConfig HOOD_SIM_CFG = new PivotSimConfig(
@@ -42,11 +50,11 @@ public class Shooter extends ChargerSubsystem {
 
     static final double FLYWHEEL_REDUCTION = 1.0;
 
-    public static final Transform2d ROBOT_TO_FUEL_LAUNCH_POINT =
+    public static final Transform2d ROBOT_TO_LAUNCH_POINT =
         new Transform2d(Inches.of(6.07), Inches.zero(), Rotation2d.kZero);
     public static final Translation3d ROBOT_TO_SHOOTER_PIVOT_POINT =
         new Translation3d(Inches.of(9.06), Inches.zero(), Inches.of(11.776));
-    public static final Distance FUEL_LAUNCH_HEIGHT = Inches.of(15);
+    public static final Distance FUEL_LAUNCH_HEIGHT = Inches.of(15.2);
 
     private final Tunable<Double>
         flywheelKp = Tunable.of(key("Flywheels/KP"), 7.0),
@@ -104,10 +112,10 @@ public class Shooter extends ChargerSubsystem {
     }
 
     /** Runs the shooter at the commanded setpoint. */
-    public Command runCmd(Function<FlywheelDataAutoLogged, ShooterSetpoint> targetSupplier) {
+    public Command runCmd(Supplier<Setpoint> targetSupplier) {
         var resetStateCmd = this.runOnce(() -> hoodController.resetTo(hoodInputs.getMotionState()));
         var targetGoalCmd = this.run(() -> {
-            var target = targetSupplier.apply(flywheelInputs);
+            var target = targetSupplier.get();
             var hoodGoal = new TrapezoidProfile.State(Math.PI / 2 - target.pitch().getRadians(), 0);
             flywheelIO.setVelocity(target.speed());
             hoodController.moveTo(hoodGoal, hoodInputs.positionRad);
@@ -122,7 +130,7 @@ public class Shooter extends ChargerSubsystem {
     }
 
     public Command setHoodAngleCmd(Supplier<Rotation2d> angle) {
-        return runCmd(ignore -> new ShooterSetpoint(Rotation2d.kZero, angle.get(), 0, true));
+        return runCmd(() -> new Setpoint(Rotation2d.kZero, angle.get(), 0));
     }
 
     @Override

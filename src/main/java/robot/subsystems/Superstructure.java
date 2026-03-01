@@ -14,9 +14,8 @@ import robot.controllers.DriverController;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
-import robot.subsystems.shooter.DataTypes.ShooterSetpoint;
+import robot.subsystems.shooter.HubShotCalcsKt;
 import robot.subsystems.shooter.Shooter;
-import robot.subsystems.shooter.math.HubShotCalcsKt;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -44,14 +43,13 @@ public class Superstructure {
     private final Serializer serializer;
 
     // State & util methods
-    @AutoLogOutput private ShooterSetpoint shotSetpoint = ShooterSetpoint.NULL;
+    @AutoLogOutput private Shooter.Setpoint shotSetpoint = Shooter.Setpoint.NULL;
     @Getter private Optional<Rotation2d> rotationOverride = Optional.empty();
 
     // Commands
     public Command shootInHubCmd() {
         var speedDebouncer = new Debouncer(0.2);
         var waitForShot = Commands.waitUntil(() -> {
-            if (!shotSetpoint.flywheelsAreReady()) return false;
             if (!shooter.hoodAtGoal) return false;
             for (var zone: hubNoShootZones) {
                 if (zone.contains(drive.getPose().getTranslation())) return false;
@@ -61,17 +59,16 @@ public class Superstructure {
         var runSerializer = NonBlockingCmds.sequence(
             waitForShot, Commands.waitSeconds(0.5), serializer.runCmd()
         );
-        var aimAndShoot = shooter.runCmd(inputs -> {
+        var aimAndShoot = shooter.runCmd(() -> {
             shotSetpoint = HubShotCalcsKt.calcHubShotSetpoint(
-                drive.getSim().getSimulatedDriveTrainPose(), drive.getFieldSpeeds(),
-                inputs, speedDebouncer, shotSetpoint
+                drive.getSim().getSimulatedDriveTrainPose(), drive.getFieldSpeeds()
             );
             rotationOverride = Optional.of(shotSetpoint.yaw());
             return shotSetpoint;
         });
         var cmd = NonBlockingCmds.parallel(aimAndShoot, runSerializer)
             .finallyDo(() -> {
-                shotSetpoint = ShooterSetpoint.NULL;
+                shotSetpoint = Shooter.Setpoint.NULL;
                 rotationOverride = Optional.empty();
             });
         return logged(cmd, "ShootAtHub (Teleop)");

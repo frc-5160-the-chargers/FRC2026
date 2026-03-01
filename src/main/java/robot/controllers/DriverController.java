@@ -6,7 +6,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -22,10 +21,9 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class DriverController extends CommandPS5Controller implements Subsystem {
-    private static final Translation2d HUB_BLUE = new Translation2d(4.63, 4.02);
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        HUB_AIM_KP = Tunable.of("HubAimingKP", 5.5),
+        HUB_AIM_KP = Tunable.of("HubAimingKP", 8.0),
         HUB_AIM_KD = Tunable.of("HubAimKD", 0.1);
 
     private final LoggedNetworkNumber
@@ -72,9 +70,9 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
         return facingHubSwerveReq
-            .withVelocityX(forward * maxVelMetersPerSec)
-            .withVelocityY(strafe * maxVelMetersPerSec)
-            .withDeadband(0.1 * scalar * maxVelMetersPerSec)
+            .withVelocityX(forward * maxVelMetersPerSec / 2.0)
+            .withVelocityY(strafe * maxVelMetersPerSec / 2.0)
+            .withDeadband(0.05 * scalar * maxVelMetersPerSec)
             .withTargetDirection(targetAngle.get())
             .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
     }

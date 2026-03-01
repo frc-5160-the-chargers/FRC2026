@@ -1,16 +1,11 @@
 package robot;
 
-import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import lib.Convert;
 import lib.RobotMode;
 import lib.Tracer;
 import lib.Tunable;
@@ -82,9 +77,6 @@ public class Robot extends LoggedRobot {
         if (RobotMode.isSim()) {
             RobotModeTriggers.test()
                 .whileTrue(superstructure.shootInHubCmd());
-            RobotModeTriggers.teleop().or(RobotModeTriggers.test())
-                .onTrue(Commands.runOnce(() -> DriverStationSim.setAllianceStationId(AllianceStationID.Blue1)));
-
             var demoAngle = Tunable.of("DemoHoodAngleDeg", 90);
             RobotModeTriggers.autonomous()
                 .whileTrue(shooter.setHoodAngleCmd(() -> Rotation2d.fromDegrees(demoAngle.get())));
