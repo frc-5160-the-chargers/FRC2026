@@ -30,7 +30,7 @@ import static lib.Convert.CustomUnits.PoundSquareInches;
 @SuppressWarnings("FieldCanBeLocal")
 public class GroundIntake extends ChargerSubsystem {
     static final double PIVOT_REDUCTION = 25.0 * 24.0 / 22.0; // MaxPlanetary + Sprockets
-    static final Angle PIVOT_OFFSET = Rotations.of(-0.2225);
+    static final Angle PIVOT_OFFSET = Rotations.of(-0.7725);
     static final Distance PIVOT_LENGTH = Inches.of(12.4);
     static final MomentOfInertia PIVOT_MOI = PoundSquareInches.of(1344.71);
     static final DCMotor PIVOT_MOTOR_KIND = DCMotor.getNEO(1);
