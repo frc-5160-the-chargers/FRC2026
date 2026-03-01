@@ -22,7 +22,9 @@ public class VortexIntakeRollers extends RollerHardware {
         config.encoder
             .positionConversionFactor(1 / GroundIntake.ROLLER_REDUCTION)
             .velocityConversionFactor(1 / GroundIntake.ROLLER_REDUCTION);
-        config.idleMode(SparkBaseConfig.IdleMode.kCoast);
+        config
+            .idleMode(SparkBaseConfig.IdleMode.kCoast)
+            .inverted(true);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
