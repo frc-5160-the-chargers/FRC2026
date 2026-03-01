@@ -60,8 +60,8 @@ public class Robot extends LoggedRobot {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
-        serializer.setSimGamePieceRemover(groundIntake.sim::obtainGamePieceFromIntake);
-        serializer.setSimGamePiecesCounter(groundIntake.sim::getGamePiecesAmount);
+//        serializer.setSimGamePieceRemover(groundIntake.sim::obtainGamePieceFromIntake);
+//        serializer.setSimGamePiecesCounter(groundIntake.sim::getGamePiecesAmount);
         setButtonBindings();
         setDefaultCommands();
     }

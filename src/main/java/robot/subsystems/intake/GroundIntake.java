@@ -59,7 +59,7 @@ public class GroundIntake extends ChargerSubsystem {
     private final PivotController pivotController;
     private final Debouncer hardStopDebouncer = new Debouncer(0.2);
 
-    public final IntakeSimulation sim;
+    private final IntakeSimulation sim;
 
     public GroundIntake(SwerveDriveSimulation swerveSim) {
         switch (RobotMode.get()) {
