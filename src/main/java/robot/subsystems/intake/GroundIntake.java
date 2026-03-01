@@ -81,14 +81,15 @@ public class GroundIntake extends ChargerSubsystem {
                 rollerIO = new SimRollerHardware(DCMotor.getNeoVortex(1), 3.0);
             }
         }
-        sim = IntakeSimulation.OverTheBumperIntake(
-            "Fuel",
-            swerveSim,
-            Inches.of(27),
-            Inches.of(7.5),
-            IntakeSimulation.IntakeSide.BACK,
-            30
-        );
+        sim = null;
+//        sim = IntakeSimulation.OverTheBumperIntake(
+//            "Fuel",
+//            swerveSim,
+//            Inches.of(27),
+//            Inches.of(7.5),
+//            IntakeSimulation.IntakeSide.BACK,
+//            30
+//        );
         pivotController = new PivotController(key("Pivot"), PIVOT_GAINS, PIVOT_CONSTRAINTS, pivotIO);
         pivotIO.setCurrentLimit(pivotCurrentLimit.get());
         rollerIO.setCurrentLimit(rollerCurrentLimit.get());
