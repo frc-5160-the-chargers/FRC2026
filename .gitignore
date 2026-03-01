@@ -162,11 +162,11 @@ gradle-app.setting
 .classpath
 .project
 .settings/
-bin/
+bin
 
 # IntelliJ
-.idea
 !.idea/runConfigurations
+.idea/
 out/
 
 # Fleet

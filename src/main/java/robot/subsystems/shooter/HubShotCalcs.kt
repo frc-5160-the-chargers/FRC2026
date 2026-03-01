@@ -7,18 +7,21 @@ package robot.subsystems.shooter
 import choreo.util.ChoreoAllianceFlipUtil.flip
 import edu.wpi.first.math.geometry.*
 import edu.wpi.first.math.kinematics.ChassisSpeeds
-import edu.wpi.first.units.Units.*
+import edu.wpi.first.units.Units.Meters
 import lib.AllianceColor
 import lib.RobotMode
 import lib.Tunable
 import lib.TunableLerpTable
 import org.littletonrobotics.junction.Logger
 import robot.constants.FieldConstants
+import java.io.BufferedWriter
+import java.io.FileWriter
 import kotlin.math.roundToInt
 
 /** Calculates the desired shot parameters to launch fuel into the hub. */
 fun calcHubShotSetpoint(robotPose: Pose2d, fieldCentricVel: ChassisSpeeds): Shooter.Setpoint {
     val goalPosition = if (AllianceColor.isRed()) flip(HUB_LOCATION) else HUB_LOCATION
+    // equivalent to Pose2d[] iterations = new Pose2d[NEWTONS_METHOD_ITERATIONS + 1];
     val iterations = Array(NEWTONS_METHOD_ITERATIONS + 1) { Pose2d.kZero }
     val vx = fieldCentricVel.vxMetersPerSecond
     val vy = fieldCentricVel.vyMetersPerSecond
@@ -29,9 +32,12 @@ fun calcHubShotSetpoint(robotPose: Pose2d, fieldCentricVel: ChassisSpeeds): Shoo
     // We multiply this time by the robot's velocity in the x, y, and omega directions,
     // and then add it to each component of the robot's pose to get the new "future" pose.
     val lookaheadComp = Transform2d(vx, vy, Rotation2d.fromRadians(omega)) * LOOKAHEAD_SECS.get()
+    // The x and y distance from the field origin to the launch point.
     val fieldOriginToShooter = (robotPose + lookaheadComp + Shooter.ROBOT_TO_LAUNCH_POINT).translation
+    // The x and y distance from the launch point to the hub.
     val shooterToGoal = goalPosition - fieldOriginToShooter
     iterations[0] = Pose2d(fieldOriginToShooter, shooterToGoal.angle)
+    // The "norm" is basically sqrt(x^2 + y^2) (or the pythagorean theorem)
     Logger.recordOutput("ShotCalcs/InitialDistanceToGoal(m)", shooterToGoal.norm)
 
     val botToLaunchPointRotated = fieldOriginToShooter - robotPose.translation
@@ -79,7 +85,7 @@ fun calcHubShotSetpoint(robotPose: Pose2d, fieldCentricVel: ChassisSpeeds): Shoo
             ),
             velocity = Translation3d(ballSpeed, launchAngle) +
                 Translation3d(shooterVelocity.x, shooterVelocity.y, 0.0),
-            dt = 0.01
+            dt = 0.05
         )
     }
 
@@ -93,7 +99,7 @@ fun calcHubShotSetpoint(robotPose: Pose2d, fieldCentricVel: ChassisSpeeds): Shoo
 private const val NEWTONS_METHOD_ITERATIONS = 7
 private const val DEBUG_MODE = false
 private val HUB_LOCATION = FieldConstants.Hub.topCenterPoint.toTranslation2d()
-private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.1)
+private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.02)
 // Because of energy loss, the linear velocity of the ball isn't exactly
 // omega * r; so, we compensate for that with a lerp table.
 private val BALL_TO_FLYWHEEL_SPEED =
@@ -109,7 +115,8 @@ private val DISTANCE_TO_BALL_SPEED =
         .put(2.65, 6.8)
         .put(2.95, 7.05)
         .put(3.05, 7.2)
-        .put(3.75, 7.7)
+        .put(3.5, 7.45)
+        .put(3.75, 7.6)
         .put(4.35, 8.05)
         .put(4.65, 8.5)
         .put(5.0, 8.5)
@@ -131,75 +138,19 @@ private val DISTANCE_TO_HOOD_ANGLE =
         .put(4.65, 0.78)
         .put(5.0, 1.0)
         .put(8.0, 1.0)
-private val DISTANCE_TO_AIR_TIME =
-    TunableLerpTable("ShotCalcs/Distance(m) -> Air Time(s)")
-        .put(0.0, 0.0)
-        .put(1.5, 0.872)
-        .put(1.6, 0.858)
-        .put(1.7, 0.842)
-        .put(1.8, 0.818)
-        .put(1.9, 0.8)
-        .put(2.2, 0.798)
-        .put(2.3, 0.8)
-        .put(2.4, 0.804)
-        .put(2.5, 0.81)
-        .put(2.6, 0.812)
-        .put(2.7, 0.816)
-        .put(2.8, 0.818)
-        .put(3.1, 0.814)
-        .put(3.2, 0.842)
-        .put(3.3, 0.848)
-        .put(3.4, 0.852)
-        .put(3.5, 0.858)
-        .put(3.6, 0.864)
-        .put(3.7, 0.87)
-        .put(3.8, 0.876)
-        .put(3.9, 0.882)
-        .put(4.0, 0.884)
-        .put(4.1, 0.886)
-        .put(4.2, 0.888)
-        .put(4.4, 0.89)
-        .put(4.6, 0.87)
-        .put(4.7, 0.844)
-        .put(4.8, 0.814)
-        .put(4.9, 0.922)
-        .put(5.0, 1.018)
-        .put(5.1, 1.102)
-        .put(5.2, 1.15)
-        .put(5.3, 1.168)
-        .put(5.4, 1.182)
-        .put(5.5, 1.192)
-        .put(5.6, 1.202)
-        .put(5.7, 1.212)
-        .put(5.8, 1.222)
-        .put(5.9, 1.234)
-        .put(6.0, 1.25)
-        .put(6.1, 1.264)
-        .put(6.2, 1.28)
-        .put(6.3, 1.294)
-        .put(6.4, 1.31)
-        .put(6.5, 1.324)
-        .put(6.6, 1.338)
-        .put(6.7, 1.352)
-        .put(6.8, 1.366)
-        .put(6.9, 1.378)
-        .put(7.0, 1.39)
-        .put(7.1, 1.404)
-        .put(7.2, 1.416)
-        .put(7.3, 1.436)
-        .put(7.4, 1.454)
-        .put(7.5, 1.472)
-        .put(7.6, 1.49)
-        .put(7.7, 1.502)
-        .put(7.8, 1.51)
-        .put(7.9, 1.516)
 
 /**
- * A (sort of jank) way to generate entries to the DISTANCE_TO_AIR_TIME table
- * using the fuel shot simulator. Should only be used when simulating the code.
+ * Generates the DistanceToAirTime.kt file (and the DISTANCE_TO_AIR_TIME table)
+ * by using the fuel shot simulator to theoretically calculate
+ * the air time of the ball at various distances from the hub.
  */
-fun printDistanceToAirTimeTable() {
-    if (!RobotMode.isSim()) return
+private fun writeDistanceToAirTimeTable(): String {
+    val text = StringBuilder()
+    text.append("// This file was autogenerated by HubShotCalcs.kt.\n")
+    text.append("package robot.subsystems.shooter\n\n")
+    text.append("import lib.TunableLerpTable\n\n")
+    text.append("val DISTANCE_TO_AIR_TIME =\n")
+    text.append("    TunableLerpTable(\"ShotCalcs/Distance(m) -> Air Time(s)\")\n")
     var prevRoundedAirTime = -1.0
     repeat(80) { i ->
         val dist = i * 0.1
@@ -222,6 +173,15 @@ fun printDistanceToAirTimeTable() {
         val roundedAirTime = (airTime * 100000.0).roundToInt() / 100000.0
         if (roundedAirTime == prevRoundedAirTime) return@repeat
         prevRoundedAirTime = roundedAirTime
-        println(".put($roundedDist, $roundedAirTime)")
+        text.append("        .put($roundedDist, $roundedAirTime)\n")
+    }
+    return text.toString()
+}
+
+fun main() {
+    val path = "src/main/java/robot/subsystems/shooter/DistanceToAirTime.kt"
+    BufferedWriter(FileWriter(path)).use { writer ->
+        val content = writeDistanceToAirTimeTable()
+        writer.write(content)
     }
 }
