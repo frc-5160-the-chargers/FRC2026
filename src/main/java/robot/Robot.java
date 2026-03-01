@@ -47,14 +47,14 @@ public class Robot extends LoggedRobot {
 
     private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
     private final GroundIntake groundIntake = new GroundIntake(drive.getSim());
-    private final Shooter shooter = new Shooter();
-    private final Serializer serializer = new Serializer();
+//    private final Shooter shooter = new Shooter();
+//    private final Serializer serializer = new Serializer();
 
     private final DriverController controller = new DriverController(0, swerveCfg);
     private final ManualOverrideController manualController = new ManualOverrideController(1);
 
-    private final Superstructure superstructure =
-        new Superstructure(controller, drive, groundIntake, shooter, serializer);
+//    private final Superstructure superstructure =
+//        new Superstructure(controller, drive, groundIntake, shooter, serializer);
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -74,24 +74,17 @@ public class Robot extends LoggedRobot {
         );
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
-        if (RobotMode.isSim()) {
-            RobotModeTriggers.test()
-                .whileTrue(superstructure.shootInHubCmd());
-            var demoAngle = Tunable.of("DemoHoodAngleDeg", 90);
-            RobotModeTriggers.autonomous()
-                .whileTrue(shooter.setHoodAngleCmd(() -> Rotation2d.fromDegrees(demoAngle.get())));
-        }
     }
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(
-            drive.driveCmd(() -> controller.getSwerveRequest(superstructure.getRotationOverride()))
+            drive.driveCmd(controller::getSwerveRequest)
         );
         groundIntake.setDefaultCommand(
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
         );
-        shooter.setDefaultCommand(shooter.stopCmd());
-        serializer.setDefaultCommand(serializer.stopCmd());
+//        shooter.setDefaultCommand(shooter.stopCmd());
+//        serializer.setDefaultCommand(serializer.stopCmd());
     }
 
     @Override
