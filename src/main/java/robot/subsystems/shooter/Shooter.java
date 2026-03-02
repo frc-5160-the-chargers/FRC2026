@@ -29,9 +29,9 @@ import static lib.Convert.CustomUnits.PoundSquareInches;
 
 public class Shooter extends ChargerSubsystem {
     /** The yaw, pitch, and shooter speed for launched balls to reach the target. */
-    public record Setpoint(Rotation2d yaw, Rotation2d pitch, double radPerSec) {
+    public record Setpoint(Rotation2d yaw, Rotation2d pitch, double radPerSec, boolean isPossible) {
         /** Represents a Shooter setpoint with no data. */
-        public static final Setpoint NULL = new Setpoint(Rotation2d.kZero, Rotation2d.kZero, 0);
+        public static final Setpoint NULL = new Setpoint(Rotation2d.kZero, Rotation2d.kZero, 0, false);
 
         public AngularVelocity speed() {
             return RadiansPerSecond.of(radPerSec);
@@ -45,8 +45,8 @@ public class Shooter extends ChargerSubsystem {
         Inches.of(7.5), HOOD_MOTOR_KIND, false
     );
     static final double HOOD_KV = 1 / HOOD_MOTOR_KIND.withReduction(HOOD_REDUCTION).KvRadPerSecPerVolt;
-    static final PivotConstraints HOOD_CONSTRAINTS = new PivotConstraints(5, 3);
-    static final PivotGains HOOD_GAINS = new PivotGains(0, HOOD_KV, 0, 4.0, 0);
+    static final PivotConstraints HOOD_CONSTRAINTS = new PivotConstraints(5, 5);
+    static final PivotGains HOOD_GAINS = new PivotGains(0, HOOD_KV, 0, 20.0, 0.05);
 
     static final double FLYWHEEL_REDUCTION = 1.0;
 
@@ -57,10 +57,11 @@ public class Shooter extends ChargerSubsystem {
     public static final Distance FUEL_LAUNCH_HEIGHT = Inches.of(15.2);
 
     private final Tunable<Double>
-        flywheelKp = Tunable.of(key("Flywheels/KP"), 7.0),
+        flywheelKp = Tunable.of(key("Flywheels/KP"), 17.0),
         flywheelKd = Tunable.of(key("Flywheels/KD"), 0.0),
         flywheelKv = Tunable.of(key("Flywheels/KV"), 0.0),
-        hoodTolerance = Tunable.of(key("Hood/Tolerance (Rad)"), 1 * Convert.DEGREES_TO_RADIANS);
+        hoodTolerance = Tunable.of(key("Hood/Tolerance (Rad)"), 1 * Convert.DEGREES_TO_RADIANS),
+        flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 5.0);
     private final KrakenFlywheels flywheelIO = new KrakenFlywheels();
     private final PivotHardware hoodIO = switch (RobotMode.get()) {
         case REAL -> new NeoShooterHood();
@@ -74,8 +75,16 @@ public class Shooter extends ChargerSubsystem {
         key("Hood"), HOOD_GAINS, HOOD_CONSTRAINTS, hoodIO
     );
 
-    /** Whether the shooter hood is at it's desired goal. */
-    @AutoLogOutput public boolean hoodAtGoal = false;
+    @AutoLogOutput(unit = "RadPerSec") private double flywheelErr = 0;
+    @AutoLogOutput(unit = "Rad") private double hoodErr = 0;
+
+    /** Whether the flywheels and hood have reached their desired velocity and position, respectively. */
+    public boolean atGoal(double toleranceMultiplier) {
+        boolean result = hoodErr < (hoodTolerance.get() * toleranceMultiplier)
+            && flywheelErr < (flywheelTolerance.get() * toleranceMultiplier);
+        Logger.recordOutput(key("AtGoal"), result);
+        return result;
+    }
 
     public final SysIdRoutine sysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(
@@ -112,16 +121,17 @@ public class Shooter extends ChargerSubsystem {
     }
 
     /** Runs the shooter at the commanded setpoint. */
-    public Command runCmd(Supplier<Setpoint> targetSupplier) {
+    public Command targetingCmd(Supplier<Setpoint> targetSupplier) {
         var resetStateCmd = this.runOnce(() -> hoodController.resetTo(hoodInputs.getMotionState()));
         var targetGoalCmd = this.run(() -> {
             var target = targetSupplier.get();
             var hoodGoal = new TrapezoidProfile.State(Math.PI / 2 - target.pitch().getRadians(), 0);
             flywheelIO.setVelocity(target.speed());
             hoodController.moveTo(hoodGoal, hoodInputs.positionRad);
-            hoodAtGoal = Math.abs(hoodInputs.positionRad - hoodGoal.position) < hoodTolerance.get();
+            hoodErr = Math.abs(hoodInputs.positionRad - hoodGoal.position);
+            flywheelErr = Math.abs(flywheelInputs.velocity.in(RadiansPerSecond) - target.radPerSec);
         });
-        return logged(resetStateCmd.andThen(targetGoalCmd), "Run");
+        return logged(resetStateCmd.andThen(targetGoalCmd), "TargetSetpoint");
     }
 
     public Command manualHoodCmd(DoubleSupplier volts) {
@@ -130,7 +140,12 @@ public class Shooter extends ChargerSubsystem {
     }
 
     public Command setHoodAngleCmd(Supplier<Rotation2d> angle) {
-        return runCmd(() -> new Setpoint(Rotation2d.kZero, angle.get(), 0));
+        return targetingCmd(() -> new Setpoint(Rotation2d.kZero, angle.get(), 0, true));
+    }
+
+    public Command setFlywheelVelCmd(Supplier<AngularVelocity> velocity) {
+        var cmd = this.run(() -> flywheelIO.setVelocity(velocity.get()));
+        return logged(cmd, "ManualFlywheel");
     }
 
     @Override

@@ -28,7 +28,7 @@ private val GRAVITATIONAL_ACCEL = VecBuilder.fill(0.0, 0.0, -9.81)
 /**
  * Simulates a shot with an initial shooter position + ball velocity.
  * Logs the simulated shot as an array of Pose3ds, while returning the total
- * time of the trajectory.
+ * time of the trajectory in seconds.
  */
 fun simulateShot(pose: Translation3d, velocity: Translation3d, dt: Double): Double {
     // For a ball with full backspin, the direction of the rotational velocity vector is clockwise

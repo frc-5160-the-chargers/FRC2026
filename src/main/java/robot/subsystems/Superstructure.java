@@ -1,11 +1,12 @@
 package robot.subsystems;
 
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import lib.Convert;
+import lib.Tunable;
 import lib.commands.NonBlockingCmds;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -14,26 +15,24 @@ import robot.controllers.DriverController;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
-import robot.subsystems.shooter.HubShotCalcsKt;
+import robot.subsystems.shooter.ShotCalcsKt;
 import robot.subsystems.shooter.Shooter;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static lib.commands.CmdLogger.logged;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor
 public class Superstructure {
     // Constants
-    private static final ArrayList<Rectangle2d> hubNoShootZones = new ArrayList<>();
-    static {
-        var blueZone = new Rectangle2d(new Translation2d(3.8, 8), new Translation2d(5.3, 0));
-        var redZone = new Rectangle2d(flip(blueZone.getCenter()), blueZone.getXWidth(), blueZone.getYWidth());
-        hubNoShootZones.add(blueZone);
-        hubNoShootZones.add(redZone);
-    }
+    private static final List<Rectangle2d> HUB_NO_SHOOT_ZONES = List.of(
+        new Rectangle2d(new Translation2d(4.3, 0), new Translation2d(12.3, 8.1))
+    );
+    private static final Tunable<Double>
+        YAW_TOLERANCE = Tunable.of("HubAiming/Tolerance (rad)", 0.15),
+        FERRY_HOOD_ANGLE = Tunable.of("Ferrying/HoodAngle (rad)", 65 * Convert.DEGREES_TO_RADIANS);
 
     // Constructor Parameters
     private final DriverController controller;
@@ -42,35 +41,88 @@ public class Superstructure {
     private final Shooter shooter;
     private final Serializer serializer;
 
-    // State & util methods
-    @AutoLogOutput private Shooter.Setpoint shotSetpoint = Shooter.Setpoint.NULL;
-    @Getter private Optional<Rotation2d> rotationOverride = Optional.empty();
+    // State
+    /** A rotation override used for shooting. */
+    @Getter
+    private Optional<Rotation2d> rotationOverride = Optional.empty();
+
+    @AutoLogOutput(key = "ShotCalcs/Setpoint")
+    private Shooter.Setpoint shotSetpoint = Shooter.Setpoint.NULL;
+
+    @AutoLogOutput(key = "Swerve/YawErr")
+    private Rotation2d yawErr = Rotation2d.kZero;
+
+    private double swerveNetSpeed = 0.0;
+
+    private void updateHubShotSetpoint() {
+        var speeds = drive.getFieldSpeeds();
+        shotSetpoint = ShotCalcsKt.getHubShotSetpoint(drive.getSim().getSimulatedDriveTrainPose(), speeds);
+        yawErr = drive.getPose().getRotation().minus(shotSetpoint.yaw());
+        swerveNetSpeed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    }
+
+    private void resetShotSetpoint() {
+        shotSetpoint = Shooter.Setpoint.NULL;
+        rotationOverride = Optional.empty();
+    }
+
+    private Command runSerializerCmd(List<Rectangle2d> noShootZones) {
+        return NonBlockingCmds.sequence(
+            Commands.waitUntil(() -> shooter.atGoal(1.0))
+                .withTimeout(1.0),
+            serializer.runWhileTrueCmd(() -> {
+                if (!shotSetpoint.isPossible()) return false;
+                double yawTolerance = YAW_TOLERANCE.get() * (1 + swerveNetSpeed);
+                if (Math.abs(yawErr.getRadians()) > yawTolerance) return false;
+                for (var zone: noShootZones) {
+                    if (zone.contains(drive.getPose().getTranslation())) return false;
+                }
+                return true;
+            })
+        );
+    }
 
     // Commands
     public Command shootInHubCmd() {
-        var speedDebouncer = new Debouncer(0.2);
-        var waitForShot = Commands.waitUntil(() -> {
-            if (!shooter.hoodAtGoal) return false;
-            for (var zone: hubNoShootZones) {
-                if (zone.contains(drive.getPose().getTranslation())) return false;
-            }
-            return true;
-        });
-        var runSerializer = NonBlockingCmds.sequence(
-            waitForShot, Commands.waitSeconds(0.5), serializer.runCmd()
-        );
-        var aimAndShoot = shooter.runCmd(() -> {
-            shotSetpoint = HubShotCalcsKt.calcHubShotSetpoint(
-                drive.getSim().getSimulatedDriveTrainPose(), drive.getFieldSpeeds()
+        var cmd = NonBlockingCmds.parallel(
+            shooter.targetingCmd(() -> {
+                updateHubShotSetpoint();
+                rotationOverride = Optional.of(shotSetpoint.yaw());
+                return shotSetpoint;
+            }),
+            runSerializerCmd(HUB_NO_SHOOT_ZONES)
+        )
+            .finallyDo(this::resetShotSetpoint);
+        return logged(cmd, "ShootAtHub");
+    }
+
+    public Command spinupForHubShotCmd() {
+        var cmd = shooter.targetingCmd(() -> {
+            updateHubShotSetpoint();
+            return shotSetpoint;
+        })
+            .finallyDo(this::resetShotSetpoint);
+        return logged(cmd, "SpinupForHubShot");
+    }
+
+    public Command ferryCmd() {
+        var cmd = shooter.targetingCmd(() -> {
+            shotSetpoint = new Shooter.Setpoint(
+                Rotation2d.kZero,
+                Rotation2d.fromRadians(FERRY_HOOD_ANGLE.get()),
+                0.0,
+                true
             );
-            rotationOverride = Optional.of(shotSetpoint.yaw());
             return shotSetpoint;
         });
-        var cmd = NonBlockingCmds.parallel(aimAndShoot, runSerializer)
-            .finallyDo(() -> {
-                shotSetpoint = Shooter.Setpoint.NULL;
-                rotationOverride = Optional.empty();
-            });
-        return logged(cmd, "ShootAtHub (Teleop)");
+        return logged(cmd, "Ferry");
+    }
+
+    public Command shootInHubFromWallCmd() {
+        return Commands.none();
+    }
+
+    public Command simpleFerryCmd() {
+        return Commands.none();
     }
 }

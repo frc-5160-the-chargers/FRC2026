@@ -27,6 +27,7 @@ import robot.subsystems.serializer.Serializer;
 import robot.subsystems.shooter.Shooter;
 
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
@@ -80,7 +81,7 @@ public class Robot extends LoggedRobot {
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(
-            drive.driveCmd(controller::getSwerveRequest)
+            drive.driveCmd(() -> controller.getSwerveRequest(superstructure.getRotationOverride()))
         );
         groundIntake.setDefaultCommand(
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
@@ -102,6 +103,8 @@ public class Robot extends LoggedRobot {
         if (RobotMode.isSim()) {
             Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
+        Logger.recordOutput("UnitTest", 1.0, "rad/s");
+        Logger.recordOutput("UnitTest", 1.0, "rad per s");
         canBusLogger.periodic();
         CmdLogger.periodic(true);
         Tracer.endCycle();

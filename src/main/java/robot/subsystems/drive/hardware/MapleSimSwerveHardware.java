@@ -22,7 +22,6 @@ import static edu.wpi.first.units.Units.Seconds;
 
 /** Swerve hardware that uses MapleSim, a library that simulates on-field collisions. */
 public class MapleSimSwerveHardware extends SwerveHardware {
-    private static final Pose2d INITIAL_POSE = new Pose2d(7, 2, Rotation2d.kZero);
     private static final double SIM_UPDATE_PERIOD = 0.002;
     private static final Notifier DATA_UPDATER =
         new Notifier(() -> SimulatedArena.getInstance().simulationPeriodic());
@@ -34,7 +33,7 @@ public class MapleSimSwerveHardware extends SwerveHardware {
         super(config);
         this.swerveSim = swerveSim;
         this.gyroSim = super.drivetrain.getPigeon2().getSimState();
-        super.drivetrain.resetTranslation(INITIAL_POSE.getTranslation());
+        super.drivetrain.resetTranslation(swerveSim.getSimulatedDriveTrainPose().getTranslation());
         // these values simulate drag.
         swerveSim.setLinearDamping(0.7);
         swerveSim.setAngularDamping(0.7);

@@ -54,7 +54,22 @@
     }
    }
   },
-  "poses":{}
+  "poses":{
+   "RightStartPos":{
+    "x":{
+     "exp":"3.55 m",
+     "val":3.55
+    },
+    "y":{
+     "exp":"1.7 m",
+     "val":1.7
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   }
+  }
  },
  "config":{
   "frontLeft":{
@@ -98,8 +113,8 @@
    "val":628.3185307179587
   },
   "tmax":{
-   "exp":"0.3 N * m",
-   "val":0.3
+   "exp":"0.5 N * m",
+   "val":0.5
   },
   "cof":{
    "exp":"cof",

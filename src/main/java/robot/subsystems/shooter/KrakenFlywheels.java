@@ -31,7 +31,6 @@ public class KrakenFlywheels {
     static class FlywheelData {
         public AngularVelocity velocity = RadiansPerSecond.zero();
         public AngularAcceleration accel = RadiansPerSecondPerSecond.zero();
-        public double pidError = 0.0;
         public MotorStats motorStats = MotorStats.EMPTY;
     }
 
@@ -39,7 +38,6 @@ public class KrakenFlywheels {
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final StatusSignal<AngularVelocity> velocity = talon.getVelocity();
     private final StatusSignal<AngularAcceleration> accel = talon.getAcceleration();
-    private final StatusSignal<Double> pidError = talon.getClosedLoopError();
 
     private final CoastOut idleReq = new CoastOut();
     private final TorqueCurrentFOC currentReq = new TorqueCurrentFOC(0);
@@ -60,7 +58,7 @@ public class KrakenFlywheels {
         config.Feedback.SensorToMechanismRatio = Shooter.FLYWHEEL_REDUCTION;
         var status = talon.getConfigurator().apply(config);
         configError.set(!status.isOK());
-        SignalRefresh.register(100.0, talon.getNetwork(), velocity, pidError);
+        SignalRefresh.register(100.0, talon.getNetwork(), velocity, accel);
         // CTRE's hardware injection sim mostly relies on itself being run
         // at a higher frequency to be less innacurate.
         if (RobotMode.isSim()) new Notifier(this::updateSim).startPeriodic(0.005);
@@ -81,7 +79,6 @@ public class KrakenFlywheels {
     public void refreshData(FlywheelDataAutoLogged inputs) {
         inputs.velocity = velocity.getValue();
         inputs.accel = accel.getValue();
-        inputs.pidError = pidError.getValueAsDouble();
         inputs.motorStats = MotorStats.from(talon);
     }
 

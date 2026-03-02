@@ -24,26 +24,33 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj BorderLineTests = new ChoreoTraj(
-	    "BorderLineTests",
+    public static final ChoreoTraj NearSideAuto = new ChoreoTraj(
+	    "NearSideAuto",
 	    OptionalInt.empty(),
-	    4.35683,
-	    new Pose2d(3.088, 5.71, Rotation2d.fromRadians(0)),
-	    new Pose2d(0, 0, Rotation2d.fromRadians(0))
+	    6.93368,
+	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(0))
 	);
-	public static final ChoreoTraj ShortPath = new ChoreoTraj(
-	    "ShortPath",
+	public static final ChoreoTraj NearSideAuto_SOTM = new ChoreoTraj(
+	    "NearSideAuto_SOTM",
 	    OptionalInt.empty(),
-	    1.02205,
-	    new Pose2d(1, 2, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.6, 2, Rotation2d.fromRadians(0))
+	    6.82643,
+	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(0))
 	);
-	public static final ChoreoTraj SimplePath = new ChoreoTraj(
-	    "SimplePath",
+	public static final ChoreoTraj FarSideAuto_Grab1 = new ChoreoTraj(
+	    "FarSideAuto_Grab1",
 	    OptionalInt.empty(),
-	    7.61439,
-	    new Pose2d(2.877, 3.714, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.543, 5.946, Rotation2d.fromRadians(0))
+	    2.80936,
+	    new Pose2d(3.554, 0.649, Rotation2d.fromRadians(3.142)),
+	    new Pose2d(7.843, 2.673, Rotation2d.fromRadians(-1.571))
+	);
+	public static final ChoreoTraj FarSideAuto_Score1 = new ChoreoTraj(
+	    "FarSideAuto_Score1",
+	    OptionalInt.empty(),
+	    2.63549,
+	    new Pose2d(7.439, 1.726, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.1, 1.8, Rotation2d.fromRadians(0.405))
 	);
 
     /**
@@ -51,9 +58,10 @@ public record ChoreoTraj(
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("BorderLineTests", BorderLineTests),
-		Map.entry("ShortPath", ShortPath),
-		Map.entry("SimplePath", SimplePath)
+    	Map.entry("NearSideAuto", NearSideAuto),
+		Map.entry("NearSideAuto_SOTM", NearSideAuto_SOTM),
+		Map.entry("FarSideAuto_Grab1", FarSideAuto_Grab1),
+		Map.entry("FarSideAuto_Score1", FarSideAuto_Score1)
     );
 
     /**

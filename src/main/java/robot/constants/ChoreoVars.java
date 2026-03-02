@@ -19,5 +19,11 @@ public final class ChoreoVars {
     public static final Mass robotMass = Units.Kilograms.of(63.5);
     public static final Distance wheelRadius = Units.Meters.of(0.048);
 
+    public static final class Poses {
+        public static final Pose2d RightStartPos = new Pose2d(3.55, 1.7, Rotation2d.kZero);
+
+        private Poses() {}
+    }
+
     private ChoreoVars() {}
 }

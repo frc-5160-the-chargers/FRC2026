@@ -1,5 +1,6 @@
 package robot.subsystems.serializer;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj2.command.Command;
 import lib.RobotMode;
@@ -14,6 +15,7 @@ import robot.subsystems.common.RollerDataAutoLogged;
 import robot.subsystems.common.RollerHardware;
 import robot.subsystems.common.SimRollerHardware;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 
 public class Serializer extends ChargerSubsystem {
@@ -37,9 +39,12 @@ public class Serializer extends ChargerSubsystem {
     @Setter private Runnable simGamePieceRemover = () -> {};
     @Setter @AutoLogOutput private IntSupplier simGamePiecesCounter = () -> 0;
 
-    public Command runCmd() {
+    public Command runWhileTrueCmd(BooleanSupplier shouldRun) {
+        var debouncer = new Debouncer(0.1);
         var cmd = this.run(() -> {
-            io.setVolts(forwardVolts.get());
+            boolean shouldStop = debouncer.calculate(!shouldRun.getAsBoolean());
+            Logger.recordOutput(key("IsStopped"), shouldStop);
+            io.setVolts(shouldStop ? 0 : forwardVolts.get());
             removeFuelIfApplicable();
         });
         return logged(cmd, "RunForward");

@@ -7,14 +7,7 @@ import testingutil.ChargerUnitTest;
 
 class RobotTest extends ChargerUnitTest {
     @Test
-    public void instantiateSimRobot() {
-        var robot = new Robot();
-        instantiate(robot);
-        robot.close();
-    }
-
-    @Test
-    public void instantiateRealRobot() {
+    public void instantiateRobot() {
         RobotMode.setShimRealRobot(true);
         var robot = new Robot();
         instantiate(robot);

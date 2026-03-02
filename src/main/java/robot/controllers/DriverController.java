@@ -5,6 +5,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -23,8 +24,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 public class DriverController extends CommandPS5Controller implements Subsystem {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        HUB_AIM_KP = Tunable.of("HubAimingKP", 8.0),
-        HUB_AIM_KD = Tunable.of("HubAimKD", 0.1);
+        HUB_AIM_KP = Tunable.of("HubAiming/KP", 7.0),
+        HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.03);
 
     private final LoggedNetworkNumber
         leftRumble = new LoggedNetworkNumber("Rumble/Left", 0),
@@ -33,6 +34,9 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         .withDriveRequestType(DriveRequestType.Velocity);
     private final FieldCentricFacingAngle facingHubSwerveReq = new FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.Velocity);
+    private final SlewRateLimiter
+        forwardLimiter = new SlewRateLimiter(1.3, -3.0, 0.0),
+        strafeLimiter = new SlewRateLimiter(1.3, -3.0, 0.0);
     private final double maxVelMetersPerSec, maxVelRadPerSec;
     @AutoLogOutput private double forward = 0, strafe = 0, rotation = 0;
 
@@ -56,6 +60,9 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
         rotation = -getRightX() * scalar;
+        // don't use slew rate limits for normal drive requests
+        forwardLimiter.reset(forward);
+        strafeLimiter.reset(strafe);
         return swerveReq
             .withVelocityX(forward * maxVelMetersPerSec)
             .withVelocityY(strafe * maxVelMetersPerSec)
@@ -67,8 +74,8 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
     public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle) {
         if (targetAngle.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
-        forward = -getLeftY() * scalar;
-        strafe = -getLeftX() * scalar;
+        forward = forwardLimiter.calculate(-getLeftY() * scalar);
+        strafe = strafeLimiter.calculate(-getLeftX() * scalar);
         return facingHubSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec / 2.0)
             .withVelocityY(strafe * maxVelMetersPerSec / 2.0)
