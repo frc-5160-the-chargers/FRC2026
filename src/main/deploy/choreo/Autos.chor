@@ -55,6 +55,34 @@
    }
   },
   "poses":{
+   "BlueHubPos":{
+    "x":{
+     "exp":"4.62 m",
+     "val":4.62
+    },
+    "y":{
+     "exp":"4.05 m",
+     "val":4.05
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "CenterShotPos":{
+    "x":{
+     "exp":"2.6 m",
+     "val":2.6
+    },
+    "y":{
+     "exp":"4 m",
+     "val":4.0
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
    "RightStartPos":{
     "x":{
      "exp":"3.55 m",
@@ -63,6 +91,20 @@
     "y":{
      "exp":"1.7 m",
      "val":1.7
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "StationPickupPos":{
+    "x":{
+     "exp":"0.77 m",
+     "val":0.77
+    },
+    "y":{
+     "exp":"0.68 m",
+     "val":0.68
     },
     "heading":{
      "exp":"0 rad",

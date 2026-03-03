@@ -38,7 +38,7 @@ public class Shooter extends ChargerSubsystem {
         }
     }
 
-    static final double HOOD_REDUCTION = 25.0;
+    static final double HOOD_REDUCTION = 28.0;
     static final DCMotor HOOD_MOTOR_KIND = DCMotor.getNeo550(1);
     static final PivotSimConfig HOOD_SIM_CFG = new PivotSimConfig(
         HOOD_REDUCTION, PoundSquareInches.of(59.04),
@@ -132,6 +132,14 @@ public class Shooter extends ChargerSubsystem {
             flywheelErr = Math.abs(flywheelInputs.velocity.in(RadiansPerSecond) - target.radPerSec);
         });
         return logged(resetStateCmd.andThen(targetGoalCmd), "TargetSetpoint");
+    }
+
+    public double getHoodRad() {
+        return Math.PI / 2 - hoodInputs.positionRad;
+    }
+
+    public double getFlywheelRadPerSec() {
+        return flywheelInputs.velocity.in(RadiansPerSecond);
     }
 
     public Command manualHoodCmd(DoubleSupplier volts) {

@@ -4,16 +4,47 @@ import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
+import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import robot.subsystems.drive.SwerveConfig;
+import robot.subsystems.drive.SwerveSubsystem;
+import robot.subsystems.drive.TunerConstants;
 
 import java.io.File;
+import java.util.Optional;
+
+import static edu.wpi.first.units.Units.Inches;
 
 @SuppressWarnings("DataFlowIssue")
-public class LoggingConfig {
+public class RobotConfig {
+    /** The configuration for this year's swerve robot. */
+    public static final SwerveConfig swerveCfg = new SwerveConfig(
+        "Swerve",
+        Inches.of(27 + 2 * 3.5),
+        Inches.of(26 + 2 * 3.5),
+        TunerConstants.DrivetrainConstants,
+        TunerConstants.FrontLeft, TunerConstants.FrontRight,
+        TunerConstants.BackLeft, TunerConstants.BackRight
+    );
+
+    /** Creates an intake simulation characterizing this year's OTB intake. */
+    public static Optional<IntakeSimulation> createIntakeSim(SwerveSubsystem drive) {
+        if (!RobotMode.isSim()) return Optional.empty();
+        var sim = IntakeSimulation.OverTheBumperIntake(
+            "Fuel",
+            drive.getSim(),
+            Inches.of(27),
+            Inches.of(7.5),
+            IntakeSimulation.IntakeSide.BACK,
+            30
+        );
+        return Optional.of(sim);
+    }
+
     /** Logs a choreo trajectory. */
     public static void logTrajectory(Trajectory<SwerveSample> rawTraj, boolean isStart) {
         Logger.recordOutput("CurrentTraj/Name", rawTraj.name());
@@ -25,7 +56,7 @@ public class LoggingConfig {
     }
 
     /** Logging config for the main robot. */
-    public static void initForMainRobot() {
+    public static void initLoggingForMainBot() {
         if (System.getenv("test") != null) {
             return; // Unit test, don't need logging here
         }

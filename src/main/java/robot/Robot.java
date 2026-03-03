@@ -10,59 +10,52 @@ import lib.RobotMode;
 import lib.Tracer;
 import lib.Tunable;
 import lib.commands.CmdLogger;
+import lib.commands.LoggedAutoChooser;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
+import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
-import robot.constants.LoggingConfig;
+import robot.constants.RobotConfig;
 import robot.controllers.DriverController;
 import robot.controllers.ManualOverrideController;
 import robot.subsystems.Superstructure;
-import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.drive.TunerConstants;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
 import robot.subsystems.shooter.Shooter;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
+import java.util.Optional;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
     static { // This is run before subsystems are created
-        LoggingConfig.initForMainRobot();
+        RobotConfig.initLoggingForMainBot();
     }
 
     private final Tunable<Double> pivotDebugVolts = Tunable.of("GroundIntake/Pivot/DemoVolts", 0);
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
-    private final SwerveConfig swerveCfg = new SwerveConfig(
-        "Swerve",
-        Inches.of(27 + 2 * 3.5),
-        Inches.of(26 + 2 * 3.5),
-        TunerConstants.DrivetrainConstants,
-        TunerConstants.FrontLeft, TunerConstants.FrontRight,
-        TunerConstants.BackLeft, TunerConstants.BackRight
-    );
 
-    private final SwerveSubsystem drive = new SwerveSubsystem(swerveCfg);
-    private final GroundIntake groundIntake = new GroundIntake(drive.getSim());
+    private final SwerveSubsystem drive = new SwerveSubsystem(RobotConfig.swerveCfg);
+    private final Optional<IntakeSimulation> intakeSim = RobotConfig.createIntakeSim(drive);
+    private final GroundIntake groundIntake = new GroundIntake(intakeSim);
+    private final Serializer serializer = new Serializer(intakeSim);
     private final Shooter shooter = new Shooter();
-    private final Serializer serializer = new Serializer();
 
-    private final DriverController controller = new DriverController(0, swerveCfg);
+    private final DriverController controller = new DriverController(0, RobotConfig.swerveCfg);
     private final ManualOverrideController manualController = new ManualOverrideController(1);
 
     private final Superstructure superstructure =
         new Superstructure(controller, drive, groundIntake, shooter, serializer);
+    private final Autos autos = new Autos(drive, groundIntake, superstructure);
+
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
-//        serializer.setSimGamePieceRemover(groundIntake.sim::obtainGamePieceFromIntake);
-//        serializer.setSimGamePiecesCounter(groundIntake.sim::getGamePiecesAmount);
         setButtonBindings();
         setDefaultCommands();
     }
@@ -77,17 +70,22 @@ public class Robot extends LoggedRobot {
         controller.square().whileTrue(groundIntake.intakeCmd());
         RobotModeTriggers.test()
             .whileTrue(superstructure.shootInHubCmd());
+        RobotModeTriggers.autonomous()
+            .and(RobotMode::isSim)
+            .onTrue(Commands.runOnce(() -> SimulatedArena.getInstance().resetFieldForAuto()));
+        controller.square()
+            .whileTrue(groundIntake.intakeCmd());
     }
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(
-            drive.driveCmd(() -> controller.getSwerveRequest(superstructure.getRotationOverride()))
+            drive.driveCmd(() -> controller.getSwerveRequest(drive.getPose().getRotation(), superstructure.getRotationOverride()))
         );
         groundIntake.setDefaultCommand(
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
         );
-//        shooter.setDefaultCommand(shooter.stopCmd());
-//        serializer.setDefaultCommand(serializer.stopCmd());
+        shooter.setDefaultCommand(shooter.stopCmd());
+        serializer.setDefaultCommand(serializer.stopCmd());
     }
 
     @Override
@@ -103,8 +101,6 @@ public class Robot extends LoggedRobot {
         if (RobotMode.isSim()) {
             Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
-        Logger.recordOutput("UnitTest", 1.0, "rad/s");
-        Logger.recordOutput("UnitTest", 1.0, "rad per s");
         canBusLogger.periodic();
         CmdLogger.periodic(true);
         Tracer.endCycle();

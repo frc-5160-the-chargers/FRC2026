@@ -19,7 +19,12 @@ import java.io.FileWriter
 import kotlin.math.roundToInt
 
 /** Calculates the desired shot parameters to launch fuel into the hub. */
-fun getHubShotSetpoint(robotPose: Pose2d, fieldCentricVel: ChassisSpeeds): Shooter.Setpoint {
+fun getHubShotSetpoint(
+    robotPose: Pose2d,
+    fieldCentricVel: ChassisSpeeds,
+    shooter: Shooter,
+    simulateShot: Boolean
+): Shooter.Setpoint {
     val goalPosition = if (AllianceColor.isRed()) flip(HUB_LOCATION) else HUB_LOCATION
     // equivalent to Pose2d[] iterations = new Pose2d[NEWTONS_METHOD_ITERATIONS + 1];
     val iterations = Array(NEWTONS_METHOD_ITERATIONS + 1) { Pose2d.kZero }
@@ -76,15 +81,15 @@ fun getHubShotSetpoint(robotPose: Pose2d, fieldCentricVel: ChassisSpeeds): Shoot
     Logger.recordOutput("ShotCalcs/TargetDistance(m)", targetDist)
     Logger.recordOutput("ShotCalcs/Iterations", *iterations)
 
-    if (RobotMode.isSim() || DEBUG_MODE) {
-        val launchAngle = Rotation3d(0.0, -targetPitch, robotPose.rotation.radians)
+    if (simulateShot && RobotMode.isSim()) {
+        val launchAngle = Rotation3d(0.0, -shooter.hoodRad, robotPose.rotation.radians)
         simulateShot(
             pose = Translation3d(
                 fieldOriginToShooter.x,
                 fieldOriginToShooter.y,
                 Shooter.FUEL_LAUNCH_HEIGHT.`in`(Meters)
             ),
-            velocity = Translation3d(ballSpeed, launchAngle) +
+            velocity = Translation3d(BALL_TO_FLYWHEEL_SPEED.getKey(shooter.flywheelRadPerSec), launchAngle) +
                 Translation3d(shooterVelocity.x, shooterVelocity.y, 0.0),
             dt = 0.05
         )
@@ -99,7 +104,6 @@ fun getHubShotSetpoint(robotPose: Pose2d, fieldCentricVel: ChassisSpeeds): Shoot
 }
 
 private const val NEWTONS_METHOD_ITERATIONS = 7
-private const val DEBUG_MODE = false
 private val HUB_LOCATION = FieldConstants.Hub.topCenterPoint.toTranslation2d()
 private val MIN_DISTANCE_TO_SHOOT = Tunable.of("ShotCalcs/Minimum Distance to Shoot(m)", 1.5)
 private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.0)

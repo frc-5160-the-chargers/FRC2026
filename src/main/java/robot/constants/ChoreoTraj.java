@@ -24,21 +24,7 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj NearSideAuto = new ChoreoTraj(
-	    "NearSideAuto",
-	    OptionalInt.empty(),
-	    6.93368,
-	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj NearSideAuto_SOTM = new ChoreoTraj(
-	    "NearSideAuto_SOTM",
-	    OptionalInt.empty(),
-	    6.82643,
-	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj FarSideAuto_Grab1 = new ChoreoTraj(
+    public static final ChoreoTraj FarSideAuto_Grab1 = new ChoreoTraj(
 	    "FarSideAuto_Grab1",
 	    OptionalInt.empty(),
 	    2.80936,
@@ -52,16 +38,86 @@ public record ChoreoTraj(
 	    new Pose2d(7.439, 1.726, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(2.1, 1.8, Rotation2d.fromRadians(0.405))
 	);
+	public static final ChoreoTraj NearSideAuto = new ChoreoTraj(
+	    "NearSideAuto",
+	    OptionalInt.empty(),
+	    6.64409,
+	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
+	);
+	public static final ChoreoTraj NearSideAuto$0 = new ChoreoTraj(
+	    "NearSideAuto",
+	    OptionalInt.of(0),
+	    1.71318,
+	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj NearSideAuto$1 = new ChoreoTraj(
+	    "NearSideAuto",
+	    OptionalInt.of(1),
+	    1.97079,
+	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj NearSideAuto$2 = new ChoreoTraj(
+	    "NearSideAuto",
+	    OptionalInt.of(2),
+	    1.8520400000000001,
+	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj NearSideAuto$3 = new ChoreoTraj(
+	    "NearSideAuto",
+	    OptionalInt.of(3),
+	    1.1080800000000002,
+	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
+	);
+	public static final ChoreoTraj NearSideAuto_SOTM = new ChoreoTraj(
+	    "NearSideAuto_SOTM",
+	    OptionalInt.empty(),
+	    5.86291,
+	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
+	);
+	public static final ChoreoTraj NearSideAuto_SOTM$0 = new ChoreoTraj(
+	    "NearSideAuto_SOTM",
+	    OptionalInt.of(0),
+	    1.71318,
+	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj NearSideAuto_SOTM$1 = new ChoreoTraj(
+	    "NearSideAuto_SOTM",
+	    OptionalInt.of(1),
+	    3.04165,
+	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj NearSideAuto_SOTM$2 = new ChoreoTraj(
+	    "NearSideAuto_SOTM",
+	    OptionalInt.of(2),
+	    1.1080800000000002,
+	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
+	);
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("NearSideAuto", NearSideAuto),
+    	Map.entry("FarSideAuto_Grab1", FarSideAuto_Grab1),
+		Map.entry("FarSideAuto_Score1", FarSideAuto_Score1),
+		Map.entry("NearSideAuto", NearSideAuto),
+		Map.entry("NearSideAuto$0", NearSideAuto$0),
+		Map.entry("NearSideAuto$1", NearSideAuto$1),
+		Map.entry("NearSideAuto$2", NearSideAuto$2),
+		Map.entry("NearSideAuto$3", NearSideAuto$3),
 		Map.entry("NearSideAuto_SOTM", NearSideAuto_SOTM),
-		Map.entry("FarSideAuto_Grab1", FarSideAuto_Grab1),
-		Map.entry("FarSideAuto_Score1", FarSideAuto_Score1)
+		Map.entry("NearSideAuto_SOTM$0", NearSideAuto_SOTM$0),
+		Map.entry("NearSideAuto_SOTM$1", NearSideAuto_SOTM$1),
+		Map.entry("NearSideAuto_SOTM$2", NearSideAuto_SOTM$2)
     );
 
     /**

@@ -44,7 +44,7 @@ import static edu.wpi.first.units.Units.*;
 public class SwerveSubsystem extends ChargerSubsystem {
     private final Tunable<Double>
         alignKP = Tunable.of(key("AutoAlign/TranslationKP"), 2),
-        choreoKP = Tunable.of(key("Choreo/TranslationKP"), 3.5),
+        choreoKP = Tunable.of(key("Choreo/TranslationKP"), 6.0),
         rotationKP = Tunable.of(key("AutoAlign/RotationKP"), 2),
         alignTolerance = Tunable.of(key("AutoAlign/Tolerance"), 0.015),
         alignMaxAccel = Tunable.of(key("AutoAlign/MaxAccel (m per s^2)"), 10),

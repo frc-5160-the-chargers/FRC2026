@@ -1,6 +1,7 @@
 package robot.subsystems.common;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import lib.hardware.MotorStats;
 
@@ -32,6 +33,7 @@ public class SimPivotHardware extends PivotHardware {
         data.positionRad = sim.getAngleRads();
         data.velocityRadPerSec = sim.getVelocityRadPerSec();
         data.motorStats = MotorStats.from(sim);
+        if (DriverStation.isDisabled()) setVolts(0);
     }
 
     @Override

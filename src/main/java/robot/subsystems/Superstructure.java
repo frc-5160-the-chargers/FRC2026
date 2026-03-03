@@ -1,10 +1,13 @@
 package robot.subsystems;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import lib.AllianceColor;
 import lib.Convert;
 import lib.Tunable;
 import lib.commands.NonBlockingCmds;
@@ -21,6 +24,7 @@ import robot.subsystems.shooter.Shooter;
 import java.util.List;
 import java.util.Optional;
 
+import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static lib.commands.CmdLogger.logged;
 
 @SuppressWarnings("unused")
@@ -54,11 +58,16 @@ public class Superstructure {
 
     private double swerveNetSpeed = 0.0;
 
-    private void updateHubShotSetpoint() {
-        var speeds = drive.getFieldSpeeds();
-        shotSetpoint = ShotCalcsKt.getHubShotSetpoint(drive.getSim().getSimulatedDriveTrainPose(), speeds);
+    private void updateHubShotSetpoint(Pose2d pose, ChassisSpeeds speeds) {
+        shotSetpoint = ShotCalcsKt.getHubShotSetpoint(pose, speeds, shooter, true);
         yawErr = drive.getPose().getRotation().minus(shotSetpoint.yaw());
         swerveNetSpeed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    }
+
+    private void updateHubShotSetpoint() {
+        updateHubShotSetpoint(
+            drive.getSim().getSimulatedDriveTrainPose(), drive.getFieldSpeeds()
+        );
     }
 
     private void resetShotSetpoint() {
@@ -68,8 +77,7 @@ public class Superstructure {
 
     private Command runSerializerCmd(List<Rectangle2d> noShootZones) {
         return NonBlockingCmds.sequence(
-            Commands.waitUntil(() -> shooter.atGoal(1.0))
-                .withTimeout(1.0),
+            Commands.waitUntil(() -> shooter.atGoal(1.0)),
             serializer.runWhileTrueCmd(() -> {
                 if (!shotSetpoint.isPossible()) return false;
                 double yawTolerance = YAW_TOLERANCE.get() * (1 + swerveNetSpeed);
@@ -96,9 +104,10 @@ public class Superstructure {
         return logged(cmd, "ShootAtHub");
     }
 
-    public Command spinupForHubShotCmd() {
+    public Command spinupForHubShotCmd(Pose2d blueTargetPose) {
         var cmd = shooter.targetingCmd(() -> {
-            updateHubShotSetpoint();
+            var pose = AllianceColor.isRed() ? flip(blueTargetPose) : blueTargetPose;
+            updateHubShotSetpoint(blueTargetPose, new ChassisSpeeds());
             return shotSetpoint;
         })
             .finallyDo(this::resetShotSetpoint);

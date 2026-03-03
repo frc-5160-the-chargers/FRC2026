@@ -2,6 +2,7 @@ package robot.subsystems.common;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import lib.hardware.MotorStats;
 
@@ -18,6 +19,7 @@ public class SimRollerHardware extends RollerHardware {
         sim.update(0.02);
         data.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
         data.motorStats = new MotorStats[] {MotorStats.from(sim)};
+        if (DriverStation.isDisabled()) setVolts(0);
     }
 
     @Override

@@ -7,7 +7,7 @@ import lib.RobotMode;
 import lib.Tunable;
 import lib.hardware.LaserCanDataAutoLogged;
 import lib.hardware.LoggedLaserCan;
-import lombok.Setter;
+import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
@@ -15,8 +15,9 @@ import robot.subsystems.common.RollerDataAutoLogged;
 import robot.subsystems.common.RollerHardware;
 import robot.subsystems.common.SimRollerHardware;
 
+import java.util.Optional;
 import java.util.function.BooleanSupplier;
-import java.util.function.IntSupplier;
+
 
 public class Serializer extends ChargerSubsystem {
     static final double CURRENT_LIMIT = 60;
@@ -36,8 +37,11 @@ public class Serializer extends ChargerSubsystem {
     private final LoggedLaserCan[] laserCans = {};
     private final LaserCanDataAutoLogged[] laserCanInputs = {};
 
-    @Setter private Runnable simGamePieceRemover = () -> {};
-    @Setter @AutoLogOutput private IntSupplier simGamePiecesCounter = () -> 0;
+    private final Optional<IntakeSimulation> sim;
+
+    public Serializer(Optional<IntakeSimulation> sim) {
+        this.sim = sim;
+    }
 
     public Command runWhileTrueCmd(BooleanSupplier shouldRun) {
         var debouncer = new Debouncer(0.1);
@@ -64,16 +68,16 @@ public class Serializer extends ChargerSubsystem {
     }
 
     private void removeFuelIfApplicable() {
-        if (!RobotMode.isSim()) return;
+        if (sim.isEmpty()) return;
         Logger.runEveryN(
             (int) (1.0 / (SIM_FUEL_REMOVAL_RATE * 0.02)),
-            simGamePieceRemover
+            () -> sim.get().obtainGamePieceFromIntake()
         );
     }
 
     @AutoLogOutput
     public boolean isEmpty() {
-        if (RobotMode.isSim()) return simGamePiecesCounter.getAsInt() == 0;
+        if (sim.isPresent()) return sim.get().getGamePiecesAmount() == 0;
         for (int i = 0; i < laserCans.length; i++) {
             if (laserCanInputs[i].distance_mm < laserCanThreshold.get()) return false;
         }

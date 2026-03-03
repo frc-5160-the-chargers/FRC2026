@@ -21,6 +21,9 @@ public final class ChoreoVars {
 
     public static final class Poses {
         public static final Pose2d RightStartPos = new Pose2d(3.55, 1.7, Rotation2d.kZero);
+        public static final Pose2d BlueHubPos = new Pose2d(4.62, 4.05, Rotation2d.kZero);
+        public static final Pose2d StationPickupPos = new Pose2d(0.77, 0.68, Rotation2d.kZero);
+        public static final Pose2d CenterShotPos = new Pose2d(2.6, 4, Rotation2d.kZero);
 
         private Poses() {}
     }

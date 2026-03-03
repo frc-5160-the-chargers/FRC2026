@@ -12,7 +12,6 @@ import lib.Convert;
 import lib.RobotMode;
 import lib.Tunable;
 import org.ironmaple.simulation.IntakeSimulation;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
@@ -21,6 +20,7 @@ import robot.subsystems.common.PivotController.PivotConstraints;
 import robot.subsystems.common.PivotController.PivotGains;
 import robot.subsystems.common.PivotHardware.PivotSimConfig;
 
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -59,9 +59,9 @@ public class GroundIntake extends ChargerSubsystem {
     private final PivotController pivotController;
     private final Debouncer hardStopDebouncer = new Debouncer(0.2);
 
-    private final IntakeSimulation sim;
+    private final Optional<IntakeSimulation> sim;
 
-    public GroundIntake(SwerveDriveSimulation swerveSim) {
+    public GroundIntake(Optional<IntakeSimulation> sim) {
         switch (RobotMode.get()) {
             case REAL -> {
                 pivotIO = new NeoIntakePivot();
@@ -81,15 +81,7 @@ public class GroundIntake extends ChargerSubsystem {
                 rollerIO = new SimRollerHardware(DCMotor.getNeoVortex(1), 3.0);
             }
         }
-//        sim = null;
-        sim = IntakeSimulation.OverTheBumperIntake(
-            "Fuel",
-            swerveSim,
-            Inches.of(27),
-            Inches.of(7.5),
-            IntakeSimulation.IntakeSide.BACK,
-            30
-        );
+        this.sim = sim;
         pivotController = new PivotController(key("Pivot"), PIVOT_GAINS, PIVOT_CONSTRAINTS, pivotIO);
         pivotIO.setCurrentLimit(pivotCurrentLimit.get());
         rollerIO.setCurrentLimit(rollerCurrentLimit.get());
@@ -99,11 +91,11 @@ public class GroundIntake extends ChargerSubsystem {
 
     private void setRollerVolts(double volts) {
         rollerIO.setVolts(volts);
-        if (!RobotMode.isSim()) return;
+        if (sim.isEmpty()) return;
         if (volts > 0.05) {
-            sim.startIntake();
+            sim.get().startIntake();
         } else {
-            sim.stopIntake();
+            sim.get().stopIntake();
         }
     }
 

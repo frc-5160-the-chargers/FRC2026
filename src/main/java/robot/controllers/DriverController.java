@@ -5,6 +5,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -17,6 +19,7 @@ import robot.subsystems.drive.SwerveConfig;
 
 import java.util.Optional;
 
+import static edu.wpi.first.math.MathUtil.angleModulus;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -24,19 +27,21 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 public class DriverController extends CommandPS5Controller implements Subsystem {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        HUB_AIM_KP = Tunable.of("HubAiming/KP", 7.0),
+        HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.5),
         HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.03);
 
     private final LoggedNetworkNumber
         leftRumble = new LoggedNetworkNumber("Rumble/Left", 0),
         rightRumble = new LoggedNetworkNumber("Rumble/Right", 0);
-    private final FieldCentric swerveReq = new FieldCentric()
-        .withDriveRequestType(DriveRequestType.Velocity);
-    private final FieldCentricFacingAngle facingHubSwerveReq = new FieldCentricFacingAngle()
-        .withDriveRequestType(DriveRequestType.Velocity);
+    private final PIDController headingPID = new PIDController(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
+    private final LinearFilter headingFilter = LinearFilter.movingAverage(5);
     private final SlewRateLimiter
         forwardLimiter = new SlewRateLimiter(1.3, -3.0, 0.0),
         strafeLimiter = new SlewRateLimiter(1.3, -3.0, 0.0);
+
+    private final FieldCentric swerveReq = new FieldCentric()
+        .withDriveRequestType(DriveRequestType.Velocity);
+    private double prevTargetRad = 0.0;
     private final double maxVelMetersPerSec, maxVelRadPerSec;
     @AutoLogOutput private double forward = 0, strafe = 0, rotation = 0;
 
@@ -45,6 +50,9 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         register();
         this.maxVelMetersPerSec = config.maxVel().in(MetersPerSecond);
         this.maxVelRadPerSec = config.maxAngularVel().in(RadiansPerSecond);
+        HUB_AIM_KP.onChange(headingPID::setP);
+        HUB_AIM_KD.onChange(headingPID::setD);
+        headingPID.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     @AutoLogOutput
@@ -71,17 +79,21 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
             .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
     }
 
-    public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle) {
-        if (targetAngle.isEmpty()) return getSwerveRequest();
+    public SwerveRequest getSwerveRequest(Rotation2d heading, Optional<Rotation2d> target) {
+        if (target.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
         forward = forwardLimiter.calculate(-getLeftY() * scalar);
         strafe = strafeLimiter.calculate(-getLeftX() * scalar);
-        return facingHubSwerveReq
+        double targetRad = angleModulus(target.get().getRadians());
+        double radiansPerSec = (targetRad - prevTargetRad) / 0.02
+            + headingPID.calculate(angleModulus(heading.getRadians()), targetRad);
+        prevTargetRad = targetRad;
+        return swerveReq
             .withVelocityX(forward * maxVelMetersPerSec / 2.0)
             .withVelocityY(strafe * maxVelMetersPerSec / 2.0)
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
-            .withTargetDirection(targetAngle.get())
-            .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
+            .withRotationalRate(radiansPerSec)
+            .withRotationalDeadband(0);
     }
 
     // For Rumble to work on PS5 Controllers, we have to run a custom script on the driver station computer.
