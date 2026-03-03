@@ -34,7 +34,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         leftRumble = new LoggedNetworkNumber("Rumble/Left", 0),
         rightRumble = new LoggedNetworkNumber("Rumble/Right", 0);
     private final PIDController headingPID = new PIDController(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
-    private final LinearFilter headingFilter = LinearFilter.movingAverage(5);
+    private final LinearFilter headingFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
     private final SlewRateLimiter
         forwardLimiter = new SlewRateLimiter(1.3, -3.0, 0.0),
         strafeLimiter = new SlewRateLimiter(1.3, -3.0, 0.0);
@@ -85,7 +85,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         forward = forwardLimiter.calculate(-getLeftY() * scalar);
         strafe = strafeLimiter.calculate(-getLeftX() * scalar);
         double targetRad = angleModulus(target.get().getRadians());
-        double radiansPerSec = (targetRad - prevTargetRad) / 0.02
+        double radiansPerSec = headingFilter.calculate((targetRad - prevTargetRad) / 0.02)
             + headingPID.calculate(angleModulus(heading.getRadians()), targetRad);
         prevTargetRad = targetRad;
         return swerveReq

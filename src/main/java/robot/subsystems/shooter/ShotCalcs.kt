@@ -48,8 +48,8 @@ fun getHubShotSetpoint(
 
     val botToLaunchPointRotated = fieldOriginToShooter - robotPose.translation
     val shooterVelocity = Translation2d(
-        vx + omega * botToLaunchPointRotated.x,
-        vy - omega * botToLaunchPointRotated.y
+        vx - omega * botToLaunchPointRotated.y,
+        vy + omega * botToLaunchPointRotated.x
     )
     // The time it takes for a ball to reach the goal.
     var airTime = DISTANCE_TO_AIR_TIME.get(shooterToGoal.norm)
