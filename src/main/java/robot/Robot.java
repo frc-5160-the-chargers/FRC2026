@@ -68,13 +68,17 @@ public class Robot extends LoggedRobot {
         );
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
-        RobotModeTriggers.test()
-            .whileTrue(superstructure.shootInHubCmd());
-        RobotModeTriggers.autonomous()
-            .and(RobotMode::isSim)
-            .onTrue(Commands.runOnce(() -> SimulatedArena.getInstance().resetFieldForAuto()));
-        controller.square()
-            .whileTrue(groundIntake.intakeCmd());
+
+        var hoodDebugAngle = Tunable.of("HoodDebugAngle(Deg)", 11);
+        controller.triangle().whileTrue(
+            serializer.runWhileTrueCmd(() -> true)
+        );
+
+//        RobotModeTriggers.test()
+//            .whileTrue(superstructure.shootInHubCmd());
+//        RobotModeTriggers.autonomous()
+//            .and(RobotMode::isSim)
+//            .onTrue(Commands.runOnce(() -> SimulatedArena.getInstance().resetFieldForAuto()));
     }
 
     private void setDefaultCommands() {

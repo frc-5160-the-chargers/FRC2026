@@ -14,7 +14,7 @@ import robot.subsystems.common.RollerHardware;
 
 /** The hardware powering the serializer motors on the real robot. */
 public class KrakenSerializerRollers extends RollerHardware {
-    private final TalonFX motor = new TalonFX(0);
+    private final TalonFX motor = new TalonFX(7);
     private final StatusSignal<AngularVelocity> angularVel = motor.getVelocity();
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final VoltageOut controlReq = new VoltageOut(0);
