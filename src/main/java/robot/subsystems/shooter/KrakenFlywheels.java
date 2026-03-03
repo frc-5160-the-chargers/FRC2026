@@ -20,6 +20,7 @@ import lib.RobotMode;
 import lib.hardware.MotorStats;
 import lib.hardware.SignalRefresh;
 import org.littletonrobotics.junction.AutoLog;
+import robot.subsystems.drive.TunerConstants;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
@@ -34,7 +35,7 @@ public class KrakenFlywheels {
         public MotorStats motorStats = MotorStats.EMPTY;
     }
 
-    private final TalonFX talon = new TalonFX(/*id */ 16);
+    private final TalonFX talon = new TalonFX(/*id */ 16, TunerConstants.kCANBus);
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final StatusSignal<AngularVelocity> velocity = talon.getVelocity();
     private final StatusSignal<AngularAcceleration> accel = talon.getAcceleration();
