@@ -34,7 +34,7 @@ public class KrakenFlywheels {
         public MotorStats motorStats = MotorStats.EMPTY;
     }
 
-    private final TalonFX talon = new TalonFX(/*id */ 1);
+    private final TalonFX talon = new TalonFX(/*id */ 16);
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final StatusSignal<AngularVelocity> velocity = talon.getVelocity();
     private final StatusSignal<AngularAcceleration> accel = talon.getAcceleration();
