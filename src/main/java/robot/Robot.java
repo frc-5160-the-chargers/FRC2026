@@ -29,6 +29,8 @@ import robot.subsystems.shooter.Shooter;
 
 import java.util.Optional;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
     static { // This is run before subsystems are created
@@ -69,9 +71,8 @@ public class Robot extends LoggedRobot {
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
 
-        var hoodDebugAngle = Tunable.of("HoodDebugAngle(Deg)", 11);
         controller.triangle().whileTrue(
-            serializer.runWhileTrueCmd(() -> true)
+            shooter.setFlywheelVelCmd(() -> RadiansPerSecond.of(30))
         );
 
 //        RobotModeTriggers.test()

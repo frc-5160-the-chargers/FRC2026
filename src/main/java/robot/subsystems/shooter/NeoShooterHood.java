@@ -17,7 +17,7 @@ import robot.subsystems.common.PivotHardware;
  * Responsible for controlling the trajectory of the fuel.
  */
 public class NeoShooterHood extends PivotHardware {
-    private final SparkMax motor = new SparkMax(1, SparkLowLevel.MotorType.kBrushless);
+    private final SparkMax motor = new SparkMax(31, SparkLowLevel.MotorType.kBrushless);
     private final SparkMaxConfig config = new SparkMaxConfig();
     private final SparkClosedLoopController pid = motor.getClosedLoopController();
     private final RelativeEncoder encoder = motor.getEncoder();
