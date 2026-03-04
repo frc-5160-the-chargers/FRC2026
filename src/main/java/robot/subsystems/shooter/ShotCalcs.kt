@@ -186,8 +186,7 @@ private fun writeDistanceToAirTimeTable(): String {
 
 fun main() {
     val path = "src/main/java/robot/subsystems/shooter/DistanceToAirTime.kt"
-    BufferedWriter(FileWriter(path)).use { writer ->
-        val content = writeDistanceToAirTimeTable()
-        writer.write(content)
-    }
+    val fileWriter = BufferedWriter(FileWriter(path))
+    fileWriter.write(writeDistanceToAirTimeTable())
+    fileWriter.close();
 }

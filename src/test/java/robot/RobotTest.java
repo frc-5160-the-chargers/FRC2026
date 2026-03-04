@@ -1,9 +1,13 @@
 package robot;
 
 import lib.RobotMode;
+import org.ironmaple.simulation.SimulatedArena;
 import org.junit.jupiter.api.Test;
 import org.littletonrobotics.junction.LoggedRobot;
 import testingutil.ChargerUnitTest;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RobotTest extends ChargerUnitTest {
     @Test
@@ -11,6 +15,14 @@ class RobotTest extends ChargerUnitTest {
         RobotMode.setShimRealRobot(true);
         var robot = new Robot();
         instantiate(robot);
+        try {
+            var simArena = SimulatedArena.class.getDeclaredField("instance");
+            simArena.setAccessible(true);
+            assertNull(
+                simArena.get(null),
+                "MapleSim should only be instantiated after checking that RobotMode.isSim() returns true."
+            );
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
         robot.close();
     }
 

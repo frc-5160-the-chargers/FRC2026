@@ -21,15 +21,15 @@
    "moduleX":{
     "dimension":"Length",
     "var":{
-     "exp":"13.5 in",
-     "val":0.3429
+     "exp":"10.75 in",
+     "val":0.27305
     }
    },
    "moduleY":{
     "dimension":"Length",
     "var":{
-     "exp":"13 in",
-     "val":0.3302
+     "exp":"11 in",
+     "val":0.2794
     }
    },
    "robotMOI":{
@@ -55,20 +55,6 @@
    }
   },
   "poses":{
-   "BlueHubPos":{
-    "x":{
-     "exp":"4.62 m",
-     "val":4.62
-    },
-    "y":{
-     "exp":"4.05 m",
-     "val":4.05
-    },
-    "heading":{
-     "exp":"0 rad",
-     "val":0.0
-    }
-   },
    "CenterShotPos":{
     "x":{
      "exp":"2.6 m",
@@ -77,6 +63,20 @@
     "y":{
      "exp":"4 m",
      "val":4.0
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "HubPos":{
+    "x":{
+     "exp":"4.62 m",
+     "val":4.62
+    },
+    "y":{
+     "exp":"4.05 m",
+     "val":4.05
     },
     "heading":{
      "exp":"0 rad",
@@ -117,21 +117,21 @@
   "frontLeft":{
    "x":{
     "exp":"moduleX",
-    "val":0.3429
+    "val":0.27305
    },
    "y":{
     "exp":"moduleY",
-    "val":0.3302
+    "val":0.2794
    }
   },
   "backLeft":{
    "x":{
     "exp":"-moduleX",
-    "val":-0.3429
+    "val":-0.27305
    },
    "y":{
     "exp":"moduleY",
-    "val":0.3302
+    "val":0.2794
    }
   },
   "mass":{
@@ -165,15 +165,15 @@
   "bumper":{
    "front":{
     "exp":"moduleX + 3.5 in",
-    "val":0.4318
+    "val":0.36195
    },
    "side":{
     "exp":"moduleY + 3.5 in",
-    "val":0.4191
+    "val":0.3683
    },
    "back":{
     "exp":"moduleX + 3.5 in",
-    "val":0.4318
+    "val":0.36195
    }
   },
   "differentialTrackWidth":{

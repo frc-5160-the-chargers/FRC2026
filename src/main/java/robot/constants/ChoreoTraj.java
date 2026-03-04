@@ -27,21 +27,21 @@ public record ChoreoTraj(
     public static final ChoreoTraj FarSideAuto_Grab1 = new ChoreoTraj(
 	    "FarSideAuto_Grab1",
 	    OptionalInt.empty(),
-	    2.80936,
+	    2.83879,
 	    new Pose2d(3.554, 0.649, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(7.843, 2.673, Rotation2d.fromRadians(-1.571))
 	);
 	public static final ChoreoTraj FarSideAuto_Score1 = new ChoreoTraj(
 	    "FarSideAuto_Score1",
 	    OptionalInt.empty(),
-	    2.63549,
+	    2.65896,
 	    new Pose2d(7.439, 1.726, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(2.1, 1.8, Rotation2d.fromRadians(0.405))
+	    new Pose2d(2.1, 1.8, Rotation2d.fromRadians(0.712))
 	);
 	public static final ChoreoTraj NearSideAuto = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.empty(),
-	    6.64409,
+	    6.64616,
 	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
@@ -69,14 +69,14 @@ public record ChoreoTraj(
 	public static final ChoreoTraj NearSideAuto$3 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(3),
-	    1.1080800000000002,
+	    1.11015,
 	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
 	public static final ChoreoTraj NearSideAuto_SOTM = new ChoreoTraj(
 	    "NearSideAuto_SOTM",
 	    OptionalInt.empty(),
-	    5.86291,
+	    5.86498,
 	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
@@ -97,7 +97,7 @@ public record ChoreoTraj(
 	public static final ChoreoTraj NearSideAuto_SOTM$2 = new ChoreoTraj(
 	    "NearSideAuto_SOTM",
 	    OptionalInt.of(2),
-	    1.1080800000000002,
+	    1.11015,
 	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
