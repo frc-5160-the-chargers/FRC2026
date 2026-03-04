@@ -6,11 +6,11 @@ import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lib.RobotMode;
 import lib.Tracer;
 import lib.Tunable;
 import lib.commands.CmdLogger;
-import lib.commands.LoggedAutoChooser;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import org.ironmaple.simulation.IntakeSimulation;
@@ -30,6 +30,7 @@ import robot.subsystems.shooter.Shooter;
 import java.util.Optional;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
@@ -53,7 +54,6 @@ public class Robot extends LoggedRobot {
         new Superstructure(controller, drive, groundIntake, shooter, serializer);
     private final Autos autos = new Autos(drive, groundIntake, superstructure);
 
-
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
@@ -75,8 +75,18 @@ public class Robot extends LoggedRobot {
             shooter.setFlywheelVelCmd(() -> RadiansPerSecond.of(30))
         );
 
-//        RobotModeTriggers.test()
-//            .whileTrue(superstructure.shootInHubCmd());
+        HubShiftUtil.initialize();
+        for (int i = 1; i <= 5; i++) {
+            double time = i;
+            var shiftAboutToEnd =
+                new Trigger(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time));
+            shiftAboutToEnd
+                .and(RobotModeTriggers.teleop())
+                .onTrue(controller.rumbleCmd(kRightRumble, 1.0).withTimeout(0.25));
+        }
+
+        RobotModeTriggers.test()
+            .whileTrue(superstructure.shootInHubCmd());
 //        RobotModeTriggers.autonomous()
 //            .and(RobotMode::isSim)
 //            .onTrue(Commands.runOnce(() -> SimulatedArena.getInstance().resetFieldForAuto()));
@@ -84,7 +94,7 @@ public class Robot extends LoggedRobot {
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(
-            drive.driveCmd(() -> controller.getSwerveRequest(drive.getPose().getRotation(), superstructure.getRotationOverride()))
+            drive.driveCmd(() -> controller.getSwerveRequest(superstructure.getRotationOverride()))
         );
         groundIntake.setDefaultCommand(
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
@@ -108,6 +118,7 @@ public class Robot extends LoggedRobot {
         }
         canBusLogger.periodic();
         CmdLogger.periodic(true);
+        HubShiftUtil.logData();
         Tracer.endCycle();
         Threads.setCurrentThreadPriority(false, 0);
     }

@@ -2,6 +2,9 @@ package robot.constants;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
+import edu.wpi.first.epilogue.logging.EpilogueBackend;
+import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
 import org.ironmaple.simulation.IntakeSimulation;
@@ -30,6 +33,13 @@ public class RobotConfig {
         TunerConstants.FrontLeft, TunerConstants.FrontRight,
         TunerConstants.BackLeft, TunerConstants.BackRight
     );
+
+    /**
+     * A logger that will only publish to networktables.
+     * Useful if data is desired to be logged to a dashboard.
+     */
+    public static final EpilogueBackend dashboardLogger =
+        new NTEpilogueBackend(NetworkTableInstance.getDefault());
 
     /** Creates an intake simulation characterizing this year's OTB intake. */
     public static Optional<IntakeSimulation> createIntakeSim(SwerveSubsystem drive) {

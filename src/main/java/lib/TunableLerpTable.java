@@ -3,7 +3,18 @@ package lib;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/** A {@link edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap} that supports tuning. */
+/**
+ * A linear interpolation (or "lerp" table) that can be tuned from the dashboard. <br />
+ *
+ * Imagine if you want to approximate a relationship between the distance to a shooting target
+ * (x) with the optimal flywheel speed (y). <br />
+ *
+ * It's probably impossible to know the exact function that relates the 2. However, you can try
+ * spinning the flywheel (and shooting balls) into the target at various distances. <br />
+ *
+ * Then, you could plot each of those points, and draw a line in between each of them. This effectively
+ * creates an approximation of the actual function that relates x and y. That's basically it.
+ */
 public class TunableLerpTable {
     private record Entry(Tunable<Double> key, Tunable<Double> value) implements Comparable<Entry> {
         @Override

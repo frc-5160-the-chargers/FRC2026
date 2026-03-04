@@ -16,8 +16,7 @@ import java.util.function.Supplier;
 
 /**
  * A tunable value. Can be found in the "Tuning" section of AdvantageScope.
- * Will be disabled if ```Tunable.setEnabled(false)``` is called; if that is
- * undesirable, use {@link LoggedNetworkNumber} or {@link LoggedNetworkBoolean}.
+ * Is disabled by default unless ```Tunable.setEnabled(true)``` is called.
  */
 public class Tunable<T> extends LoggedNetworkInput {
     /** When Tunable.setEnabled(true) is called, dashboard tuning will be enabled. */
