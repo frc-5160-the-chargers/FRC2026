@@ -15,6 +15,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -64,6 +66,8 @@ public class SwerveSubsystem extends ChargerSubsystem {
     private final SwerveHardware io; // The underlying hardware powering this drivetrain.
     private final SwerveDataAutoLogged inputs = new SwerveDataAutoLogged();
 
+    private final Field2d viz = new Field2d();
+
     /** A pose estimate that will be replayed correctly. */
     @Getter private Pose2d pose = Pose2d.kZero;
 
@@ -86,6 +90,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         alignMaxAccel.onChange(this::configureAlignment);
         alignMaxAngularAccel.onChange(this::configureAlignment);
         rotController.enableContinuousInput(-Math.PI, Math.PI);
+        SmartDashboard.putData("FieldViz", viz);
     }
 
     private void configureAlignment() {
@@ -157,6 +162,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         } else {
             pose = inputs.pose;
         }
+        viz.getRobotObject().setPose(pose);
     }
 
     /** The input data of this drivetrain. */

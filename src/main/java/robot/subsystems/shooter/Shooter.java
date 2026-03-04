@@ -38,15 +38,15 @@ public class Shooter extends ChargerSubsystem {
         }
     }
 
-    static final double HOOD_REDUCTION = 28.0;
-    static final DCMotor HOOD_MOTOR_KIND = DCMotor.getNeo550(1);
+    static final double HOOD_REDUCTION = 28.0 / 12.0 * 18.0 / 24.0 * 25.0;
+    static final DCMotor HOOD_MOTOR_KIND = DCMotor.getNEO(1);
     static final PivotSimConfig HOOD_SIM_CFG = new PivotSimConfig(
         HOOD_REDUCTION, PoundSquareInches.of(59.04),
         Inches.of(7.5), HOOD_MOTOR_KIND, false
     );
     static final double HOOD_KV = 1 / HOOD_MOTOR_KIND.withReduction(HOOD_REDUCTION).KvRadPerSecPerVolt;
-    static final PivotConstraints HOOD_CONSTRAINTS = new PivotConstraints(5, 5);
-    static final PivotGains HOOD_GAINS = new PivotGains(0, HOOD_KV, 0, 20.0, 0.05);
+    static final PivotConstraints HOOD_CONSTRAINTS = new PivotConstraints(12, 28);
+    static final PivotGains HOOD_GAINS = new PivotGains(0, HOOD_KV, 0, 10.0, 0.05);
 
     static final double FLYWHEEL_REDUCTION = 1.0;
 

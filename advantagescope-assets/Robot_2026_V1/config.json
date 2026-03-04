@@ -16,7 +16,34 @@
       "degrees": -90
     }
   ],
-  "cameras": [],
+  "cameras": [
+    {
+      "name": "Chargers 1",
+      "rotations": [
+        {
+          "axis": "x",
+          "degrees": 0.0
+        },
+        {
+          "axis": "y",
+          "degrees": -15.0
+        },
+        {
+          "axis": "z",
+          "degrees": -20.0
+        }
+      ],
+      "position": [
+        0.3302,
+        -0.12065,
+        0.435
+      ],
+      "resolution": [
+        1200, 800
+      ],
+      "fov": 70
+    }
+  ],
   "components": [
     {
       "zeroedRotations": [

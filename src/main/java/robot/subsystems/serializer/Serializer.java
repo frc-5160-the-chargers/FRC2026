@@ -22,6 +22,7 @@ import java.util.function.BooleanSupplier;
 public class Serializer extends ChargerSubsystem {
     static final double CURRENT_LIMIT = 60;
     static final int SIM_FUEL_REMOVAL_RATE = 5; // # of game pieces per sec
+    public static final double FLYWHEEL_TO_SERIALIZER_SPEED_RATIO = 0.4;
 
     private final Tunable<Double>
         forwardVolts = Tunable.of(key("ForwardVolts"), 9.0),

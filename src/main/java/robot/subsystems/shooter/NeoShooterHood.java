@@ -12,6 +12,9 @@ import lib.hardware.MotorStats;
 import robot.subsystems.common.PivotDataAutoLogged;
 import robot.subsystems.common.PivotHardware;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
+
 /**
  * The hardware powering the shooter hood on the real robot.
  * Responsible for controlling the trajectory of the fuel.
@@ -28,6 +31,7 @@ public class NeoShooterHood extends PivotHardware {
             .positionConversionFactor(1 / Shooter.HOOD_REDUCTION)
             .velocityConversionFactor(1 / Shooter.HOOD_REDUCTION);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        encoder.setPosition(Degrees.of(19).in(Rotations));
     }
 
     @Override

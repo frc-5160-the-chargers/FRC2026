@@ -32,7 +32,6 @@ import robot.subsystems.shooter.Shooter;
 
 import java.util.Optional;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 
 @SuppressWarnings("FieldCanBeLocal")
@@ -41,7 +40,9 @@ public class Robot extends LoggedRobot {
         RobotConfig.initLoggingForMainBot();
     }
 
-    private final Tunable<Double> pivotDebugVolts = Tunable.of("GroundIntake/Pivot/DemoVolts", 0);
+    private final Tunable<Double>
+        hoodDebugVolts = Tunable.of("Shooter/Hood/DemoVolts", 0),
+        hoodDebugDeg = Tunable.of("Shooter/Hood/DemoAngle (deg)", 30);
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
 
     private final SwerveSubsystem drive = new SwerveSubsystem(RobotConfig.swerveCfg);
@@ -72,14 +73,13 @@ public class Robot extends LoggedRobot {
         controller.touchpad().multiPress(2, 0.3)
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
         controller.triangle().whileTrue(
-            groundIntake.manualPivotCmd(pivotDebugVolts::get)
+            serializer.runWhileTrueCmd(() -> true)
+        );
+        controller.cross().whileTrue(
+            shooter.setHoodAngleCmd(() -> Rotation2d.fromDegrees(hoodDebugDeg.get()))
         );
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
-
-        controller.triangle().whileTrue(
-            shooter.setFlywheelVelCmd(() -> RadiansPerSecond.of(30))
-        );
 
         HubShiftUtil.initialize();
         for (int i = 1; i <= 5; i++) {
