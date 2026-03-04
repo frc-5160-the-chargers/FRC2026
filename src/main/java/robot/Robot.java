@@ -1,7 +1,10 @@
 package robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -60,6 +63,9 @@ public class Robot extends LoggedRobot {
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
         setButtonBindings();
         setDefaultCommands();
+
+        CameraServer.startAutomaticCapture();
+        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
     }
 
     private void setButtonBindings() {
