@@ -19,7 +19,7 @@ def ROBOT_MAIN_CLASS = "robot.Main"
 def genAirTimeTable = frc.project.hasProperty("genAirTimeTable")
 def isDeployTask = project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })
 if (genAirTimeTable && !isDeployTask) {
-    ROBOT_MAIN_CLASS = "robot.subsystems.shooter.HubShotCalcsKt"
+    ROBOT_MAIN_CLASS = "robot.subsystems.shooter.ShotCalcsKt"
 }
 
 // Define my targets (RoboRIO) and artifacts (deployable files)

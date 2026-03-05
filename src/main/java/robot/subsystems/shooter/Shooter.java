@@ -1,11 +1,13 @@
 package robot.subsystems.shooter;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import lib.Convert;
 import lib.RobotMode;
@@ -54,7 +56,7 @@ public class Shooter extends ChargerSubsystem {
         new Transform2d(Inches.of(6.07), Inches.zero(), Rotation2d.kZero);
     public static final Translation3d ROBOT_TO_SHOOTER_PIVOT_POINT =
         new Translation3d(Inches.of(9.06), Inches.zero(), Inches.of(11.776));
-    public static final Distance FUEL_LAUNCH_HEIGHT = Inches.of(15.2);
+    public static final Distance FUEL_LAUNCH_HEIGHT = Inches.of(15.2 + 1.5);
 
     private final Tunable<Double>
         flywheelKp = Tunable.of(key("Flywheels/KP"), 17.0),
@@ -74,6 +76,7 @@ public class Shooter extends ChargerSubsystem {
     private final PivotController hoodController = new PivotController(
         key("Hood"), HOOD_GAINS, HOOD_CONSTRAINTS, hoodIO
     );
+    private final Debouncer hardStopDebouncer = new Debouncer(1.2);
 
     @AutoLogOutput(unit = "RadPerSec") private double flywheelErr = 0;
     @AutoLogOutput(unit = "Rad") private double hoodErr = 0;
@@ -168,5 +171,11 @@ public class Shooter extends ChargerSubsystem {
             new Rotation3d(0, hoodInputs.positionRad - 11 * Convert.DEGREES_TO_RADIANS, 0)
         );
         Logger.recordOutput("HoodPosition", hoodPos);
+
+        // Stop hood if it's jamming
+        if (hardStopDebouncer.calculate(hoodInputs.motorStats.appliedAmps() > 35)) {
+            Logger.recordOutput(key("JamDetected"), true);
+            CommandScheduler.getInstance().schedule(stopCmd());
+        }
     }
 }

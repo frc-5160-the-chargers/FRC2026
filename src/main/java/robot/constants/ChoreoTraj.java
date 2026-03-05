@@ -41,65 +41,58 @@ public record ChoreoTraj(
 	public static final ChoreoTraj NearSideAuto = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.empty(),
-	    6.64616,
-	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    6.62429,
+	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
 	public static final ChoreoTraj NearSideAuto$0 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(0),
-	    1.71318,
-	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    1.6913,
+	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NearSideAuto$1 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(1),
-	    1.97079,
+	    1.9708,
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NearSideAuto$2 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(2),
-	    1.8520400000000001,
+	    1.8520299999999996,
 	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NearSideAuto$3 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(3),
-	    1.11015,
+	    1.1101600000000005,
 	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
-	public static final ChoreoTraj NearSideAuto_SOTM = new ChoreoTraj(
-	    "NearSideAuto_SOTM",
+	public static final ChoreoTraj NearSideAuto_2 = new ChoreoTraj(
+	    "NearSideAuto_2",
 	    OptionalInt.empty(),
-	    5.86498,
-	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
+	    10.14857,
+	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
 	);
-	public static final ChoreoTraj NearSideAuto_SOTM$0 = new ChoreoTraj(
-	    "NearSideAuto_SOTM",
+	public static final ChoreoTraj NearSideAuto_2$0 = new ChoreoTraj(
+	    "NearSideAuto_2",
 	    OptionalInt.of(0),
-	    1.71318,
-	    new Pose2d(3.55, 1.7, Rotation2d.fromRadians(0)),
+	    1.6913,
+	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
 	);
-	public static final ChoreoTraj NearSideAuto_SOTM$1 = new ChoreoTraj(
-	    "NearSideAuto_SOTM",
+	public static final ChoreoTraj NearSideAuto_2$1 = new ChoreoTraj(
+	    "NearSideAuto_2",
 	    OptionalInt.of(1),
-	    3.04165,
+	    8.45727,
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj NearSideAuto_SOTM$2 = new ChoreoTraj(
-	    "NearSideAuto_SOTM",
-	    OptionalInt.of(2),
-	    1.11015,
-	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
+	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
 	);
 
     /**
@@ -114,10 +107,9 @@ public record ChoreoTraj(
 		Map.entry("NearSideAuto$1", NearSideAuto$1),
 		Map.entry("NearSideAuto$2", NearSideAuto$2),
 		Map.entry("NearSideAuto$3", NearSideAuto$3),
-		Map.entry("NearSideAuto_SOTM", NearSideAuto_SOTM),
-		Map.entry("NearSideAuto_SOTM$0", NearSideAuto_SOTM$0),
-		Map.entry("NearSideAuto_SOTM$1", NearSideAuto_SOTM$1),
-		Map.entry("NearSideAuto_SOTM$2", NearSideAuto_SOTM$2)
+		Map.entry("NearSideAuto_2", NearSideAuto_2),
+		Map.entry("NearSideAuto_2$0", NearSideAuto_2$0),
+		Map.entry("NearSideAuto_2$1", NearSideAuto_2$1)
     );
 
     /**

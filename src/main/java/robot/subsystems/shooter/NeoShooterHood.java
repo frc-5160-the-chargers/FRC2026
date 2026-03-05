@@ -30,6 +30,7 @@ public class NeoShooterHood extends PivotHardware {
         config.encoder
             .positionConversionFactor(1 / Shooter.HOOD_REDUCTION)
             .velocityConversionFactor(1 / Shooter.HOOD_REDUCTION);
+        config.smartCurrentLimit(40);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         encoder.setPosition(Degrees.of(19).in(Rotations));
     }
