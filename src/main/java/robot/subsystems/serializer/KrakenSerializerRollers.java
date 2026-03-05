@@ -23,6 +23,7 @@ public class KrakenSerializerRollers extends RollerHardware {
         setCurrentLimit(Serializer.CURRENT_LIMIT);
         setCoastMode(false);
         SignalRefresh.register(100.0, motor.getNetwork(), angularVel);
+        motor.optimizeBusUtilization();
     }
 
     @Override

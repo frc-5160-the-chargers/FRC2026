@@ -60,6 +60,7 @@ public class KrakenFlywheels {
         var status = talon.getConfigurator().apply(config);
         configError.set(!status.isOK());
         SignalRefresh.register(100.0, talon.getNetwork(), velocity, accel);
+        talon.optimizeBusUtilization();
         // CTRE's hardware injection sim mostly relies on itself being run
         // at a higher frequency to be less innacurate.
         if (RobotMode.isSim()) new Notifier(this::updateSim).startPeriodic(0.005);
