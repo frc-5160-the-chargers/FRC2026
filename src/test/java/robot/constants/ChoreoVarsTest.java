@@ -23,7 +23,7 @@ class ChoreoVarsTest extends ChargerUnitTest {
             TunerConstants.FrontLeft.WheelRadius,
             ChoreoVars.wheelRadius.in(Meters),
             0.001,
-            "Incorrect moduleY in choreo."
+            "Incorrect wheel radius in choreo."
         );
         assertEquals(
             TunerConstants.FrontLeft.LocationX,
