@@ -1,185 +1,120 @@
 package robot.subsystems.shooter;
 
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.Commands;
 import lib.Convert;
-import lib.RobotMode;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
-import robot.subsystems.common.PivotController;
-import robot.subsystems.common.PivotController.PivotConstraints;
-import robot.subsystems.common.PivotController.PivotGains;
-import robot.subsystems.common.PivotDataAutoLogged;
-import robot.subsystems.common.PivotHardware;
-import robot.subsystems.common.PivotHardware.PivotSimConfig;
-import robot.subsystems.common.SimPivotHardware;
 
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
-import static lib.Convert.CustomUnits.PoundSquareInches;
 
 public class Shooter extends ChargerSubsystem {
     /** The yaw, pitch, and shooter speed for launched balls to reach the target. */
-    public record Setpoint(Rotation2d yaw, Rotation2d pitch, double radPerSec, boolean isPossible) {
+    public record Setpoint(Rotation2d yaw, double radPerSec, boolean isPossible) {
         /** Represents a Shooter setpoint with no data. */
-        public static final Setpoint NULL = new Setpoint(Rotation2d.kZero, Rotation2d.kZero, 0, false);
+        public static final Setpoint NULL = new Setpoint(Rotation2d.kZero, 0, false);
 
         public AngularVelocity speed() {
             return RadiansPerSecond.of(radPerSec);
         }
     }
 
-    static final double HOOD_REDUCTION = 28.0 / 12.0 * 18.0 / 24.0 * 25.0;
-    static final DCMotor HOOD_MOTOR_KIND = DCMotor.getNEO(1);
-    static final PivotSimConfig HOOD_SIM_CFG = new PivotSimConfig(
-        HOOD_REDUCTION, PoundSquareInches.of(59.04),
-        Inches.of(7.5), HOOD_MOTOR_KIND, false
-    );
-    static final double HOOD_KV = 1 / HOOD_MOTOR_KIND.withReduction(HOOD_REDUCTION).KvRadPerSecPerVolt;
-    static final PivotConstraints HOOD_CONSTRAINTS = new PivotConstraints(12, 28);
-    static final PivotGains HOOD_GAINS = new PivotGains(0, HOOD_KV, 0, 10.0, 0.05);
-
-    static final double FLYWHEEL_REDUCTION = 1.0;
-
+    public static final double FLYWHEEL_REDUCTION = 1.0;
     public static final Transform2d ROBOT_TO_LAUNCH_POINT =
         new Transform2d(Inches.of(6.07), Inches.zero(), Rotation2d.kZero);
     public static final Translation3d ROBOT_TO_SHOOTER_PIVOT_POINT =
         new Translation3d(Inches.of(9.06), Inches.zero(), Inches.of(11.776));
     public static final Distance FUEL_LAUNCH_HEIGHT = Inches.of(15.2 + 1.5);
+    public static final Rotation2d LAUNCH_ANGLE = Rotation2d.fromDegrees(90 - 20);
 
     private final Tunable<Double>
-        flywheelKp = Tunable.of(key("Flywheels/KP"), 17.0),
+        flywheelKp = Tunable.of(key("Flywheels/KP"), 3.5),
         flywheelKd = Tunable.of(key("Flywheels/KD"), 0.0),
         flywheelKv = Tunable.of(key("Flywheels/KV"), 0.0),
-        hoodTolerance = Tunable.of(key("Hood/Tolerance (Rad)"), 1 * Convert.DEGREES_TO_RADIANS),
-        flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 5.0);
+        flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 5.0),
+        shotLimit = Tunable.of(key("Flywheels/ShootingCurrentLimit"), 60.0),
+        spinupLimit = Tunable.of(key("Flywheels/SpinupCurrentLimit"), 20.0);
+    private final Tunable<AngularVelocity>
+        defaultSpinupVel = Tunable.of(key("Flywheels/DefaultSpinupVel"), RadiansPerSecond.of(150));
     private final KrakenFlywheels flywheelIO = new KrakenFlywheels();
-    private final PivotHardware hoodIO = switch (RobotMode.get()) {
-        case REAL -> new NeoShooterHood();
-        case SIM -> new SimPivotHardware(HOOD_SIM_CFG);
-        case REPLAY -> new PivotHardware();
-    };
     private final FlywheelDataAutoLogged flywheelInputs = new FlywheelDataAutoLogged();
-    private final PivotDataAutoLogged hoodInputs = new PivotDataAutoLogged();
-
-    private final PivotController hoodController = new PivotController(
-        key("Hood"), HOOD_GAINS, HOOD_CONSTRAINTS, hoodIO
-    );
-    private final Debouncer hardStopDebouncer = new Debouncer(1.2);
 
     @AutoLogOutput(unit = "RadPerSec") private double flywheelErr = 0;
-    @AutoLogOutput(unit = "Rad") private double hoodErr = 0;
 
     /** Whether the flywheels and hood have reached their desired velocity and position, respectively. */
     public boolean atGoal(double toleranceMultiplier) {
-        boolean result = hoodErr < (hoodTolerance.get() * toleranceMultiplier)
-            && flywheelErr < (flywheelTolerance.get() * toleranceMultiplier);
+        boolean result = flywheelErr < (flywheelTolerance.get() * toleranceMultiplier);
         Logger.recordOutput(key("AtGoal"), result);
         return result;
     }
-
-    public final SysIdRoutine sysIdRoutine = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.per(Second).of(1),
-            Volts.of(1),
-            Seconds.of(20),
-            state -> Logger.recordOutput(key("SysIdState"), state)
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> flywheelIO.setAmps(output.in(Volts)),
-            null,
-            this
-        )
-    );
 
     public Shooter() {
         configureGains();
         flywheelKp.onChange(this::configureGains);
         flywheelKd.onChange(this::configureGains);
         flywheelKv.onChange(this::configureGains);
-        hoodIO.zeroEncoder(0 * Convert.DEGREES_TO_RADIANS);
+        flywheelIO.setCurrentLimit(spinupLimit.get());
+        var hoodPos = new Pose3d(
+            ROBOT_TO_SHOOTER_PIVOT_POINT,
+            new Rotation3d(0, 11 * Convert.DEGREES_TO_RADIANS, 0)
+        );
+        Logger.recordOutput("HoodPosition", hoodPos);
     }
 
     private void configureGains() {
         flywheelIO.setGains(flywheelKp.get(), flywheelKd.get(), flywheelKv.get());
     }
 
-    public Command stopCmd() {
-        var cmd = this.run(() -> {
-            flywheelIO.idle();
-            hoodIO.setVolts(0);
+    // We use a separate method for the "impl" version of the setVelocityCmd
+    // so that it isn't logged when spinupCmd() is scheduled.
+    private Command setVelocityCmdImpl(Supplier<AngularVelocity> targetSupplier) {
+        return this.run(() -> {
+            var target = targetSupplier.get();
+            flywheelIO.setVelocity(target);
+            flywheelErr = Math.abs(flywheelInputs.velocity.minus(target).in(RadiansPerSecond));
         });
-        return logged(cmd, "Idle");
+    }
+
+    /** Spins up the shooter at the default angular velocity. */
+    public Command spinupCmd() {
+        return spinupCmd(defaultSpinupVel::get);
+    }
+
+    /**
+     * Runs the flywheel at the designated angular velocity while
+     * lowering the current limit, to allow it to build momentum.
+     */
+    public Command spinupCmd(Supplier<AngularVelocity> targetSupplier) {
+        var cmd = Commands.sequence(
+            this.runOnce(() -> flywheelIO.setCurrentLimit(spinupLimit.get())),
+            Commands.parallel(
+                setVelocityCmdImpl(targetSupplier),
+                Commands.waitUntil(() -> atGoal(1.0))
+                    .andThen(Commands.runOnce(() -> flywheelIO.setCurrentLimit(shotLimit.get())))
+            )
+        );
+        return logged(cmd, "Spinup");
     }
 
     /** Runs the shooter at the commanded setpoint. */
-    public Command targetingCmd(Supplier<Setpoint> targetSupplier) {
-        var resetStateCmd = this.runOnce(() -> hoodController.resetTo(hoodInputs.getMotionState()));
-        var targetGoalCmd = this.run(() -> {
-            var target = targetSupplier.get();
-            var hoodGoal = new TrapezoidProfile.State(Math.PI / 2 - target.pitch().getRadians(), 0);
-            flywheelIO.setVelocity(target.speed());
-            hoodController.moveTo(hoodGoal, hoodInputs.positionRad);
-            hoodErr = Math.abs(hoodInputs.positionRad - hoodGoal.position);
-            flywheelErr = Math.abs(flywheelInputs.velocity.in(RadiansPerSecond) - target.radPerSec);
-        });
-        return logged(resetStateCmd.andThen(targetGoalCmd), "TargetSetpoint");
+    public Command setVelocityCmd(Supplier<AngularVelocity> targetSupplier) {
+        return logged(setVelocityCmdImpl(targetSupplier), "SetVelocity");
     }
 
-    public double getHoodRad() {
-        return Math.PI / 2 - hoodInputs.positionRad;
-    }
-
-    public double getFlywheelRadPerSec() {
-        return flywheelInputs.velocity.in(RadiansPerSecond);
-    }
-
-    public Command manualHoodCmd(DoubleSupplier volts) {
-        var cmd = this.run(() -> hoodIO.setVolts(volts.getAsDouble()));
-        return logged(cmd, "ManualHood");
-    }
-
-    public Command dualShooterHoodCmd(Supplier<Rotation2d> angle, Supplier<AngularVelocity> velocity) {
-        return targetingCmd(() -> new Setpoint(Rotation2d.kZero, angle.get(), velocity.get().in(RadiansPerSecond), true));
-    }
-
-    public Command setHoodAngleCmd(Supplier<Rotation2d> angle) {
-        return targetingCmd(() -> new Setpoint(Rotation2d.kZero, angle.get(), 0, true));
-    }
-
-    public Command setFlywheelVelCmd(Supplier<AngularVelocity> velocity) {
-        var cmd = this.run(() -> flywheelIO.setVelocity(velocity.get()));
-        return logged(cmd, "ManualFlywheel");
+    public AngularVelocity velocity() {
+        return flywheelInputs.velocity;
     }
 
     @Override
     public void loggedPeriodic() {
         flywheelIO.refreshData(flywheelInputs);
-        hoodIO.refreshData(hoodInputs);
         Logger.processInputs("Shooter/Flywheels", flywheelInputs);
-        Logger.processInputs("Shooter/Hood", hoodInputs);
-
-        var hoodPos = new Pose3d(
-            ROBOT_TO_SHOOTER_PIVOT_POINT,
-            new Rotation3d(0, hoodInputs.positionRad - 11 * Convert.DEGREES_TO_RADIANS, 0)
-        );
-        Logger.recordOutput("HoodPosition", hoodPos);
-
-        // Stop hood if it's jamming
-        if (hardStopDebouncer.calculate(hoodInputs.motorStats.appliedAmps() > 35)) {
-            Logger.recordOutput(key("JamDetected"), true);
-            CommandScheduler.getInstance().schedule(stopCmd());
-        }
     }
 }

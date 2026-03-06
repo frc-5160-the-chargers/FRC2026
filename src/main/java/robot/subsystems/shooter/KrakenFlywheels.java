@@ -20,7 +20,7 @@ import lib.RobotMode;
 import lib.hardware.MotorStats;
 import lib.hardware.SignalRefresh;
 import org.littletonrobotics.junction.AutoLog;
-import robot.subsystems.drive.TunerConstants;
+import robot.constants.RobotConfig;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
@@ -35,7 +35,7 @@ public class KrakenFlywheels {
         public MotorStats motorStats = MotorStats.EMPTY;
     }
 
-    private final TalonFX talon = new TalonFX(/*id */ 16, TunerConstants.kCANBus);
+    private final TalonFX talon = new TalonFX(/*id */ 16, RobotConfig.CANIVORE);
     private final TalonFXConfiguration config = new TalonFXConfiguration();
     private final StatusSignal<AngularVelocity> velocity = talon.getVelocity();
     private final StatusSignal<AngularAcceleration> accel = talon.getAcceleration();
@@ -55,7 +55,6 @@ public class KrakenFlywheels {
 
     public KrakenFlywheels() {
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        config.CurrentLimits.SupplyCurrentLimit = 60.0;
         config.Feedback.SensorToMechanismRatio = Shooter.FLYWHEEL_REDUCTION;
         var status = talon.getConfigurator().apply(config);
         configError.set(!status.isOK());
@@ -88,7 +87,14 @@ public class KrakenFlywheels {
         config.Slot0.kP = kP / Convert.RADIANS_TO_ROTATIONS;
         config.Slot0.kD = kD / Convert.RADIANS_TO_ROTATIONS;
         config.Slot0.kV = kV / Convert.RADIANS_TO_ROTATIONS;
-        var status = talon.getConfigurator().apply(config);
+        var status = talon.getConfigurator().apply(config.Slot0);
+        configError.set(!status.isOK());
+    }
+
+    public void setCurrentLimit(double amps) {
+        config.TorqueCurrent.PeakForwardTorqueCurrent = amps;
+        config.TorqueCurrent.PeakReverseTorqueCurrent = -amps;
+        var status = talon.getConfigurator().apply(config.TorqueCurrent);
         configError.set(!status.isOK());
     }
 

@@ -2,6 +2,7 @@ package robot.constants;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -33,6 +34,9 @@ public class RobotConfig {
         TunerConstants.FrontLeft, TunerConstants.FrontRight,
         TunerConstants.BackLeft, TunerConstants.BackRight
     );
+
+    /** The canivore we use on the robot. */
+    public static final CANBus CANIVORE = TunerConstants.kCANBus;
 
     /**
      * A logger that will only publish to networktables.

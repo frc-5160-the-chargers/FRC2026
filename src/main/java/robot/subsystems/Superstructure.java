@@ -93,10 +93,10 @@ public class Superstructure {
     // Commands
     public Command shootInHubCmd() {
         var cmd = NonBlockingCmds.parallel(
-            shooter.targetingCmd(() -> {
+            shooter.setVelocityCmd(() -> {
                 updateHubShotSetpoint();
                 rotationOverride = Optional.of(shotSetpoint.yaw());
-                return shotSetpoint;
+                return shotSetpoint.speed();
             }),
             runSerializerCmd(HUB_NO_SHOOT_ZONES)
         )
@@ -105,33 +105,12 @@ public class Superstructure {
     }
 
     public Command spinupForHubShotCmd(Pose2d blueTargetPose) {
-        var cmd = shooter.targetingCmd(() -> {
+        var cmd = shooter.setVelocityCmd(() -> {
             var pose = AllianceColor.isRed() ? flip(blueTargetPose) : blueTargetPose;
             updateHubShotSetpoint(blueTargetPose, new ChassisSpeeds());
-            return shotSetpoint;
+            return shotSetpoint.speed();
         })
             .finallyDo(this::resetShotSetpoint);
         return logged(cmd, "SpinupForHubShot");
-    }
-
-    public Command ferryCmd() {
-        var cmd = shooter.targetingCmd(() -> {
-            shotSetpoint = new Shooter.Setpoint(
-                Rotation2d.kZero,
-                Rotation2d.fromRadians(FERRY_HOOD_ANGLE.get()),
-                0.0,
-                true
-            );
-            return shotSetpoint;
-        });
-        return logged(cmd, "Ferry");
-    }
-
-    public Command shootInHubFromWallCmd() {
-        return Commands.none();
-    }
-
-    public Command simpleFerryCmd() {
-        return Commands.none();
     }
 }

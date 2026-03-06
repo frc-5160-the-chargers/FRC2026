@@ -8,6 +8,7 @@ import choreo.util.ChoreoAllianceFlipUtil.flip
 import edu.wpi.first.math.geometry.*
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.units.Units.Meters
+import edu.wpi.first.units.Units.RadiansPerSecond
 import lib.AllianceColor
 import lib.RobotMode
 import lib.Tunable
@@ -71,7 +72,6 @@ fun getHubShotSetpoint(
     val futureShooterToGoal = shooterToGoal - shooterVelocity * airTime
     val targetDist = futureShooterToGoal.norm
     val ballSpeed = DISTANCE_TO_BALL_SPEED.get(targetDist)
-    val targetPitch = DISTANCE_TO_HOOD_ANGLE.get(targetDist)
     val targetYaw = if (AllianceColor.isRed()) {
         flip(futureShooterToGoal.angle)
     } else {
@@ -82,14 +82,15 @@ fun getHubShotSetpoint(
     Logger.recordOutput("ShotCalcs/Iterations", *iterations)
 
     if (simulateShot && RobotMode.isSim()) {
-        val launchAngle = Rotation3d(0.0, -shooter.hoodRad, robotPose.rotation.radians)
+        val launchAngle = Rotation3d(0.0, -Shooter.LAUNCH_ANGLE.radians, robotPose.rotation.radians)
+        val angularVel = BALL_TO_FLYWHEEL_SPEED.getKey(shooter.velocity().`in`(RadiansPerSecond))
         simulateShot(
             pose = Translation3d(
                 fieldOriginToShooter.x,
                 fieldOriginToShooter.y,
                 Shooter.FUEL_LAUNCH_HEIGHT.`in`(Meters)
             ),
-            velocity = Translation3d(BALL_TO_FLYWHEEL_SPEED.getKey(shooter.flywheelRadPerSec), launchAngle) +
+            velocity = Translation3d(angularVel, launchAngle) +
                 Translation3d(shooterVelocity.x, shooterVelocity.y, 0.0),
             dt = 0.05
         )
@@ -97,7 +98,6 @@ fun getHubShotSetpoint(
 
     return Shooter.Setpoint(
         targetYaw,
-        Rotation2d.fromRadians(targetPitch),
         BALL_TO_FLYWHEEL_SPEED.get(ballSpeed),
         targetDist >= MIN_DISTANCE_TO_SHOOT.get()
     )
@@ -116,35 +116,24 @@ private val BALL_TO_FLYWHEEL_SPEED =
         .put(14.5, 285.433)
 private val DISTANCE_TO_BALL_SPEED =
     TunableLerpTable("ShotCalcs/Distance(m) -> Ball Velocity(mps)")
-        .put(1.3, 6.2)
-        .put(1.5, 6.3)
-        .put(1.7, 6.3)
-        .put(2.1, 6.7)
-        .put(2.65, 7.1)
-        .put(2.95, 7.1)
-        .put(3.05, 7.15)
-        .put(3.5, 7.4)
-        .put(3.75, 7.8)
-        .put(4.35, 8.1)
-        .put(4.65, 8.3)
-        .put(5.0, 8.4)
-        .put(5.226, 8.6)
-        .put(5.71, 8.8)
-        .put(6.371, 9.2)
-        .put(6.7, 9.5)
-        .put(7.04, 9.7)
-        .put(7.5, 9.9)
-        .put(8.0, 10.3)
-private val DISTANCE_TO_HOOD_ANGLE =
-    TunableLerpTable("ShotCalcs/Distance(m) -> Hood Angle(rad)")
-        .put(2.35, 1.22)
-        .put(2.65, 1.17)
-        .put(2.95, 1.1)
-        .put(3.35, 1.06)
-        .put(4.35, 1.02)
-        .put(4.65, 1.0)
-        .put(5.0, 0.95)
-        .put(8.0, 0.9)
+        .put(1.7, 6.2)
+        .put(2.1, 6.6)
+        .put(2.65, 7.3)
+        .put(2.95, 7.6)
+        .put(3.05, 7.8)
+        .put(3.5, 8.2)
+        .put(3.75, 8.6)
+        .put(4.35, 9.1)
+        .put(4.65, 9.4)
+        .put(5.0, 9.8)
+        .put(5.2, 10.1)
+        .put(5.7, 10.5)
+        .put(6.3, 11.1)
+        .put(6.7, 11.4)
+        .put(7.0, 11.7)
+        .put(7.5, 12.1)
+        .put(8.0, 12.7)
+
 
 /**
  * Generates the DistanceToAirTime.kt file (and the DISTANCE_TO_AIR_TIME table)
@@ -164,8 +153,7 @@ private fun writeDistanceToAirTimeTable(): String {
         fieldOriginToShooter += Shooter.ROBOT_TO_LAUNCH_POINT.translation
         val shooterToGoal = HUB_LOCATION - fieldOriginToShooter
         val ballSpeed = DISTANCE_TO_BALL_SPEED.get(shooterToGoal.norm)
-        val targetPitch = DISTANCE_TO_HOOD_ANGLE.get(shooterToGoal.norm)
-        val launchAngle = Rotation3d(0.0, -targetPitch, shooterToGoal.angle.radians)
+        val launchAngle = Rotation3d(0.0, -Shooter.LAUNCH_ANGLE.radians, shooterToGoal.angle.radians)
         val airTime = simulateShot(
             pose = Translation3d(
                 fieldOriginToShooter.x,
@@ -189,5 +177,5 @@ fun main() {
     val path = "src/main/java/robot/subsystems/shooter/DistanceToAirTime.kt"
     val fileWriter = BufferedWriter(FileWriter(path))
     fileWriter.write(writeDistanceToAirTimeTable())
-    fileWriter.close();
+    fileWriter.close()
 }

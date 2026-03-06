@@ -86,7 +86,7 @@ public class Robot extends LoggedRobot {
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
         controller.cross().whileTrue(
-            shooter.setFlywheelVelCmd(flywheelDebugVel::get)
+            shooter.setVelocityCmd(flywheelDebugVel::get)
         );
         controller.triangle().whileTrue(
             serializer.runWhileTrueCmd(() -> true)
@@ -110,28 +110,24 @@ public class Robot extends LoggedRobot {
         groundIntake.setDefaultCommand(
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
         );
-        shooter.setDefaultCommand(shooter.stopCmd());
         serializer.setDefaultCommand(serializer.stopCmd());
     }
 
     private void mapAutoAndTestModes() {
+//        RobotModeTriggers.test()
+//            .whileTrue(testChooser.autoScheduler());
         RobotModeTriggers.test()
-            .whileTrue(testChooser.autoScheduler());
+            .whileTrue(superstructure.shootInHubCmd());
         RobotModeTriggers.autonomous()
             .whileTrue(autoChooser.autoScheduler());
 
         autoChooser.addCmd("Near Side Auto", autos::nearSide);
 
-        var hoodDebugDeg = Tunable.of("Shooter/Hood/DebugDeg", 50);
         testChooser.addCmd("Test Hub Shot", superstructure::shootInHubCmd);
-        testChooser.addCmd("Test Ferry", superstructure::ferryCmd);
-        testChooser.addCmd(
-            "Set Hood Angle",
-            () -> shooter.setHoodAngleCmd(() -> Rotation2d.fromDegrees(hoodDebugDeg.get()))
-        );
+//        testChooser.addCmd("Test Ferry", superstructure::ferryCmd);
         testChooser.addCmd(
             "Set Flywheel Vel",
-            () -> shooter.setFlywheelVelCmd(flywheelDebugVel::get)
+            () -> shooter.setVelocityCmd(flywheelDebugVel::get)
         );
     }
 
