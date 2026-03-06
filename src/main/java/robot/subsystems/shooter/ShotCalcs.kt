@@ -107,6 +107,7 @@ private const val NEWTONS_METHOD_ITERATIONS = 7
 private val HUB_LOCATION = FieldConstants.Hub.topCenterPoint.toTranslation2d()
 private val MIN_DISTANCE_TO_SHOOT = Tunable.of("ShotCalcs/Minimum Distance to Shoot(m)", 1.5)
 private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.0)
+//private val DRAG_COMP_INVERSE_SECS = Tunable.of("ShotCalcs/Drag Compensation(secs ^ -1)", 0.02)
 // Because of energy loss, the linear velocity of the ball isn't exactly
 // omega * r; so, we compensate for that with a lerp table.
 private val BALL_TO_FLYWHEEL_SPEED =

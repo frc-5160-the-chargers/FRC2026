@@ -118,7 +118,7 @@ public class GroundIntake extends ChargerSubsystem {
 
     public Command stowCmd() {
         var cmd = setAngleCmd(stowPos::get)
-            .alongWith(Commands.run(() -> setRollerVolts(0)));
+            .alongWith(Commands.run(() -> setRollerVolts(1.0)));
         return logged(cmd, "Stow");
     }
 

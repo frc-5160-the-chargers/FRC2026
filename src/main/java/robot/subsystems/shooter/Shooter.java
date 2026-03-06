@@ -150,6 +150,10 @@ public class Shooter extends ChargerSubsystem {
         return logged(cmd, "ManualHood");
     }
 
+    public Command dualShooterHoodCmd(Supplier<Rotation2d> angle, Supplier<AngularVelocity> velocity) {
+        return targetingCmd(() -> new Setpoint(Rotation2d.kZero, angle.get(), velocity.get().in(RadiansPerSecond), true));
+    }
+
     public Command setHoodAngleCmd(Supplier<Rotation2d> angle) {
         return targetingCmd(() -> new Setpoint(Rotation2d.kZero, angle.get(), 0, true));
     }

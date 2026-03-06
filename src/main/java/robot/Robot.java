@@ -2,6 +2,7 @@ package robot;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
@@ -14,6 +15,7 @@ import lib.RobotMode;
 import lib.Tracer;
 import lib.Tunable;
 import lib.commands.CmdLogger;
+import lib.commands.LoggedAutoChooser;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import org.ironmaple.simulation.IntakeSimulation;
@@ -32,6 +34,7 @@ import robot.subsystems.shooter.Shooter;
 
 import java.util.Optional;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 
 @SuppressWarnings("FieldCanBeLocal")
@@ -40,9 +43,9 @@ public class Robot extends LoggedRobot {
         RobotConfig.initLoggingForMainBot();
     }
 
-    private final Tunable<Double>
-        hoodDebugVolts = Tunable.of("Shooter/Hood/DemoVolts", 0),
-        hoodDebugDeg = Tunable.of("Shooter/Hood/DemoAngle (deg)", 30);
+    private final Tunable<AngularVelocity> flywheelDebugVel =
+        Tunable.of("Shooter/Flywheels/DebugVel", RadiansPerSecond.of(50));;
+
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
 
     private final SwerveSubsystem drive = new SwerveSubsystem(RobotConfig.swerveCfg);
@@ -58,12 +61,17 @@ public class Robot extends LoggedRobot {
         new Superstructure(controller, drive, groundIntake, shooter, serializer);
     private final Autos autos = new Autos(drive, groundIntake, superstructure);
 
+    private final LoggedAutoChooser
+        testChooser = new LoggedAutoChooser("TestModeChoices"),
+        autoChooser = new LoggedAutoChooser("AutoModeChoices");
+
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
         setButtonBindings();
         setDefaultCommands();
+        mapAutoAndTestModes();
 
         CameraServer.startAutomaticCapture();
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
@@ -71,15 +79,18 @@ public class Robot extends LoggedRobot {
 
     private void setButtonBindings() {
         controller.touchpad().multiPress(2, 0.3)
-            .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)));
+            .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)).ignoringDisable(true).withName("Drive Reset Heading"));
         controller.triangle().whileTrue(
             serializer.runWhileTrueCmd(() -> true)
         );
-        controller.cross().whileTrue(
-            shooter.setHoodAngleCmd(() -> Rotation2d.fromDegrees(hoodDebugDeg.get()))
-        );
         controller.circle().whileTrue(groundIntake.stowCmd());
         controller.square().whileTrue(groundIntake.intakeCmd());
+        controller.cross().whileTrue(
+            shooter.setFlywheelVelCmd(flywheelDebugVel::get)
+        );
+        controller.triangle().whileTrue(
+            serializer.runWhileTrueCmd(() -> true)
+        );
 
         HubShiftUtil.initialize();
         for (int i = 1; i <= 5; i++) {
@@ -90,12 +101,6 @@ public class Robot extends LoggedRobot {
                 .and(RobotModeTriggers.teleop())
                 .onTrue(controller.rumbleCmd(kRightRumble, 1.0).withTimeout(0.25));
         }
-
-        RobotModeTriggers.test()
-            .whileTrue(superstructure.shootInHubCmd());
-//        RobotModeTriggers.autonomous()
-//            .and(RobotMode::isSim)
-//            .onTrue(Commands.runOnce(() -> SimulatedArena.getInstance().resetFieldForAuto()));
     }
 
     private void setDefaultCommands() {
@@ -107,6 +112,27 @@ public class Robot extends LoggedRobot {
         );
         shooter.setDefaultCommand(shooter.stopCmd());
         serializer.setDefaultCommand(serializer.stopCmd());
+    }
+
+    private void mapAutoAndTestModes() {
+        RobotModeTriggers.test()
+            .whileTrue(testChooser.autoScheduler());
+        RobotModeTriggers.autonomous()
+            .whileTrue(autoChooser.autoScheduler());
+
+        autoChooser.addCmd("Near Side Auto", autos::nearSide);
+
+        var hoodDebugDeg = Tunable.of("Shooter/Hood/DebugDeg", 50);
+        testChooser.addCmd("Test Hub Shot", superstructure::shootInHubCmd);
+        testChooser.addCmd("Test Ferry", superstructure::ferryCmd);
+        testChooser.addCmd(
+            "Set Hood Angle",
+            () -> shooter.setHoodAngleCmd(() -> Rotation2d.fromDegrees(hoodDebugDeg.get()))
+        );
+        testChooser.addCmd(
+            "Set Flywheel Vel",
+            () -> shooter.setFlywheelVelCmd(flywheelDebugVel::get)
+        );
     }
 
     @Override
