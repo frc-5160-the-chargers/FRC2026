@@ -1,6 +1,7 @@
 package robot;
 
 import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import robot.constants.ChoreoTraj;
@@ -8,13 +9,21 @@ import robot.constants.RobotConfig;
 import robot.subsystems.Superstructure;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.intake.GroundIntake;
+import robot.subsystems.shooter.Shooter;
+import robot.subsystems.shooter.Shooter.IdleBehavior;
 
 public class Autos {
     private final AutoFactory autoFactory;
     private final Superstructure superstructure;
     private final GroundIntake intake;
+    private final Shooter shooter;
 
-    public Autos(SwerveSubsystem drive, GroundIntake intake, Superstructure superstructure) {
+    public Autos(
+        SwerveSubsystem drive,
+        GroundIntake intake,
+        Superstructure superstructure,
+        Shooter shooter
+    ) {
         autoFactory = new AutoFactory(
             drive::getPose, drive::resetPose,
             target -> drive.followChoreoTraj(target, superstructure.getRotationOverride()),
@@ -22,6 +31,13 @@ public class Autos {
         );
         this.superstructure = superstructure;
         this.intake = intake;
+        this.shooter = shooter;
+    }
+
+    private void setupAutoRoutine(AutoRoutine routine) {
+        routine.active()
+            .onTrue(shooter.setIdleBehaviorToSpinupCmd())
+            .onFalse(shooter.setIdleBehaviorToCoastCmd());
     }
 
     public Command nearSide() {
@@ -31,6 +47,7 @@ public class Autos {
         var allianceSideIntake = ChoreoTraj.NearSideAuto$2.asAutoTraj(routine);
         var score2 = ChoreoTraj.NearSideAuto$3.asAutoTraj(routine);
 
+        setupAutoRoutine(routine);
         routine.active().onTrue(
             goToLoadingStation.resetOdometry().andThen(goToLoadingStation.spawnCmd())
         );

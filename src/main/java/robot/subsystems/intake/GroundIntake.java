@@ -35,21 +35,21 @@ public class GroundIntake extends ChargerSubsystem {
     static final MomentOfInertia PIVOT_MOI = PoundSquareInches.of(1344.71);
     static final DCMotor PIVOT_MOTOR_KIND = DCMotor.getNEO(1);
     static final double PIVOT_KV = 1 / PIVOT_MOTOR_KIND.withReduction(PIVOT_REDUCTION).KvRadPerSecPerVolt;
-    static final PivotConstraints PIVOT_CONSTRAINTS = new PivotConstraints(4, 5);
+    static final PivotConstraints PIVOT_CONSTRAINTS = new PivotConstraints(4, 2);
     static final PivotGains PIVOT_GAINS = new PivotGains(0.03, PIVOT_KV, -0.38, 5.0, 0);
 
     static final DCMotor ROLLER_MOTOR_KIND = DCMotor.getNeoVortex(1);
     static final double ROLLER_REDUCTION = 1.0;
 
     private final Tunable<Double>
-        rollerVolts = Tunable.of(key("Rollers/Power(Volts)"), 3.5),
+        rollerVolts = Tunable.of(key("Rollers/Power(Volts)"), 2.5),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit(Amps)"), 55),
         pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
         pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
         pivotCurrentZeroLimit = Tunable.of(key("Pivot/CurrentZeroing/Limit (amps)"), 20.0);
     private final Tunable<Angle>
         stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-140)),
-        intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-10));
+        intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-4));
 
     private PivotHardware pivotIO;
     private RollerHardware rollerIO;

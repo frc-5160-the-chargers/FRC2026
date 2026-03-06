@@ -30,11 +30,11 @@ public class VisionConsts {
     // front left cam is the 25 deg pitch one
 
     public static final AprilTagCamConsts FL_CONSTS = new AprilTagCamConsts(
-        "Chargers-2",
+        "Chargers-1",
         new Transform3d(
-            Inches.of(5.689),
-            Inches.of(12.008),
-            Inches.of(21.602),
+            Inches.of(5.753),
+            Inches.of(12.189),
+            Inches.of(21.122 - 0.5),
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-15),
@@ -44,11 +44,11 @@ public class VisionConsts {
         FIELD_LAYOUT, 1.0, Optional.empty()
     );
     public static final AprilTagCamConsts FR_CONSTS = new AprilTagCamConsts(
-        "Chargers-1",
+        "Chargers-2",
         new Transform3d(
-            Inches.of(5.716),
-            Inches.of(-12.137),
-            Inches.of(21.663),
+            Inches.of(5.78),
+            Inches.of(-12.317),
+            Inches.of(21.183 - 0.5),
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-25),

@@ -80,7 +80,7 @@ public class Superstructure {
     private Command runSerializerCmd(List<Rectangle2d> noShootZones) {
         return NonBlockingCmds.sequence(
             Commands.waitUntil(() -> shooter.atGoal(1.0)),
-            serializer.runWhileTrueCmd(() -> {
+            serializer.pulseWhileTrueCmd(() -> {
                 if (!shotSetpoint.isPossible()) return false;
                 double yawTolerance = YAW_TOLERANCE.get() * (1 + swerveNetSpeed);
                 if (Math.abs(yawErr.getRadians()) > yawTolerance) return false;
@@ -115,5 +115,14 @@ public class Superstructure {
         })
             .finallyDo(this::resetState);
         return logged(cmd, "SpinupForHubShot");
+    }
+
+    public Command visionlessHubShotCmd() {
+        var resetPoseCmd = Commands.runOnce(() -> {
+            var pose = new Pose2d(1.45, 4.05, Rotation2d.kZero);
+            drive.resetPose(AllianceColor.isRed() ? flip(pose) : pose);
+        });
+        return logged(resetPoseCmd, "ResetPoseForVisionlessHubShot")
+            .andThen(shootCmd(Target.HUB));
     }
 }

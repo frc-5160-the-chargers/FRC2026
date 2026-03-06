@@ -15,6 +15,7 @@ import lib.Tunable
 import lib.TunableLerpTable
 import org.littletonrobotics.junction.Logger
 import robot.constants.FieldConstants
+import robot.subsystems.shooter.Shooter.Target
 import java.io.BufferedWriter
 import java.io.FileWriter
 import kotlin.math.roundToInt
@@ -25,12 +26,12 @@ fun getHubShotSetpoint(
     fieldCentricVel: ChassisSpeeds,
     shooter: Shooter,
     simulateShot: Boolean,
-    target: Shooter.Target
+    target: Target
 ): Shooter.Setpoint {
     // a when statement is equivalent to a java switch statement.
     var goalPosition = when (target) {
-        Shooter.Target.GROUND -> Translation2d(PASS_LOC_X_COORD.get(), robotPose.y)
-        Shooter.Target.HUB -> HUB_LOCATION
+        Target.GROUND -> Translation2d(PASS_LOC_X_COORD.get(), robotPose.y)
+        Target.HUB -> HUB_LOCATION
     }
     if (AllianceColor.isRed()) goalPosition = flip(goalPosition)
     // equivalent to Pose2d[] iterations = new Pose2d[NEWTONS_METHOD_ITERATIONS + 1];
@@ -120,7 +121,7 @@ private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.0)
 private val BALL_TO_FLYWHEEL_SPEED =
     TunableLerpTable("ShotCalcs/Ball Speed(mps) -> Flywheel Speed(rad per s)")
         .put(0.0, 0.0)
-        .put(14.5, 285.433)
+        .put(13.5, 620.0)
 private val DISTANCE_TO_BALL_SPEED =
     TunableLerpTable("ShotCalcs/Distance(m) -> Ball Velocity(mps)")
         .put(1.7, 6.2)

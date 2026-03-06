@@ -3,6 +3,7 @@ package robot.subsystems.serializer;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
 import lib.hardware.LaserCanDataAutoLogged;
@@ -22,6 +23,8 @@ import java.util.function.BooleanSupplier;
 public class Serializer extends ChargerSubsystem {
     static final double CURRENT_LIMIT = 60;
     static final int SIM_FUEL_REMOVAL_RATE = 5; // # of game pieces per sec
+    static final double PULSE_ON_TIME_SECS = 1.0;
+    static final double PULSE_OFF_TIME_SECS = 0.5;
     public static final double FLYWHEEL_TO_SERIALIZER_SPEED_RATIO = 0.4;
 
     private final Tunable<Double>
@@ -44,6 +47,14 @@ public class Serializer extends ChargerSubsystem {
         this.sim = sim;
     }
 
+    public Command pulseWhileTrueCmd(BooleanSupplier shouldRun) {
+        var cmd = Commands.repeatingSequence(
+            runWhileTrueCmd(shouldRun).withTimeout(PULSE_ON_TIME_SECS),
+            stopCmd().withTimeout(PULSE_OFF_TIME_SECS)
+        );
+        return logged(cmd, "RunForward (Pulsing)");
+    }
+
     public Command runWhileTrueCmd(BooleanSupplier shouldRun) {
         var debouncer = new Debouncer(0.1);
         var cmd = this.run(() -> {
@@ -64,7 +75,10 @@ public class Serializer extends ChargerSubsystem {
     }
 
     public Command stopCmd() {
-        var cmd = this.run(() -> io.setVolts(0));
+        var cmd = this.run(() -> {
+            io.setVolts(0);
+            Logger.recordOutput(key("IsStopped"), true);
+        });
         return logged(cmd, "Idle");
     }
 

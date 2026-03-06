@@ -37,34 +37,35 @@ import java.util.function.Supplier;
  * will not work in replay. However, you can use {@link Tracer#fetchTimeMs} to fetch already
  * logged tracer times to set breakpoints, log latency deltas, and more in replay mode.
  */
+// TODO Fix memory issues! StringBuilder is like destroying the roborio's memory
 public class Tracer {
 	/**
 	 * Logs data recorded by the tracer and cleans up stale entries.
 	 * <h3>This must be the very last statement in robotPeriodic().
 	 */
 	public static void endCycle() {
-		if (logger == null) return;
-		if (!traceStack.isEmpty()) {
-			DriverStation.reportWarning("Tracer.endCycle() must be run after ALL Tracer.trace() calls.", false);
-			return;
-		}
-		Logger.processInputs("Tracer", loggerFetcher);
-		// update times for all already existing entries
-		for (var entry : entryArray) {
-			// if the entry isn't found, time will null-cast to 0.0
-			Double time = traceTimes.remove(entry);
-			if (time == null) time = 0.0;
-			logger.put(entry, time);
-		}
-		// log all new entries
-		for (var traceTime : traceTimes.entrySet()) {
-			logger.put(traceTime.getKey(), traceTime.getValue());
-			entryArray.add(traceTime.getKey());
-		}
-
-		// clean up state
-		traceTimes.clear();
-		traceStackHistory.clear();
+//		if (logger == null) return;
+//		if (!traceStack.isEmpty()) {
+//			DriverStation.reportWarning("Tracer.endCycle() must be run after ALL Tracer.trace() calls.", false);
+//			return;
+//		}
+//		Logger.processInputs("Tracer", loggerFetcher);
+//		// update times for all already existing entries
+//		for (var entry : entryArray) {
+//			// if the entry isn't found, time will null-cast to 0.0
+//			Double time = traceTimes.remove(entry);
+//			if (time == null) time = 0.0;
+//			logger.put(entry, time);
+//		}
+//		// log all new entries
+//		for (var traceTime : traceTimes.entrySet()) {
+//			logger.put(traceTime.getKey(), traceTime.getValue());
+//			entryArray.add(traceTime.getKey());
+//		}
+//
+//		// clean up state
+//		traceTimes.clear();
+//		traceStackHistory.clear();
 	}
 
 	/**
@@ -75,12 +76,13 @@ public class Tracer {
 	 * @apiNote If you want to return a value then use {@link Tracer#trace(String, Supplier)}.
 	 */
 	public static void trace(String name, Runnable functionToTrace) {
-		try {
-			startTrace(name);
-			functionToTrace.run();
-		} finally {
-			endTrace();
-		}
+//		try {
+//			startTrace(name);
+//			functionToTrace.run();
+//		} finally {
+//			endTrace();
+//		}
+		functionToTrace.run();
 	}
 
 	/**
@@ -126,14 +128,14 @@ public class Tracer {
 	 * @param name the name of the trace, should be unique to the function.
 	 */
 	public static void startTrace(String name) {
-		if (RobotMode.get() == RobotMode.REPLAY) return;
-		String stack = appendTraceStack(name);
-		TraceStartData data = traceStartTimes.get(stack);
-		if (data == null) {
-			data = new TraceStartData();
-			traceStartTimes.put(stack, data);
-		}
-		data.set(RobotController.getFPGATime() / 1000.0, totalGCTime());
+//		if (RobotMode.get() == RobotMode.REPLAY) return;
+//		String stack = appendTraceStack(name);
+//		TraceStartData data = traceStartTimes.get(stack);
+//		if (data == null) {
+//			data = new TraceStartData();
+//			traceStartTimes.put(stack, data);
+//		}
+//		data.set(RobotController.getFPGATime() / 1000.0, totalGCTime());
 	}
 
 	/**
@@ -142,17 +144,17 @@ public class Tracer {
 	 * there could be dropped or incorrect data.
 	 */
 	public static void endTrace() {
-		if (RobotMode.get() == RobotMode.REPLAY) return;
-		try {
-			String stack = popTraceStack();
-			var startData = traceStartTimes.get(stack);
-			double gcTimeSinceStart = totalGCTime() - startData.startGCTotalTime;
-			traceTimes.put(
-				stack, RobotController.getFPGATime() / 1000.0 - startData.startTime - gcTimeSinceStart);
-		} catch (Exception e) {
-			DriverStation.reportError(
-				"[Tracer] An end trace was called with no opening trace " + e, true);
-		}
+//		if (RobotMode.get() == RobotMode.REPLAY) return;
+//		try {
+//			String stack = popTraceStack();
+//			var startData = traceStartTimes.get(stack);
+//			double gcTimeSinceStart = totalGCTime() - startData.startGCTotalTime;
+//			traceTimes.put(
+//				stack, RobotController.getFPGATime() / 1000.0 - startData.startTime - gcTimeSinceStart);
+//		} catch (Exception e) {
+//			DriverStation.reportError(
+//				"[Tracer] An end trace was called with no opening trace " + e, true);
+//		}
 	}
 
 	/**
@@ -213,17 +215,18 @@ public class Tracer {
 	}
 
 	private static String appendTraceStack(String trace) {
-		traceStack.add(trace);
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < traceStack.size(); i++) {
-			sb.append(traceStack.get(i));
-			if (i < traceStack.size() - 1) {
-				sb.append("/");
-			}
-		}
-		String str = sb.toString();
-		traceStackHistory.add(str);
-		return str;
+//		traceStack.add(trace);
+//		StringBuilder sb = new StringBuilder();
+//		for (int i = 0; i < traceStack.size(); i++) {
+//			sb.append(traceStack.get(i));
+//			if (i < traceStack.size() - 1) {
+//				sb.append("/");
+//			}
+//		}
+//		String str = sb.toString();
+//		traceStackHistory.add(str);
+//		return str;
+		return "";
 	}
 
 	private static String popTraceStack() {

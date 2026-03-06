@@ -30,8 +30,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        HUB_AIM_KP = Tunable.of("HubAiming/KP", 6.3),
-        HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.05);
+        HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.4),
+        HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.02);
 
     // Equation: X = C * x_current + (1 - C) * x_previous, C = e^-(0.02/0.1) = e^(-0.2).
     // Effectively, this filter prevents the robot's target angular velocity from oscillating.
@@ -39,8 +39,8 @@ public class DriverController extends CommandPS5Controller {
 
     // A SlewRateLimiter limits the acceleration of the input.
     private final SlewRateLimiter
-        forwardLimiter = new SlewRateLimiter(2.3, -4.0, 0.0),
-        strafeLimiter = new SlewRateLimiter(2.3, -4.0, 0.0);
+        forwardLimiter = new SlewRateLimiter(1.3, -4.0, 0.0),
+        strafeLimiter = new SlewRateLimiter(1.3, -4.0, 0.0);
 
     // The swerve request this controller calculates.
     private final FieldCentric swerveReq = new FieldCentric()

@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import lib.AllianceColor;
 import lib.RobotMode;
 import lib.Tracer;
 import lib.Tunable;
@@ -31,9 +32,11 @@ import robot.subsystems.drive.TunerConstants;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
 import robot.subsystems.shooter.Shooter;
+import robot.subsystems.shooter.Shooter.IdleBehavior;
 import robot.vision.AprilTagCam;
 import robot.vision.VisionConsts;
 
+import java.util.List;
 import java.util.Optional;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -46,7 +49,7 @@ public class Robot extends LoggedRobot {
     }
 
     private final Tunable<AngularVelocity> flywheelDebugVel =
-        Tunable.of("Shooter/Flywheels/DebugVel", RadiansPerSecond.of(50));;
+        Tunable.of("Shooter/Flywheels/DebugVel", RadiansPerSecond.of(50));
 
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
 
@@ -55,16 +58,18 @@ public class Robot extends LoggedRobot {
     private final GroundIntake groundIntake = new GroundIntake(intakeSim);
     private final Serializer serializer = new Serializer(intakeSim);
     private final Shooter shooter = new Shooter();
-    private final AprilTagCam
-        frontLeft = new AprilTagCam(drive.getSim(), VisionConsts.FL_CONSTS),
-        frontRight = new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS);
+    private final List<AprilTagCam> cameras =
+        List.of(
+            new AprilTagCam(drive.getSim(), VisionConsts.FL_CONSTS),
+            new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS)
+        );
 
     private final DriverController controller = new DriverController(0, RobotConfig.swerveCfg);
     private final ManualOverrideController manualController = new ManualOverrideController(1);
 
     private final Superstructure superstructure =
         new Superstructure(controller, drive, groundIntake, shooter, serializer);
-    private final Autos autos = new Autos(drive, groundIntake, superstructure);
+    private final Autos autos = new Autos(drive, groundIntake, superstructure, shooter);
 
     private final LoggedAutoChooser
         testChooser = new LoggedAutoChooser("TestModeChoices"),
@@ -74,7 +79,7 @@ public class Robot extends LoggedRobot {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
-        setButtonBindings();
+        setCompButtonBindings();
         setDefaultCommands();
         mapAutoAndTestModes();
 
@@ -82,8 +87,31 @@ public class Robot extends LoggedRobot {
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
     }
 
-    private void setButtonBindings() {
-        controller.touchpad().multiPress(2, 0.3)
+    private void setCompButtonBindings() {
+        controller.touchpad()
+            .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)).ignoringDisable(true).withName("Drive Reset Heading"));
+        controller.L1().whileTrue(groundIntake.intakeCmd());
+        controller.R1().whileTrue(groundIntake.stowCmd());
+        controller.R2().whileTrue(
+            superstructure.shootCmd(Shooter.Target.GROUND)
+        );
+        controller.circle().whileTrue(
+            superstructure.shootCmd(Shooter.Target.HUB)
+        );
+        controller.square().whileTrue(
+            superstructure.visionlessHubShotCmd()
+        );
+        controller.cross()
+            .onTrue(shooter.setIdleBehaviorToSpinupCmd());
+        RobotModeTriggers.disabled()
+            .or(controller.triangle())
+            .onTrue(shooter.setIdleBehaviorToCoastCmd());
+
+        initDashboard();
+    }
+
+    private void setDevButtonBindings() {
+        controller.touchpad()
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)).ignoringDisable(true).withName("Drive Reset Heading"));
         controller.triangle().whileTrue(
             serializer.runWhileTrueCmd(() -> true)
@@ -97,6 +125,10 @@ public class Robot extends LoggedRobot {
             serializer.runWhileTrueCmd(() -> true)
         );
 
+        initDashboard();
+    }
+
+    private void initDashboard() {
         HubShiftUtil.initialize();
         for (int i = 1; i <= 5; i++) {
             double time = i;
@@ -121,6 +153,7 @@ public class Robot extends LoggedRobot {
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
         );
         serializer.setDefaultCommand(serializer.stopCmd());
+        shooter.setDefaultCommand(shooter.coastCmd());
     }
 
     private void mapAutoAndTestModes() {
@@ -137,14 +170,21 @@ public class Robot extends LoggedRobot {
             "Set Flywheel Vel",
             () -> shooter.setVelocityCmd(flywheelDebugVel::get)
         );
+        testChooser.addCmd(
+            "Change heading to photonvision cam heading",
+            () -> Commands.runOnce(() -> {
+                var estimate = cameras.get(0).update().get(0);
+                drive.resetHeading(estimate.pose().getRotation());
+            })
+        );
     }
 
     @Override
     public void robotPeriodic() {
         // TODO Disable setCurrentThreadPriority() if loop times are consistently over 20 ms
         Threads.setCurrentThreadPriority(true, 1);
-        Tracer.trace("Signal Refresh", SignalRefresh::refreshAll);
-        Tracer.trace("Cmd Scheduler", CommandScheduler.getInstance()::run);
+        SignalRefresh.refreshAll();
+        CommandScheduler.getInstance().run();
         Logger.recordOutput(
             "LoggedRobot/MemoryUsageMb",
             (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6
@@ -153,8 +193,11 @@ public class Robot extends LoggedRobot {
             Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
         canBusLogger.periodic();
-        frontLeft.update();
-        frontRight.update();
+        for (var cam: cameras) {
+            for (var update: cam.update()) {
+                drive.addVisionMeasurement(update);
+            }
+        }
         CmdLogger.periodic(true);
         HubShiftUtil.logData();
         Tracer.endCycle();

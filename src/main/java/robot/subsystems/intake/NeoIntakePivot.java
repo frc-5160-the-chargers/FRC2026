@@ -46,7 +46,7 @@ public class NeoIntakePivot extends PivotHardware {
 
     @AutoLogOutput(key = "GroundIntake/Pivot/AbsoluteRotations")
     private double getAbsoluteRot() {
-        return absoluteEncoder.get() + GroundIntake.PIVOT_OFFSET.in(Rotations);
+        return -(absoluteEncoder.get() + GroundIntake.PIVOT_OFFSET.in(Rotations));
     }
 
     @Override

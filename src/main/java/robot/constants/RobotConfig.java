@@ -3,6 +3,8 @@ package robot.constants;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.SignalLogger;
+import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -100,6 +102,8 @@ public class RobotConfig {
                 default -> "Unknown";
             });
             Logger.recordMetadata("LoggedToUSBDrive", logToUsbDrive ? "Yes" : "No");
+            StatusLogger.disableAutoLogging();
+            SignalLogger.enableAutoLogging(false);
         }
         Logger.start();
     }

@@ -1,6 +1,7 @@
 package robot.subsystems.shooter;
 
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,6 +32,10 @@ public class Shooter extends ChargerSubsystem {
         HUB, GROUND
     }
 
+    public enum IdleBehavior {
+        SPINUP, COAST
+    }
+
     public static final double FLYWHEEL_REDUCTION = 1.0;
     public static final Transform2d ROBOT_TO_LAUNCH_POINT =
         new Transform2d(Inches.of(6.07), Inches.zero(), Rotation2d.kZero);
@@ -38,16 +43,17 @@ public class Shooter extends ChargerSubsystem {
         new Translation3d(Inches.of(9.06), Inches.zero(), Inches.of(11.776));
     public static final Distance FUEL_LAUNCH_HEIGHT = Inches.of(15.2 + 1.5);
     public static final Rotation2d LAUNCH_ANGLE = Rotation2d.fromDegrees(90 - 20);
+    public static final ChassisSpeeds ZERO_VEL = new ChassisSpeeds();
 
     private final Tunable<Double>
-        flywheelKp = Tunable.of(key("Flywheels/KP"), 3.5),
+        flywheelKp = Tunable.of(key("Flywheels/KP"), 5.0),
         flywheelKd = Tunable.of(key("Flywheels/KD"), 0.0),
-        flywheelKv = Tunable.of(key("Flywheels/KV"), 0.0),
-        flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 5.0),
+        flywheelKv = Tunable.of(key("Flywheels/KV"), 0.03),
+        flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 10.0),
         shotLimit = Tunable.of(key("Flywheels/ShootingCurrentLimit"), 60.0),
         spinupLimit = Tunable.of(key("Flywheels/SpinupCurrentLimit"), 20.0);
     private final Tunable<AngularVelocity>
-        defaultSpinupVel = Tunable.of(key("Flywheels/DefaultSpinupVel"), RadiansPerSecond.of(150));
+        defaultSpinupVel = Tunable.of(key("Flywheels/DefaultSpinupVel"), RadiansPerSecond.of(250));
     private final KrakenFlywheels flywheelIO = new KrakenFlywheels();
     private final FlywheelDataAutoLogged flywheelInputs = new FlywheelDataAutoLogged();
 
@@ -65,12 +71,17 @@ public class Shooter extends ChargerSubsystem {
         flywheelKp.onChange(this::configureGains);
         flywheelKd.onChange(this::configureGains);
         flywheelKv.onChange(this::configureGains);
-        flywheelIO.setCurrentLimit(spinupLimit.get());
+        setCurrentLimit(shotLimit.get());
         var hoodPos = new Pose3d(
             ROBOT_TO_SHOOTER_PIVOT_POINT,
             new Rotation3d(0, 11 * Convert.DEGREES_TO_RADIANS, 0)
         );
         Logger.recordOutput("HoodPosition", hoodPos);
+    }
+
+    private void setCurrentLimit(double amps) {
+        flywheelIO.setCurrentLimit(amps);
+        Logger.recordOutput(key("CurrentLimit"), amps);
     }
 
     private void configureGains() {
@@ -87,6 +98,23 @@ public class Shooter extends ChargerSubsystem {
         });
     }
 
+    public Command setIdleBehaviorToCoastCmd() {
+        var cmd = this.runOnce(() -> setDefaultCommand(coastCmd()))
+            .ignoringDisable(true);
+        return logged(cmd, "Change Idle Behavior to Coast");
+    }
+
+    public Command setIdleBehaviorToSpinupCmd() {
+        var cmd = this.runOnce(() -> setDefaultCommand(spinupCmd()))
+            .ignoringDisable(true);
+        return logged(cmd, "Change Idle Behavior to Coast");
+    }
+
+    /** Run flywheels at coast mode with no output */
+    public Command coastCmd() {
+        return logged(this.run(flywheelIO::setCoast), "FlywheelCoast");
+    }
+
     /** Spins up the shooter at the default angular velocity. */
     public Command spinupCmd() {
         return spinupCmd(defaultSpinupVel::get);
@@ -96,21 +124,21 @@ public class Shooter extends ChargerSubsystem {
      * Runs the flywheel at the designated angular velocity while
      * lowering the current limit, to allow it to build momentum.
      */
-    public Command spinupCmd(Supplier<AngularVelocity> targetSupplier) {
+    public Command spinupCmd(Supplier<AngularVelocity> velocity) {
         var cmd = Commands.sequence(
-            this.runOnce(() -> flywheelIO.setCurrentLimit(spinupLimit.get())),
+            this.runOnce(() -> setCurrentLimit(spinupLimit.get())),
             Commands.parallel(
-                setVelocityCmdImpl(targetSupplier),
+                setVelocityCmdImpl(velocity),
                 Commands.waitUntil(() -> atGoal(1.0))
-                    .andThen(Commands.runOnce(() -> flywheelIO.setCurrentLimit(shotLimit.get())))
+                    .andThen(Commands.runOnce(() -> setCurrentLimit(shotLimit.get())))
             )
         );
         return logged(cmd, "Spinup");
     }
 
     /** Runs the shooter at the commanded setpoint. */
-    public Command setVelocityCmd(Supplier<AngularVelocity> targetSupplier) {
-        return logged(setVelocityCmdImpl(targetSupplier), "SetVelocity");
+    public Command setVelocityCmd(Supplier<AngularVelocity> velocity) {
+        return logged(setVelocityCmdImpl(velocity), "SetVelocity");
     }
 
     public AngularVelocity velocity() {

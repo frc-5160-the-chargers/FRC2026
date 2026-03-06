@@ -65,7 +65,7 @@ public class KrakenFlywheels {
         if (RobotMode.isSim()) new Notifier(this::updateSim).startPeriodic(0.005);
     }
 
-    public void idle() {
+    public void setCoast() {
         talon.setControl(idleReq);
     }
 
