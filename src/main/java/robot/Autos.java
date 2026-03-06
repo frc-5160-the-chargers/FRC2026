@@ -43,11 +43,11 @@ public class Autos {
         score1.active().whileTrue(
             superstructure.spinupForHubShotCmd(ChoreoTraj.NearSideAuto$1.endPoseBlue())
         );
-        score1.done().onTrue(
-            superstructure.shootInHubCmd()
-                .withTimeout(5.0)
-                .andThen(allianceSideIntake.spawnCmd())
-        );
+//        score1.done().onTrue(
+//            superstructure.shootInHubCmd()
+//                .withTimeout(5.0)
+//                .andThen(allianceSideIntake.spawnCmd())
+//        );
         allianceSideIntake.done().onTrue(
             Commands.waitSeconds(0.5)
                 .andThen(score2.spawnCmd())
@@ -55,7 +55,7 @@ public class Autos {
         score2.active().whileTrue(
             superstructure.spinupForHubShotCmd(ChoreoTraj.NearSideAuto$3.endPoseBlue())
         );
-        score2.done().onTrue(superstructure.shootInHubCmd());
+//        score2.done().onTrue(superstructure.shootInHubCmd());
 
         return routine.cmd();
     }

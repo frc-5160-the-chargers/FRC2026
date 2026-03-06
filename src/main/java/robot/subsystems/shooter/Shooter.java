@@ -26,6 +26,11 @@ public class Shooter extends ChargerSubsystem {
         }
     }
 
+    /** A location on the field. */
+    public enum Target {
+        HUB, GROUND
+    }
+
     public static final double FLYWHEEL_REDUCTION = 1.0;
     public static final Transform2d ROBOT_TO_LAUNCH_POINT =
         new Transform2d(Inches.of(6.07), Inches.zero(), Rotation2d.kZero);

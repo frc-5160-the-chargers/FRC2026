@@ -31,6 +31,8 @@ import robot.subsystems.drive.TunerConstants;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
 import robot.subsystems.shooter.Shooter;
+import robot.vision.AprilTagCam;
+import robot.vision.VisionConsts;
 
 import java.util.Optional;
 
@@ -53,6 +55,9 @@ public class Robot extends LoggedRobot {
     private final GroundIntake groundIntake = new GroundIntake(intakeSim);
     private final Serializer serializer = new Serializer(intakeSim);
     private final Shooter shooter = new Shooter();
+    private final AprilTagCam
+        frontLeft = new AprilTagCam(drive.getSim(), VisionConsts.FL_CONSTS),
+        frontRight = new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS);
 
     private final DriverController controller = new DriverController(0, RobotConfig.swerveCfg);
     private final ManualOverrideController manualController = new ManualOverrideController(1);
@@ -105,7 +110,12 @@ public class Robot extends LoggedRobot {
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(
-            drive.driveCmd(() -> controller.getSwerveRequest(superstructure.getRotationOverride()))
+            drive.driveCmd(
+                () -> controller.getSwerveRequest(
+                    superstructure.getRotationOverride(),
+                    superstructure.getShotTarget()
+                )
+            )
         );
         groundIntake.setDefaultCommand(
             groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
@@ -114,17 +124,15 @@ public class Robot extends LoggedRobot {
     }
 
     private void mapAutoAndTestModes() {
-//        RobotModeTriggers.test()
-//            .whileTrue(testChooser.autoScheduler());
         RobotModeTriggers.test()
-            .whileTrue(superstructure.shootInHubCmd());
+            .whileTrue(testChooser.autoScheduler());
         RobotModeTriggers.autonomous()
             .whileTrue(autoChooser.autoScheduler());
 
         autoChooser.addCmd("Near Side Auto", autos::nearSide);
 
-        testChooser.addCmd("Test Hub Shot", superstructure::shootInHubCmd);
-//        testChooser.addCmd("Test Ferry", superstructure::ferryCmd);
+        testChooser.addCmd("Test Hub Shot", () -> superstructure.shootCmd(Shooter.Target.HUB));
+        testChooser.addCmd("Test Ferry", () -> superstructure.shootCmd(Shooter.Target.GROUND));
         testChooser.addCmd(
             "Set Flywheel Vel",
             () -> shooter.setVelocityCmd(flywheelDebugVel::get)
@@ -145,6 +153,8 @@ public class Robot extends LoggedRobot {
             Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
         canBusLogger.periodic();
+        frontLeft.update();
+        frontRight.update();
         CmdLogger.periodic(true);
         HubShiftUtil.logData();
         Tracer.endCycle();

@@ -38,6 +38,7 @@ public class AprilTagCam {
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             consts.robotCenterToCamera()
         );
+        Logger.recordOutput(key("CamRelativePos"), consts.robotCenterToCamera());
     }
     
     private String key(String path) {
@@ -65,6 +66,7 @@ public class AprilTagCam {
         String estimationStrat = "";
         fiducialIds.clear();
         poses.clear();
+        Logger.recordOutput(key("NumResults"), inputs.results.size());
         for (var result: inputs.results) {
             // ignores result if ambiguity is exceeded or if there is no targets.
             if (result.targets.isEmpty()) {
@@ -83,7 +85,7 @@ public class AprilTagCam {
             }
             if (ambiguityExceeded) {
                 ambHighCount++;
-                continue;
+//                continue;
             }
             // updates the pose, and makes sure that the estimated pose
             // has a z coordinate near 0 and x and y coordinates within the field.
@@ -92,14 +94,14 @@ public class AprilTagCam {
             estimationStrat += (poseEstimate.get().strategy + ",");
             var pose = poseEstimate.get().estimatedPose;
             var timestamp = poseEstimate.get().timestampSeconds;
-            if (Math.abs(pose.getZ()) > MAX_Z_ERROR.in(Meters)
-                || pose.getX() < 0.0
-                || pose.getX() > FIELD_LAYOUT.getFieldLength()
-                || pose.getY() < 0.0
-                || pose.getY() > FIELD_LAYOUT.getFieldWidth()) {
-                errHighCount++;
-                continue;
-            }
+//            if (Math.abs(pose.getZ()) > MAX_Z_ERROR.in(Meters)
+//                || pose.getX() < 0.0
+//                || pose.getX() > FIELD_LAYOUT.getFieldLength()
+//                || pose.getY() < 0.0
+//                || pose.getY() > FIELD_LAYOUT.getFieldWidth()) {
+//                errHighCount++;
+//                continue;
+//            }
             // Calculates standard deviations
             double areaSumMultiplier = Math.pow(result.targets.size() / Math.abs(tagAreaSum), 0.2);
             double stdDevMultiplier = Math.pow(tagDistSum / result.targets.size(), 2) / result.targets.size();

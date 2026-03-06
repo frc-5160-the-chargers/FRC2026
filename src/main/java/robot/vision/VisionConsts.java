@@ -22,59 +22,43 @@ public class VisionConsts {
     public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(
         AprilTagFields.k2026RebuiltAndymark
     );
-    public static final AprilTagFieldLayout REEF_ONLY_LAYOUT = new AprilTagFieldLayout(
-        FIELD_LAYOUT.getTags()
-            .stream()
-            .filter(it -> (it.ID >= 17 && it.ID <= 22) || (it.ID >= 6 && it.ID <= 11))
-            .toList(),
-        FIELD_LAYOUT.getFieldLength(),
-        FIELD_LAYOUT.getFieldWidth()
-    );
+
+    // Long: 12.137 left, 5.716 forward, 21.663 up
+    // Short: 12.008 left, 5.689 forward, 21.602 up
+
+    // assumes that front right cam is the 15 deg pitch one,
+    // front left cam is the 25 deg pitch one
 
     public static final AprilTagCamConsts FL_CONSTS = new AprilTagCamConsts(
-        "Chargers-FrontLeft",
+        "Chargers-2",
         new Transform3d(
-            Meters.of(TunerConstants.FrontLeft.LocationX - 0.026),
-            Meters.of(TunerConstants.FrontLeft.LocationY + 0.11),
-            Inches.of(7.375),
+            Inches.of(5.689),
+            Inches.of(12.008),
+            Inches.of(21.602),
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-15),
-                Degrees.of(-46) // measured as: 46, previously working: 48
+                Degrees.of(-20)
             )
         ),
-        REEF_ONLY_LAYOUT, 1.0, Optional.empty()
+        FIELD_LAYOUT, 1.0, Optional.empty()
     );
     public static final AprilTagCamConsts FR_CONSTS = new AprilTagCamConsts(
-        "Chargers-FrontRight",
+        "Chargers-1",
         new Transform3d(
-            Meters.of(TunerConstants.FrontLeft.LocationX - 0.026),
-            Meters.of(TunerConstants.FrontLeft.LocationY - 0.1),
-            Inches.of(7.375),
+            Inches.of(5.716),
+            Inches.of(-12.137),
+            Inches.of(21.663),
             new Rotation3d(
                 Degrees.zero(),
-                Degrees.of(-15),
-                Degrees.of(-48) // prob correct - another value -56
+                Degrees.of(-25),
+                Degrees.of(20)
             )
         ),
-        REEF_ONLY_LAYOUT, 1.0, Optional.empty()
+        FIELD_LAYOUT, 1.0, Optional.empty()
     );
-    public static final MLCamConsts CORAL_CAM_CONSTS = new MLCamConsts(
-        "CoralCam",
-        Map.of(
-            "Coral",
-            new TargetModel(
-                11.875 * Convert.INCHES_TO_METERS,
-                4.5 * Convert.INCHES_TO_METERS,
-                4.5 * Convert.INCHES_TO_METERS
-            )
-        ),
-        new Transform3d(
-            new Translation3d(-0.3, 0, 0.254),
-            new Rotation3d(0, 0, 180 * Convert.DEGREES_TO_RADIANS)
-        ),
-        Optional.empty()
-    );
+
+    // 9.5 back, 17.15 up
 
     public static final double MAX_AMBIGUITY = 0.2;
     public static final Distance MAX_Z_ERROR = Meters.of(0.1);

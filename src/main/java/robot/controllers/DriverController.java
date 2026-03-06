@@ -16,6 +16,7 @@ import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import robot.constants.RobotConfig;
 import robot.subsystems.drive.SwerveConfig;
+import robot.subsystems.shooter.Shooter;
 
 import java.util.Optional;
 
@@ -83,19 +84,27 @@ public class DriverController extends CommandPS5Controller {
             .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
     }
 
-    public SwerveRequest getSwerveRequest(Optional<Rotation2d> target) {
-        if (target.isEmpty()) return getSwerveRequest();
+    public SwerveRequest getSwerveRequest(
+        Optional<Rotation2d> heading,
+        Optional<Shooter.Target> shotTarget
+    ) {
+        if (heading.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
-        forward = forwardLimiter.calculate(-getLeftY() * scalar);
-        strafe = strafeLimiter.calculate(-getLeftX() * scalar);
-        double radiansPerSec = (target.get().getRadians() - prevTargetRad) / 0.02;
-        prevTargetRad = target.get().getRadians();
+        forward = -getLeftY() * scalar;
+        strafe = -getLeftX() * scalar;
+        if (shotTarget.isPresent() && shotTarget.get() == Shooter.Target.HUB) {
+            // add slew rate limiting if shooting in hub
+            forward = forwardLimiter.calculate(forward);
+            strafe = strafeLimiter.calculate(strafe);
+        }
+        double radiansPerSec = (heading.get().getRadians() - prevTargetRad) / 0.02;
+        prevTargetRad = heading.get().getRadians();
 
         return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec / 2.0)
             .withVelocityY(strafe * maxVelMetersPerSec / 2.0)
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
-            .withTargetDirection(target.get())
+            .withTargetDirection(heading.get())
             .withTargetRateFeedforward(rotationFilter.calculate(radiansPerSec))
             .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
     }

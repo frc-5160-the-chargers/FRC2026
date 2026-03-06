@@ -24,9 +24,15 @@ fun getHubShotSetpoint(
     robotPose: Pose2d,
     fieldCentricVel: ChassisSpeeds,
     shooter: Shooter,
-    simulateShot: Boolean
+    simulateShot: Boolean,
+    target: Shooter.Target
 ): Shooter.Setpoint {
-    val goalPosition = if (AllianceColor.isRed()) flip(HUB_LOCATION) else HUB_LOCATION
+    // a when statement is equivalent to a java switch statement.
+    var goalPosition = when (target) {
+        Shooter.Target.GROUND -> Translation2d(PASS_LOC_X_COORD.get(), robotPose.y)
+        Shooter.Target.HUB -> HUB_LOCATION
+    }
+    if (AllianceColor.isRed()) goalPosition = flip(goalPosition)
     // equivalent to Pose2d[] iterations = new Pose2d[NEWTONS_METHOD_ITERATIONS + 1];
     val iterations = Array(NEWTONS_METHOD_ITERATIONS + 1) { Pose2d.kZero }
     val vx = fieldCentricVel.vxMetersPerSecond
@@ -105,6 +111,7 @@ fun getHubShotSetpoint(
 
 private const val NEWTONS_METHOD_ITERATIONS = 7
 private val HUB_LOCATION = FieldConstants.Hub.topCenterPoint.toTranslation2d()
+private val PASS_LOC_X_COORD = Tunable.of("PassingLocation", 1.5)
 private val MIN_DISTANCE_TO_SHOOT = Tunable.of("ShotCalcs/Minimum Distance to Shoot(m)", 1.5)
 private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.0)
 //private val DRAG_COMP_INVERSE_SECS = Tunable.of("ShotCalcs/Drag Compensation(secs ^ -1)", 0.02)

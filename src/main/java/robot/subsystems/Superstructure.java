@@ -8,7 +8,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.AllianceColor;
-import lib.Convert;
 import lib.Tunable;
 import lib.commands.NonBlockingCmds;
 import lombok.Getter;
@@ -18,6 +17,7 @@ import robot.controllers.DriverController;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
+import robot.subsystems.shooter.Shooter.Target;
 import robot.subsystems.shooter.ShotCalcsKt;
 import robot.subsystems.shooter.Shooter;
 
@@ -31,12 +31,14 @@ import static lib.commands.CmdLogger.logged;
 @RequiredArgsConstructor
 public class Superstructure {
     // Constants
-    private static final List<Rectangle2d> HUB_NO_SHOOT_ZONES = List.of(
-        new Rectangle2d(new Translation2d(4.3, 0), new Translation2d(12.3, 8.1))
-    );
-    private static final Tunable<Double>
-        YAW_TOLERANCE = Tunable.of("HubAiming/Tolerance (rad)", 0.15),
-        FERRY_HOOD_ANGLE = Tunable.of("Ferrying/HoodAngle (rad)", 65 * Convert.DEGREES_TO_RADIANS);
+    private static final List<Rectangle2d>
+        HUB_NO_SHOOT_ZONES = List.of(
+            new Rectangle2d(new Translation2d(4.3, 0), new Translation2d(12.3, 8.1))
+        ),
+        FERRY_NO_SHOOT_ZONES = List.of(
+            new Rectangle2d(new Translation2d(4.6, 3.05), new Translation2d(11.9, 5.0))
+        );
+    private static final Tunable<Double> YAW_TOLERANCE = Tunable.of("HubAiming/Tolerance (rad)", 0.15);
 
     // Constructor Parameters
     private final DriverController controller;
@@ -50,6 +52,10 @@ public class Superstructure {
     @Getter
     private Optional<Rotation2d> rotationOverride = Optional.empty();
 
+    /** The current shooting target of the robot. (Hub or Ground) */
+    @Getter
+    private Optional<Target> shotTarget = Optional.empty();
+
     @AutoLogOutput(key = "ShotCalcs/Setpoint")
     private Shooter.Setpoint shotSetpoint = Shooter.Setpoint.NULL;
 
@@ -58,20 +64,16 @@ public class Superstructure {
 
     private double swerveNetSpeed = 0.0;
 
-    private void updateHubShotSetpoint(Pose2d pose, ChassisSpeeds speeds) {
-        shotSetpoint = ShotCalcsKt.getHubShotSetpoint(pose, speeds, shooter, true);
+    private void updateState(Target target, Pose2d pose, ChassisSpeeds speeds) {
+        shotTarget = Optional.of(target);
+        shotSetpoint = ShotCalcsKt.getHubShotSetpoint(pose, speeds, shooter, true, target);
         yawErr = drive.getPose().getRotation().minus(shotSetpoint.yaw());
         swerveNetSpeed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
     }
 
-    private void updateHubShotSetpoint() {
-        updateHubShotSetpoint(
-            drive.getSim().getSimulatedDriveTrainPose(), drive.getFieldSpeeds()
-        );
-    }
-
-    private void resetShotSetpoint() {
+    private void resetState() {
         shotSetpoint = Shooter.Setpoint.NULL;
+        shotTarget = Optional.empty();
         rotationOverride = Optional.empty();
     }
 
@@ -91,26 +93,27 @@ public class Superstructure {
     }
 
     // Commands
-    public Command shootInHubCmd() {
+    public Command shootCmd(Target target) {
         var cmd = NonBlockingCmds.parallel(
             shooter.setVelocityCmd(() -> {
-                updateHubShotSetpoint();
+                updateState(target, drive.getPose(), drive.getFieldSpeeds());
                 rotationOverride = Optional.of(shotSetpoint.yaw());
                 return shotSetpoint.speed();
             }),
-            runSerializerCmd(HUB_NO_SHOOT_ZONES)
+            runSerializerCmd(target == Target.HUB ? HUB_NO_SHOOT_ZONES : FERRY_NO_SHOOT_ZONES)
         )
-            .finallyDo(this::resetShotSetpoint);
+            .finallyDo(this::resetState);
         return logged(cmd, "ShootAtHub");
     }
 
     public Command spinupForHubShotCmd(Pose2d blueTargetPose) {
+        var speeds = new ChassisSpeeds();
         var cmd = shooter.setVelocityCmd(() -> {
             var pose = AllianceColor.isRed() ? flip(blueTargetPose) : blueTargetPose;
-            updateHubShotSetpoint(blueTargetPose, new ChassisSpeeds());
+            updateState(Target.HUB, blueTargetPose, speeds);
             return shotSetpoint.speed();
         })
-            .finallyDo(this::resetShotSetpoint);
+            .finallyDo(this::resetState);
         return logged(cmd, "SpinupForHubShot");
     }
 }
