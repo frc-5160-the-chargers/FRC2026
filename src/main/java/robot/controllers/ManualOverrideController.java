@@ -13,4 +13,9 @@ public class ManualOverrideController extends CommandXboxController {
     public double getManualPivotVolts() {
         return MathUtil.applyDeadband(getLeftY(), 0.2) * 2;
     }
+
+    @AutoLogOutput
+    public double getFlywheelSpeedAdjustment() {
+        return MathUtil.applyDeadband(getRightY(), 0.1) / 2.0 + 1.0;
+    }
 }

@@ -27,70 +27,147 @@ public record ChoreoTraj(
     public static final ChoreoTraj FarSideAuto_Grab1 = new ChoreoTraj(
 	    "FarSideAuto_Grab1",
 	    OptionalInt.empty(),
-	    2.83879,
-	    new Pose2d(3.554, 0.649, Rotation2d.fromRadians(3.142)),
+	    3.99688,
+	    new Pose2d(3.612, 0.906, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(7.843, 2.673, Rotation2d.fromRadians(-1.571))
 	);
 	public static final ChoreoTraj FarSideAuto_Score1 = new ChoreoTraj(
 	    "FarSideAuto_Score1",
 	    OptionalInt.empty(),
-	    2.65896,
+	    3.93038,
 	    new Pose2d(7.439, 1.726, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(2.1, 1.8, Rotation2d.fromRadians(0.712))
+	    new Pose2d(2.7, 2.2, Rotation2d.fromRadians(0.75))
+	);
+	public static final ChoreoTraj JustShoot = new ChoreoTraj(
+	    "JustShoot",
+	    OptionalInt.empty(),
+	    1.78021,
+	    new Pose2d(3.6, 4, Rotation2d.fromRadians(0)),
+	    new Pose2d(2, 4, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj mirrored_FarSideAuto_Grab1 = new ChoreoTraj(
+	    "mirrored_FarSideAuto_Grab1",
+	    OptionalInt.empty(),
+	    3.99688,
+	    new Pose2d(3.612, 7.145, Rotation2d.fromRadians(-3.142)),
+	    new Pose2d(7.843, 5.378, Rotation2d.fromRadians(1.571))
+	);
+	public static final ChoreoTraj mirrored_FarSideAuto_Score1 = new ChoreoTraj(
+	    "mirrored_FarSideAuto_Score1",
+	    OptionalInt.empty(),
+	    3.75971,
+	    new Pose2d(7.439, 6.325, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(2.1, 6.252, Rotation2d.fromRadians(-0.701))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto = new ChoreoTraj(
+	    "mirrored_NearSideAuto",
+	    OptionalInt.empty(),
+	    9.3337,
+	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 2.575, Rotation2d.fromRadians(0.486))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto$0 = new ChoreoTraj(
+	    "mirrored_NearSideAuto",
+	    OptionalInt.of(0),
+	    2.39186,
+	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto$1 = new ChoreoTraj(
+	    "mirrored_NearSideAuto",
+	    OptionalInt.of(1),
+	    2.78701,
+	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.6, 4.052, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto$2 = new ChoreoTraj(
+	    "mirrored_NearSideAuto",
+	    OptionalInt.of(2),
+	    2.5852200000000005,
+	    new Pose2d(2.6, 4.052, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.79, 2.122, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto$3 = new ChoreoTraj(
+	    "mirrored_NearSideAuto",
+	    OptionalInt.of(3),
+	    1.56961,
+	    new Pose2d(0.79, 2.122, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.936, 2.575, Rotation2d.fromRadians(0.486))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto_2 = new ChoreoTraj(
+	    "mirrored_NearSideAuto_2",
+	    OptionalInt.empty(),
+	    13.99812,
+	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.355, 6.412, Rotation2d.fromRadians(-0.824))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto_2$0 = new ChoreoTraj(
+	    "mirrored_NearSideAuto_2",
+	    OptionalInt.of(0),
+	    2.39186,
+	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj mirrored_NearSideAuto_2$1 = new ChoreoTraj(
+	    "mirrored_NearSideAuto_2",
+	    OptionalInt.of(1),
+	    11.60626,
+	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.355, 6.412, Rotation2d.fromRadians(-0.824))
 	);
 	public static final ChoreoTraj NearSideAuto = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.empty(),
-	    6.62429,
+	    9.33333,
 	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
 	public static final ChoreoTraj NearSideAuto$0 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(0),
-	    1.6913,
+	    2.39186,
 	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NearSideAuto$1 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(1),
-	    1.9708,
+	    2.78701,
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NearSideAuto$2 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(2),
-	    1.8520299999999996,
+	    2.5852200000000005,
 	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NearSideAuto$3 = new ChoreoTraj(
 	    "NearSideAuto",
 	    OptionalInt.of(3),
-	    1.1101600000000005,
+	    1.5692399999999997,
 	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
 	);
 	public static final ChoreoTraj NearSideAuto_2 = new ChoreoTraj(
 	    "NearSideAuto_2",
 	    OptionalInt.empty(),
-	    10.14857,
+	    13.9976,
 	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
 	);
 	public static final ChoreoTraj NearSideAuto_2$0 = new ChoreoTraj(
 	    "NearSideAuto_2",
 	    OptionalInt.of(0),
-	    1.6913,
+	    2.39186,
 	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj NearSideAuto_2$1 = new ChoreoTraj(
 	    "NearSideAuto_2",
 	    OptionalInt.of(1),
-	    8.45727,
+	    11.60574,
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
 	);
@@ -102,6 +179,17 @@ public record ChoreoTraj(
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
     	Map.entry("FarSideAuto_Grab1", FarSideAuto_Grab1),
 		Map.entry("FarSideAuto_Score1", FarSideAuto_Score1),
+		Map.entry("JustShoot", JustShoot),
+		Map.entry("mirrored_FarSideAuto_Grab1", mirrored_FarSideAuto_Grab1),
+		Map.entry("mirrored_FarSideAuto_Score1", mirrored_FarSideAuto_Score1),
+		Map.entry("mirrored_NearSideAuto", mirrored_NearSideAuto),
+		Map.entry("mirrored_NearSideAuto$0", mirrored_NearSideAuto$0),
+		Map.entry("mirrored_NearSideAuto$1", mirrored_NearSideAuto$1),
+		Map.entry("mirrored_NearSideAuto$2", mirrored_NearSideAuto$2),
+		Map.entry("mirrored_NearSideAuto$3", mirrored_NearSideAuto$3),
+		Map.entry("mirrored_NearSideAuto_2", mirrored_NearSideAuto_2),
+		Map.entry("mirrored_NearSideAuto_2$0", mirrored_NearSideAuto_2$0),
+		Map.entry("mirrored_NearSideAuto_2$1", mirrored_NearSideAuto_2$1),
 		Map.entry("NearSideAuto", NearSideAuto),
 		Map.entry("NearSideAuto$0", NearSideAuto$0),
 		Map.entry("NearSideAuto$1", NearSideAuto$1),

@@ -30,12 +30,12 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.4),
+        HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.9),
         HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.02);
 
     // Equation: X = C * x_current + (1 - C) * x_previous, C = e^-(0.02/0.1) = e^(-0.2).
     // Effectively, this filter prevents the robot's target angular velocity from oscillating.
-    private final LinearFilter rotationFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
+//    private final LinearFilter rotationFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
 
     // A SlewRateLimiter limits the acceleration of the input.
     private final SlewRateLimiter
@@ -48,7 +48,7 @@ public class DriverController extends CommandPS5Controller {
     private final FieldCentricFacingAngle facingAngleSwerveReq = new FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.Velocity);
 
-    private double prevTargetRad = 0.0; // the previous target angle of the robot.
+//    private double prevTargetRad = 0.0; // the previous target angle of the robot.
     private final double maxVelMetersPerSec, maxVelRadPerSec;
 
     // controller axis outputs; range from 0-1.
@@ -97,15 +97,16 @@ public class DriverController extends CommandPS5Controller {
             forward = forwardLimiter.calculate(forward);
             strafe = strafeLimiter.calculate(strafe);
         }
-        double radiansPerSec = (heading.get().getRadians() - prevTargetRad) / 0.02;
-        prevTargetRad = heading.get().getRadians();
+//        double deltaRad = heading.get().getRadians() - prevTargetRad;
+//        double radiansPerSec = rotationFilter.calculate(-deltaRad / 0.02);
+//        prevTargetRad = heading.get().getRadians();
 
         return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec / 2.0)
             .withVelocityY(strafe * maxVelMetersPerSec / 2.0)
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
             .withTargetDirection(heading.get())
-            .withTargetRateFeedforward(rotationFilter.calculate(radiansPerSec))
+//            .withTargetRateFeedforward(radiansPerSec)
             .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
     }
 

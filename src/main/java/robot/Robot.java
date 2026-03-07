@@ -2,25 +2,24 @@ package robot;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import lib.AllianceColor;
 import lib.RobotMode;
-import lib.Tracer;
 import lib.Tunable;
 import lib.commands.CmdLogger;
 import lib.commands.LoggedAutoChooser;
+import lib.commands.NonBlockingCmds;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
-import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import robot.constants.RobotConfig;
@@ -32,12 +31,10 @@ import robot.subsystems.drive.TunerConstants;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.serializer.Serializer;
 import robot.subsystems.shooter.Shooter;
-import robot.subsystems.shooter.Shooter.IdleBehavior;
 import robot.vision.AprilTagCam;
 import robot.vision.VisionConsts;
 
 import java.util.List;
-import java.util.Optional;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
@@ -54,9 +51,8 @@ public class Robot extends LoggedRobot {
     private final CanBusLogger canBusLogger = new CanBusLogger(TunerConstants.kCANBus);
 
     private final SwerveSubsystem drive = new SwerveSubsystem(RobotConfig.swerveCfg);
-    private final Optional<IntakeSimulation> intakeSim = RobotConfig.createIntakeSim(drive);
-    private final GroundIntake groundIntake = new GroundIntake(intakeSim);
-    private final Serializer serializer = new Serializer(intakeSim);
+    private final GroundIntake groundIntake = new GroundIntake(RobotConfig.createIntakeSim(drive));
+    private final Serializer serializer = new Serializer();
     private final Shooter shooter = new Shooter();
     private final List<AprilTagCam> cameras =
         List.of(
@@ -68,12 +64,22 @@ public class Robot extends LoggedRobot {
     private final ManualOverrideController manualController = new ManualOverrideController(1);
 
     private final Superstructure superstructure =
-        new Superstructure(controller, drive, groundIntake, shooter, serializer);
+        new Superstructure(
+            manualController.rightBumper(),
+            manualController::getFlywheelSpeedAdjustment,
+            drive, groundIntake, shooter, serializer
+        );
     private final Autos autos = new Autos(drive, groundIntake, superstructure, shooter);
 
     private final LoggedAutoChooser
         testChooser = new LoggedAutoChooser("TestModeChoices"),
         autoChooser = new LoggedAutoChooser("AutoModeChoices");
+
+    @AutoLogOutput(key = "Experimental/Pulse Serializer")
+    private boolean pulsingEnabled = false;
+
+    @AutoLogOutput(key = "Experimental/Compensate for Robot Vel on Intake")
+    private boolean closedLoopIntakeEnabled = true;
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -82,6 +88,7 @@ public class Robot extends LoggedRobot {
         setCompButtonBindings();
         setDefaultCommands();
         mapAutoAndTestModes();
+        drive.resetPose(new Pose2d(2.5, 4, Rotation2d.kZero));
 
         CameraServer.startAutomaticCapture();
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
@@ -90,14 +97,33 @@ public class Robot extends LoggedRobot {
     private void setCompButtonBindings() {
         controller.touchpad()
             .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)).ignoringDisable(true).withName("Drive Reset Heading"));
-        controller.L1().whileTrue(groundIntake.intakeCmd());
-        controller.R1().whileTrue(groundIntake.stowCmd());
-        controller.R2().whileTrue(
-            superstructure.shootCmd(Shooter.Target.GROUND)
-        );
-        controller.circle().whileTrue(
-            superstructure.shootCmd(Shooter.Target.HUB)
-        );
+        controller.L1()
+            .or(manualController.leftBumper())
+            .and(() -> !closedLoopIntakeEnabled)
+            .whileTrue(groundIntake.intakeCmd());
+        controller.L1()
+            .or(manualController.leftBumper())
+            .and(() -> closedLoopIntakeEnabled)
+            .whileTrue(groundIntake.intakeCmd(drive::getRobotSpeeds));
+        controller.R1()
+            .whileTrue(groundIntake.stowCmd());
+
+        controller.R2()
+            .and(() -> !pulsingEnabled)
+            .whileTrue(superstructure.shootCmd(Shooter.Target.GROUND));
+
+        controller.circle()
+            .and(() -> !pulsingEnabled)
+            .whileTrue(superstructure.shootCmd(Shooter.Target.HUB));
+
+        controller.R2()
+            .and(() -> pulsingEnabled)
+            .whileTrue(superstructure.shootCmd(Shooter.Target.GROUND, true, true));
+
+        controller.circle()
+            .and(() -> pulsingEnabled)
+            .whileTrue(superstructure.shootCmd(Shooter.Target.HUB, true, true));
+
         controller.square().whileTrue(
             superstructure.visionlessHubShotCmd()
         );
@@ -108,24 +134,20 @@ public class Robot extends LoggedRobot {
             .onTrue(shooter.setIdleBehaviorToCoastCmd());
 
         initDashboard();
-    }
 
-    private void setDevButtonBindings() {
-        controller.touchpad()
-            .onTrue(Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero)).ignoringDisable(true).withName("Drive Reset Heading"));
-        controller.triangle().whileTrue(
-            serializer.runWhileTrueCmd(() -> true)
+        manualController.povUp().onTrue(
+            Commands.runOnce(() -> pulsingEnabled = true).withName("Enable Pulsing")
         );
-        controller.circle().whileTrue(groundIntake.stowCmd());
-        controller.square().whileTrue(groundIntake.intakeCmd());
-        controller.cross().whileTrue(
-            shooter.setVelocityCmd(flywheelDebugVel::get)
+        manualController.povDown().onTrue(
+            Commands.runOnce(() -> closedLoopIntakeEnabled = true).withName("Enable Closed Loop Intake")
         );
-        controller.triangle().whileTrue(
-            serializer.runWhileTrueCmd(() -> true)
+        manualController.back().onTrue(
+            Commands.runOnce(() -> {
+                pulsingEnabled = false;
+                closedLoopIntakeEnabled = false;
+            })
+                .withName("Disable Experimental")
         );
-
-        initDashboard();
     }
 
     private void initDashboard() {
@@ -143,14 +165,20 @@ public class Robot extends LoggedRobot {
     private void setDefaultCommands() {
         drive.setDefaultCommand(
             drive.driveCmd(
-                () -> controller.getSwerveRequest(
-                    superstructure.getRotationOverride(),
-                    superstructure.getShotTarget()
-                )
+                () -> {
+                    Logger.recordOutput("Test", new Pose2d(drive.getPose().getTranslation(), superstructure.getRotationOverride().orElse(Rotation2d.kZero)));
+                    return controller.getSwerveRequest(
+                        superstructure.getRotationOverride(),
+                        superstructure.getShotTarget()
+                    );
+                }
             )
         );
         groundIntake.setDefaultCommand(
-            groundIntake.manualPivotCmd(manualController::getManualPivotVolts)
+            groundIntake.manualCmd(
+                manualController::getManualPivotVolts,
+                manualController.a()
+            )
         );
         serializer.setDefaultCommand(serializer.stopCmd());
         shooter.setDefaultCommand(shooter.coastCmd());
@@ -162,7 +190,10 @@ public class Robot extends LoggedRobot {
         RobotModeTriggers.autonomous()
             .whileTrue(autoChooser.autoScheduler());
 
+        autoChooser.addCmd("(USE IF NO AUTO) Reset Heading to 180 deg", () -> Commands.runOnce(() -> drive.resetHeading(Rotation2d.k180deg)));
         autoChooser.addCmd("Near Side Auto", autos::nearSide);
+        autoChooser.addCmd("Right Side Far Auto", autos::rightSide);
+        autoChooser.addCmd("(Mirrored) Right Side Far Auto", autos::rightSideMirrored);
 
         testChooser.addCmd("Test Hub Shot", () -> superstructure.shootCmd(Shooter.Target.HUB));
         testChooser.addCmd("Test Ferry", () -> superstructure.shootCmd(Shooter.Target.GROUND));
@@ -176,6 +207,18 @@ public class Robot extends LoggedRobot {
                 var estimate = cameras.get(0).update().get(0);
                 drive.resetHeading(estimate.pose().getRotation());
             })
+        );
+        testChooser.addCmd("Just Aim", superstructure::hubAimCmd);
+        testChooser.addCmd(
+            "Test serializer",
+            () -> serializer.runCmd(() -> true)
+        );
+        testChooser.addCmd(
+            "Test Pulsing",
+            () -> NonBlockingCmds.parallel(
+                serializer.pulseCmd(() -> true),
+                shooter.setVelocityCmd(() -> RadiansPerSecond.of(20))
+            ).withName("Pulse Testing")
         );
     }
 
@@ -200,7 +243,6 @@ public class Robot extends LoggedRobot {
         }
         CmdLogger.periodic(true);
         HubShiftUtil.logData();
-        Tracer.endCycle();
         Threads.setCurrentThreadPriority(false, 0);
     }
 }

@@ -2,9 +2,9 @@ package robot.vision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import lib.RobotMode;
-import lib.Tracer;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonPoseEstimator;
@@ -24,12 +24,14 @@ public class AprilTagCam {
     private final PhotonPoseEstimator poseEst;
     private final CameraIO io;
     private final CameraIO.RawData inputs = new CameraIO.RawData();
+    private final Alert disconnectedAlert;
 
     private final List<Integer> fiducialIds = new ArrayList<>();
     private final List<Pose3d> poses = new ArrayList<>();
 
     public AprilTagCam(SwerveDriveSimulation swerveSim, AprilTagCamConsts consts) {
         this.consts = consts;
+        disconnectedAlert = new Alert("Camera " + consts.name() + " is disconnected!", Alert.AlertType.kError);
         this.io = RobotMode.isSim()
             ? new SimCameraIOForTags(swerveSim::getSimulatedDriveTrainPose, consts)
             : new CameraIO(consts.name());
@@ -48,12 +50,9 @@ public class AprilTagCam {
     /** Fetches the latest pose estimates from this camera. */
     @SuppressWarnings("StringConcatenationInLoop")
     public List<CamPoseEstimate> update() {
-        Tracer.startTrace("Vision Update (" + consts.name() + ")");
-
-        Tracer.trace("Poll Data", () -> {
-            io.refreshData(inputs);
-            Logger.processInputs(key(""), inputs);
-        });
+        io.refreshData(inputs);
+        Logger.processInputs(key(""), inputs);
+        disconnectedAlert.set(!inputs.connected);
         if (RobotMode.get() == RobotMode.REAL && !inputs.connected) {
             return List.of();
         }
@@ -128,7 +127,6 @@ public class AprilTagCam {
             Logger.recordOutput(key("EstimationStrategy"), estimationStrat);
         }
 
-        Tracer.endTrace();
         return poseEstimates;
     }
 

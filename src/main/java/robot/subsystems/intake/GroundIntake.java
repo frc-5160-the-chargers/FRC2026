@@ -1,6 +1,7 @@
 package robot.subsystems.intake;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
@@ -21,6 +22,7 @@ import robot.subsystems.common.PivotController.PivotGains;
 import robot.subsystems.common.PivotHardware.PivotSimConfig;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -30,7 +32,7 @@ import static lib.Convert.CustomUnits.PoundSquareInches;
 @SuppressWarnings("FieldCanBeLocal")
 public class GroundIntake extends ChargerSubsystem {
     static final double PIVOT_REDUCTION = 25.0 * 24.0 / 22.0; // MaxPlanetary + Sprockets
-    static final Angle PIVOT_OFFSET = Rotations.of(-0.2225);
+    static final Angle PIVOT_OFFSET = Radians.of(-1.459);
     static final Distance PIVOT_LENGTH = Inches.of(12.4);
     static final MomentOfInertia PIVOT_MOI = PoundSquareInches.of(1344.71);
     static final DCMotor PIVOT_MOTOR_KIND = DCMotor.getNEO(1);
@@ -40,15 +42,20 @@ public class GroundIntake extends ChargerSubsystem {
 
     static final DCMotor ROLLER_MOTOR_KIND = DCMotor.getNeoVortex(1);
     static final double ROLLER_REDUCTION = 1.0;
+    static final double ROLLER_KV = 1 / ROLLER_MOTOR_KIND.withReduction(ROLLER_REDUCTION).KvRadPerSecPerVolt;
+    static final Distance ROLLER_WHEEL_RADIUS = Inches.of(2);
 
     private final Tunable<Double>
-        rollerVolts = Tunable.of(key("Rollers/Power(Volts)"), 2.5),
-        rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit(Amps)"), 55),
+        rollerVolts = Tunable.of(key("Rollers/Volts"), 2.5),
+        rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
+        rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 150),
+        rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.01);
+    private final Tunable<Double>
         pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
         pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
         pivotCurrentZeroLimit = Tunable.of(key("Pivot/CurrentZeroing/Limit (amps)"), 20.0);
     private final Tunable<Angle>
-        stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-140)),
+        stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-120)),
         intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-4));
 
     private PivotHardware pivotIO;
@@ -108,24 +115,38 @@ public class GroundIntake extends ChargerSubsystem {
         return resetStateCmd.andThen(targetAngleCmd);
     }
 
-    public Command manualRollersCmd(DoubleSupplier desiredVolts) {
-        var cmd = this.run(() -> {
-            setRollerVolts(desiredVolts.getAsDouble());
-            pivotIO.setVolts(0);
-        });
-        return logged(cmd, "ManualRollers");
-    }
-
     public Command stowCmd() {
         var cmd = setAngleCmd(stowPos::get)
             .alongWith(Commands.run(() -> setRollerVolts(1.0)));
         return logged(cmd, "Stow");
     }
 
+    @AutoLogOutput
+    private boolean atHardStop() {
+        return pivotInputs.positionRad < -100 * Convert.DEGREES_TO_RADIANS;
+    }
+
     public Command intakeCmd() {
         var cmd = setAngleCmd(intakePos::get)
-            .alongWith(Commands.run(() -> setRollerVolts(rollerVolts.get())));
+            .alongWith(
+                Commands.run(() -> setRollerVolts(atHardStop() ? 0 : rollerVolts.get()))
+            );
         return logged(cmd, "Intake");
+    }
+
+    public Command intakeCmd(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
+        var cmd = setAngleCmd(intakePos::get)
+            .alongWith(
+                Commands.run(() -> {
+                    var vx = robotRelativeSpeeds.get().vxMetersPerSecond;
+                    var target = rollerTargetVel.get();
+                    if (vx < 0) target += 1.2 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                    var error = target - rollerInputs.velocityRadPerSec;
+                    Logger.recordOutput(key("ClosedLoopErr"), error);
+                    setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * error + ROLLER_KV * target));
+                })
+            );
+        return logged(cmd, "Intake (Velocity-Based)");
     }
 
     public Command idleCmd() {
@@ -133,11 +154,11 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "Idle");
     }
 
-    public Command manualPivotCmd(DoubleSupplier volts) {
+    public Command manualCmd(DoubleSupplier volts, BooleanSupplier shouldRunIntake) {
         var cmd = this.run(() -> {
             double antiGravityVolts = pivotController.getAntiGravityVolts(pivotInputs.positionRad);
             pivotIO.setVolts(volts.getAsDouble() + antiGravityVolts);
-            setRollerVolts(0);
+            setRollerVolts(shouldRunIntake.getAsBoolean() ? rollerVolts.get() : 0);
         });
         return logged(cmd, "ManualPivot");
     }

@@ -2,7 +2,6 @@ package robot.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import lib.Tracer;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import robot.vision.DataTypes.AprilTagCamConsts;
@@ -36,7 +35,7 @@ public class SimCameraIOForTags extends CameraIO {
 
     @Override
     public void refreshData(CameraIO.RawData data) {
-        Tracer.trace("Simulation", () -> sim.update(simPoseSupplier.get()));
+        sim.update(simPoseSupplier.get());
         super.refreshData(data);
     }
 }

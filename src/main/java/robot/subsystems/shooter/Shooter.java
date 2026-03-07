@@ -21,10 +21,6 @@ public class Shooter extends ChargerSubsystem {
     public record Setpoint(Rotation2d yaw, double radPerSec, boolean isPossible) {
         /** Represents a Shooter setpoint with no data. */
         public static final Setpoint NULL = new Setpoint(Rotation2d.kZero, 0, false);
-
-        public AngularVelocity speed() {
-            return RadiansPerSecond.of(radPerSec);
-        }
     }
 
     /** A location on the field. */
@@ -46,14 +42,14 @@ public class Shooter extends ChargerSubsystem {
     public static final ChassisSpeeds ZERO_VEL = new ChassisSpeeds();
 
     private final Tunable<Double>
-        flywheelKp = Tunable.of(key("Flywheels/KP"), 5.0),
+        flywheelKp = Tunable.of(key("Flywheels/KP"), 2.1),
         flywheelKd = Tunable.of(key("Flywheels/KD"), 0.0),
-        flywheelKv = Tunable.of(key("Flywheels/KV"), 0.03),
-        flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 10.0),
+        flywheelKv = Tunable.of(key("Flywheels/KV"), 0.02),
+        flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 15.0),
         shotLimit = Tunable.of(key("Flywheels/ShootingCurrentLimit"), 60.0),
         spinupLimit = Tunable.of(key("Flywheels/SpinupCurrentLimit"), 20.0);
     private final Tunable<AngularVelocity>
-        defaultSpinupVel = Tunable.of(key("Flywheels/DefaultSpinupVel"), RadiansPerSecond.of(250));
+        defaultSpinupVel = Tunable.of(key("Flywheels/DefaultSpinupVel"), RadiansPerSecond.of(200));
     private final KrakenFlywheels flywheelIO = new KrakenFlywheels();
     private final FlywheelDataAutoLogged flywheelInputs = new FlywheelDataAutoLogged();
 

@@ -9,7 +9,7 @@ import sys
 field_width = 57.573 / 3.281
 field_height = 26.417 / 3.281
 
-choreo_dir = "../src/main/deploy/choreo"
+choreo_dir = "../../src/main/deploy/choreo"
 
 def load_traj(file_path):
     with open(file_path, 'r') as f:

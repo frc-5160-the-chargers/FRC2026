@@ -6,19 +6,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
-import lib.hardware.LaserCanDataAutoLogged;
-import lib.hardware.LoggedLaserCan;
-import org.ironmaple.simulation.IntakeSimulation;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.common.RollerDataAutoLogged;
 import robot.subsystems.common.RollerHardware;
 import robot.subsystems.common.SimRollerHardware;
 
-import java.util.Optional;
 import java.util.function.BooleanSupplier;
-
+import java.util.function.DoubleSupplier;
 
 public class Serializer extends ChargerSubsystem {
     static final double CURRENT_LIMIT = 60;
@@ -28,9 +23,8 @@ public class Serializer extends ChargerSubsystem {
     public static final double FLYWHEEL_TO_SERIALIZER_SPEED_RATIO = 0.4;
 
     private final Tunable<Double>
-        forwardVolts = Tunable.of(key("ForwardVolts"), 9.0),
-        reverseVolts = Tunable.of(key("ReverseVolts"), -6.0),
-        laserCanThreshold = Tunable.of(key("LaserCanDistanceThreshold (mm)"), 10);
+        defaultVolts = Tunable.of(key("DefaultVolts"), 9.0),
+        pulseOffVolts = Tunable.of(key("PulseOffVolts"), 3.0);
     private final RollerHardware io = switch (RobotMode.get()) {
         case REAL -> new KrakenSerializerRollers();
         case SIM -> new SimRollerHardware(DCMotor.getKrakenX60(1), 1.0);
@@ -38,38 +32,24 @@ public class Serializer extends ChargerSubsystem {
     };
     private final RollerDataAutoLogged inputs = new RollerDataAutoLogged();
 
-    private final LoggedLaserCan[] laserCans = {};
-    private final LaserCanDataAutoLogged[] laserCanInputs = {};
-
-    private final Optional<IntakeSimulation> sim;
-
-    public Serializer(Optional<IntakeSimulation> sim) {
-        this.sim = sim;
-    }
-
-    public Command pulseWhileTrueCmd(BooleanSupplier shouldRun) {
+    public Command pulseCmd(BooleanSupplier shouldRun) {
         var cmd = Commands.repeatingSequence(
-            runWhileTrueCmd(shouldRun).withTimeout(PULSE_ON_TIME_SECS),
-            stopCmd().withTimeout(PULSE_OFF_TIME_SECS)
+            runCmdImpl(defaultVolts::get, shouldRun).withTimeout(PULSE_ON_TIME_SECS),
+            runCmdImpl(pulseOffVolts::get, shouldRun).withTimeout(PULSE_OFF_TIME_SECS)
         );
-        return logged(cmd, "RunForward (Pulsing)");
+        return logged(cmd, "Pulse");
     }
 
-    public Command runWhileTrueCmd(BooleanSupplier shouldRun) {
+    public Command runCmd(BooleanSupplier shouldRun) {
+        return logged(runCmdImpl(defaultVolts::get, shouldRun), "Run");
+    }
+
+    private Command runCmdImpl(DoubleSupplier voltage, BooleanSupplier shouldRun) {
         var debouncer = new Debouncer(0.1);
         var cmd = this.run(() -> {
             boolean shouldStop = debouncer.calculate(!shouldRun.getAsBoolean());
             Logger.recordOutput(key("IsStopped"), shouldStop);
-            io.setVolts(shouldStop ? 0 : forwardVolts.get());
-            removeFuelIfApplicable();
-        });
-        return logged(cmd, "RunForward");
-    }
-
-    public Command runReverseCmd() {
-        var cmd = this.run(() -> {
-            io.setVolts(reverseVolts.get());
-            removeFuelIfApplicable();
+            io.setVolts(shouldStop ? 0 : voltage.getAsDouble());
         });
         return logged(cmd, "RunForward");
     }
@@ -82,30 +62,9 @@ public class Serializer extends ChargerSubsystem {
         return logged(cmd, "Idle");
     }
 
-    private void removeFuelIfApplicable() {
-        if (sim.isEmpty()) return;
-        Logger.runEveryN(
-            (int) (1.0 / (SIM_FUEL_REMOVAL_RATE * 0.02)),
-            () -> sim.get().obtainGamePieceFromIntake()
-        );
-    }
-
-    @AutoLogOutput
-    public boolean isEmpty() {
-        if (sim.isPresent()) return sim.get().getGamePiecesAmount() == 0;
-        for (int i = 0; i < laserCans.length; i++) {
-            if (laserCanInputs[i].distance_mm < laserCanThreshold.get()) return false;
-        }
-        return true;
-    }
-
     @Override
     public void periodic() {
         io.refreshData(inputs);
         Logger.processInputs(getName(), inputs);
-        for (int i = 0; i < laserCans.length; i++) {
-            laserCans[i].refreshData(laserCanInputs[i]);
-            Logger.processInputs(key("LaserCans/" + i), laserCanInputs[i]);
-        }
     }
 }

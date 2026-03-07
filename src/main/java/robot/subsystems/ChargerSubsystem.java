@@ -2,7 +2,6 @@ package robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import lib.Tracer;
 import lib.commands.CmdLogger;
 import org.littletonrobotics.junction.Logger;
 
@@ -35,13 +34,11 @@ public abstract class ChargerSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Tracer.startTrace(getName() + " Periodic");
         loggedPeriodic();
         var currCmd = super.getCurrentCommand();
         Logger.recordOutput(
             key("CurrentCommand"),
             currCmd == null ? "none" : currCmd.getName()
         );
-        Tracer.endTrace();
     }
 }

@@ -23,18 +23,12 @@ public class VisionConsts {
         AprilTagFields.k2026RebuiltAndymark
     );
 
-    // Long: 12.137 left, 5.716 forward, 21.663 up
-    // Short: 12.008 left, 5.689 forward, 21.602 up
-
-    // assumes that front right cam is the 15 deg pitch one,
-    // front left cam is the 25 deg pitch one
-
     public static final AprilTagCamConsts FL_CONSTS = new AprilTagCamConsts(
         "Chargers-1",
         new Transform3d(
             Inches.of(5.753),
             Inches.of(12.189),
-            Inches.of(21.122 - 0.5),
+            Inches.of(21.122 - 0.5), // TODO fix
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-15),
@@ -48,7 +42,7 @@ public class VisionConsts {
         new Transform3d(
             Inches.of(5.78),
             Inches.of(-12.317),
-            Inches.of(21.183 - 0.5),
+            Inches.of(21.183 - 0.5), // TODO fix
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-25),

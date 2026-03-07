@@ -77,7 +77,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
     public SwerveSubsystem(SwerveConfig config) {
         super(config.name());
         this.config = config;
-        this.sim = new SwerveDriveSimulation(config.mapleSimConfig(), new Pose2d(2.5, 4, Rotation2d.kZero));
+        this.sim = new SwerveDriveSimulation(config.mapleSimConfig(), new Pose2d(5.7, 5.7, Rotation2d.kZero));
         io = RobotMode.isSim()
             ? MapleSimSwerveHardware.create(sim, config)
             : new SwerveHardware(config);
@@ -224,6 +224,11 @@ public class SwerveSubsystem extends ChargerSubsystem {
             );
         }
         io.addVisionMeasurement(estimate, inputs.timeOffsetSecs);
+    }
+
+    /** Returns the robot relative speeds of the drivetrain. */
+    public ChassisSpeeds getRobotSpeeds() {
+        return inputs.robotRelativeSpeeds;
     }
 
     /** Fetches the field-relative speeds of this drivetrain. */

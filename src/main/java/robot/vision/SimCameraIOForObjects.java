@@ -3,7 +3,6 @@ package robot.vision;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import lib.Tracer;
 import org.ironmaple.simulation.SimulatedArena;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
@@ -61,7 +60,7 @@ public class SimCameraIOForObjects extends CameraIO {
                 sim.addVisionTargets(type, new VisionTargetSim(pose, model));
             }
         }
-        Tracer.trace("Simulation", () -> sim.update(simPoseSupplier.get()));
+        sim.update(simPoseSupplier.get());
         super.refreshData(inputs);
     }
 }
