@@ -30,8 +30,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.9),
-        HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.02);
+        HUB_AIM_KP = Tunable.of("HubAiming/KP", 6.4),
+        HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.0);
 
     // Equation: X = C * x_current + (1 - C) * x_previous, C = e^-(0.02/0.1) = e^(-0.2).
     // Effectively, this filter prevents the robot's target angular velocity from oscillating.

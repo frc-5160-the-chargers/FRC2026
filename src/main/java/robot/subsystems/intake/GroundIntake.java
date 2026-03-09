@@ -49,7 +49,7 @@ public class GroundIntake extends ChargerSubsystem {
         rollerVolts = Tunable.of(key("Rollers/Volts"), 2.5),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
         rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 150),
-        rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.01);
+        rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.02);
     private final Tunable<Double>
         pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
         pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
@@ -139,8 +139,7 @@ public class GroundIntake extends ChargerSubsystem {
             .alongWith(
                 Commands.run(() -> {
                     var vx = robotRelativeSpeeds.get().vxMetersPerSecond;
-                    var target = rollerTargetVel.get();
-                    if (vx < 0) target += 1.2 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                    var target = rollerTargetVel.get() + 2.5 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
                     var error = target - rollerInputs.velocityRadPerSec;
                     Logger.recordOutput(key("ClosedLoopErr"), error);
                     setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * error + ROLLER_KV * target));
