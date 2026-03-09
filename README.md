@@ -1,5 +1,7 @@
 # FRC2026
 
+The code for the Chargers' 2026 robot, Wasabi.
+
 ### Important Folders
 - /src/main - RIO robot code
 - /scripts - python utilities, including vision recording and path mirroring
