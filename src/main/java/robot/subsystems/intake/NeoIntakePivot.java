@@ -15,7 +15,6 @@ import lib.Convert;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLogOutput;
 import robot.subsystems.common.PivotDataAutoLogged;
-import robot.subsystems.common.PivotHardware;
 
 import static edu.wpi.first.units.Units.Rotations;
 
@@ -23,7 +22,7 @@ import static edu.wpi.first.units.Units.Rotations;
  * The hardware powering the intake pivot on the real robot,
  * using a duty-cycle encoder to zero the neo's onboard relative encoder.
  */
-public class NeoIntakePivot extends PivotHardware {
+public class NeoIntakePivot extends IntakePivot {
     private final SparkMax motor = new SparkMax(15, SparkLowLevel.MotorType.kBrushless);
     private final SparkMaxConfig config = new SparkMaxConfig();
     private final SparkClosedLoopController pid = motor.getClosedLoopController();

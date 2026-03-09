@@ -1,26 +1,26 @@
-package robot.subsystems.common;
+package robot.subsystems.intake;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import lib.hardware.MotorStats;
+import robot.subsystems.common.PivotDataAutoLogged;
 
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Meters;
 
-public class SimPivotHardware extends PivotHardware {
-    private final SingleJointedArmSim sim;
+public class SimIntakePivot extends IntakePivot {
+    private final SingleJointedArmSim sim = new SingleJointedArmSim(
+        GroundIntake.PIVOT_MOTOR_KIND,
+        GroundIntake.PIVOT_REDUCTION,
+        GroundIntake.PIVOT_MOI.in(KilogramSquareMeters),
+        GroundIntake.PIVOT_LENGTH.in(Meters),
+        -2 * Math.PI,
+        2 * Math.PI,
+        false,
+        0
+    );
     private final PIDController pidController = new PIDController(0, 0, 0);
-
-    public SimPivotHardware(PivotSimConfig config) {
-        sim = new SingleJointedArmSim(
-            config.motorKind(), config.reduction(),
-            config.moi().in(KilogramSquareMeters),
-            config.pivotLength().in(Meters),
-            -2 * Math.PI, 2 * Math.PI,
-            config.simulateGravity(), 0
-        );
-    }
 
     @Override
     public void setPDGains(double p, double d) {

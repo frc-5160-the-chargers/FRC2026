@@ -1,17 +1,11 @@
-package robot.subsystems.common;
+package robot.subsystems.intake;
 
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.MomentOfInertia;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
+import robot.subsystems.common.PivotDataAutoLogged;
 
-/**
- * A hardware base class representing a generic pivoting mechanism.
- */
-public class PivotHardware {
-    /** Data read from a pivoting mechanism every 0.02 secs. */
+public class IntakePivot {
     @AutoLog
     static class PivotData {
         public double positionRad = 0, velocityRadPerSec = 0;
@@ -21,15 +15,6 @@ public class PivotHardware {
             return new TrapezoidProfile.State(positionRad, velocityRadPerSec);
         }
     }
-
-    /** Hardware-level config for a pivoting mechanism. */
-    public record PivotSimConfig(
-        double reduction,
-        MomentOfInertia moi,
-        Distance pivotLength,
-        DCMotor motorKind,
-        boolean simulateGravity
-    ) {}
 
     public void refreshData(PivotDataAutoLogged data) {}
 

@@ -17,9 +17,6 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.common.*;
-import robot.subsystems.common.PivotController.PivotConstraints;
-import robot.subsystems.common.PivotController.PivotGains;
-import robot.subsystems.common.PivotHardware.PivotSimConfig;
 
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
@@ -37,8 +34,6 @@ public class GroundIntake extends ChargerSubsystem {
     static final MomentOfInertia PIVOT_MOI = PoundSquareInches.of(1344.71);
     static final DCMotor PIVOT_MOTOR_KIND = DCMotor.getNEO(1);
     static final double PIVOT_KV = 1 / PIVOT_MOTOR_KIND.withReduction(PIVOT_REDUCTION).KvRadPerSecPerVolt;
-    static final PivotConstraints PIVOT_CONSTRAINTS = new PivotConstraints(4, 2);
-    static final PivotGains PIVOT_GAINS = new PivotGains(0.03, PIVOT_KV, -0.38, 5.0, 0);
 
     static final DCMotor ROLLER_MOTOR_KIND = DCMotor.getNeoVortex(1);
     static final double ROLLER_REDUCTION = 1.0;
@@ -54,19 +49,26 @@ public class GroundIntake extends ChargerSubsystem {
         pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
         pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
         pivotCurrentZeroLimit = Tunable.of(key("Pivot/CurrentZeroing/Limit (amps)"), 20.0);
+    private final Tunable<Double>
+        pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 4.0),
+        pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 2.0),
+        pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.03),
+        pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), -0.38),
+        pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
     private final Tunable<Angle>
         stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-120)),
         intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-4));
 
-    private PivotHardware pivotIO;
+    private IntakePivot pivotIO;
     private RollerHardware rollerIO;
     private final PivotDataAutoLogged pivotInputs = new PivotDataAutoLogged();
     private final RollerDataAutoLogged rollerInputs = new RollerDataAutoLogged();
 
-    private final PivotController pivotController;
     private final Debouncer hardStopDebouncer = new Debouncer(0.2);
-
     private final Optional<IntakeSimulation> sim;
+
+    private TrapezoidProfile motionProfile;
+    @AutoLogOutput private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
 
     public GroundIntake(Optional<IntakeSimulation> sim) {
         switch (RobotMode.get()) {
@@ -75,25 +77,30 @@ public class GroundIntake extends ChargerSubsystem {
                 rollerIO = new VortexIntakeRollers();
             }
             case REPLAY -> {
-                pivotIO = new PivotHardware();
+                pivotIO = new IntakePivot();
                 rollerIO = new RollerHardware();
             }
             case SIM -> {
-                var pivotSimConfig = new PivotSimConfig(
-                    PIVOT_REDUCTION, PIVOT_MOI, PIVOT_LENGTH,
-                    PIVOT_MOTOR_KIND, true
-                );
-                pivotIO = new SimPivotHardware(pivotSimConfig);
+                pivotIO = new SimIntakePivot();
+                rollerIO = new SimRollerHardware(ROLLER_MOTOR_KIND, ROLLER_REDUCTION);
                 pivotIO.zeroEncoder(-170 * Convert.DEGREES_TO_RADIANS);
-                rollerIO = new SimRollerHardware(DCMotor.getNeoVortex(1), 3.0);
             }
         }
         this.sim = sim;
-        pivotController = new PivotController(key("Pivot"), PIVOT_GAINS, PIVOT_CONSTRAINTS, pivotIO);
+        applyConfigs();
+        pivotCurrentLimit.onChange(this::applyConfigs);
+        rollerCurrentLimit.onChange(this::applyConfigs);
+        pivotMaxVel.onChange(this::applyConfigs);
+        pivotMaxAccel.onChange(this::applyConfigs);
+        pivotKp.onChange(this::applyConfigs);
+    }
+
+    private void applyConfigs() {
+        var constraints = new TrapezoidProfile.Constraints(pivotMaxVel.get(), pivotMaxAccel.get());
+        motionProfile = new TrapezoidProfile(constraints);
+        pivotIO.setPDGains(pivotKp.get(), 0.0);
         pivotIO.setCurrentLimit(pivotCurrentLimit.get());
         rollerIO.setCurrentLimit(rollerCurrentLimit.get());
-        pivotCurrentLimit.onChange(pivotIO::setCurrentLimit);
-        rollerCurrentLimit.onChange(rollerIO::setCurrentLimit);
     }
 
     private void setRollerVolts(double volts) {
@@ -107,10 +114,15 @@ public class GroundIntake extends ChargerSubsystem {
     }
 
     private Command setAngleCmd(Supplier<Angle> target) {
-        var resetStateCmd = this.runOnce(() -> pivotController.resetTo(pivotInputs.getMotionState()));
+        var resetStateCmd = this.runOnce(() -> setpoint = pivotInputs.getMotionState());
         var targetAngleCmd = this.run(() -> {
             var goal = new TrapezoidProfile.State(target.get().in(Radians), 0);
-            pivotController.moveTo(goal, pivotInputs.positionRad);
+            setpoint = motionProfile.calculate(0.02, setpoint, goal);
+            double ff = pivotKg.get() * Math.cos(pivotInputs.positionRad); // pivotInputs.radians must be 0 degrees when horizontal.
+            ff += Math.signum(setpoint.velocity) * pivotKs.get();
+            ff += PIVOT_KV * setpoint.velocity;
+            Logger.recordOutput(key("PivotFF"), ff);
+            pivotIO.setRadians(setpoint.position, ff);
         });
         return resetStateCmd.andThen(targetAngleCmd);
     }
@@ -155,7 +167,7 @@ public class GroundIntake extends ChargerSubsystem {
 
     public Command manualCmd(DoubleSupplier volts, BooleanSupplier shouldRunIntake) {
         var cmd = this.run(() -> {
-            double antiGravityVolts = pivotController.getAntiGravityVolts(pivotInputs.positionRad);
+            double antiGravityVolts = pivotKg.get() * Math.cos(pivotInputs.positionRad);
             pivotIO.setVolts(volts.getAsDouble() + antiGravityVolts);
             setRollerVolts(shouldRunIntake.getAsBoolean() ? rollerVolts.get() : 0);
         });
