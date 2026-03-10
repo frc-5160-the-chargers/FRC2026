@@ -32,7 +32,7 @@ public class VisionConsts {
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-15),
-                Degrees.of(-20)
+                Degrees.of(-30)
             )
         ),
         FIELD_LAYOUT, 1.0, Optional.empty()
@@ -42,7 +42,7 @@ public class VisionConsts {
         new Transform3d(
             Inches.of(5.78),
             Inches.of(-12.317),
-            Inches.of(21.183 - 0.5), // TODO fix
+            Inches.of(21.183 - 0.5).minus(Meters.of(0.03)), // TODO fix
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-25),
@@ -57,8 +57,8 @@ public class VisionConsts {
     public static final double MAX_AMBIGUITY = 0.2;
     public static final Distance MAX_Z_ERROR = Meters.of(0.1);
     public static final double Z_ERROR_SCALAR = 100.0;
-    public static final double SINGLE_TAG_SCALAR = 1.3;
-    public static final double LINEAR_STD_DEV_BASELINE = 0.3;
+    public static final double SINGLE_TAG_SCALAR = 2.0;
+    public static final double LINEAR_STD_DEV_BASELINE = 0.1;
     public static final double ANGULAR_STD_DEV = 10000000;
     public static final SimCameraProperties DEFAULT_CAM_PROPERTIES = new SimCameraProperties();
 

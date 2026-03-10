@@ -13,7 +13,9 @@ import robot.vision.DataTypes.AprilTagCamConsts;
 import robot.vision.DataTypes.CamPoseEstimate;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static edu.wpi.first.units.Units.Meters;
 import static robot.vision.VisionConsts.*;
@@ -26,7 +28,7 @@ public class AprilTagCam {
     private final CameraIO.RawData inputs = new CameraIO.RawData();
     private final Alert disconnectedAlert;
 
-    private final List<Integer> fiducialIds = new ArrayList<>();
+    private final Set<Integer> fiducialIds = new HashSet<>();
     private final List<Pose3d> poses = new ArrayList<>();
 
     public AprilTagCam(SwerveDriveSimulation swerveSim, AprilTagCamConsts consts) {
@@ -116,11 +118,13 @@ public class AprilTagCam {
         // logs relevant data
         boolean shouldLog = !inputs.results.isEmpty() && !DriverStation.isFMSAttached();
         if (shouldLog || RobotMode.get() == RobotMode.REPLAY) {
-            int[] ids = new int[fiducialIds.size()];
-            for (int i = 0; i < fiducialIds.size(); i++) {
-                ids[i] = fiducialIds.get(i);
+            int[] fiducialIdsArray = new int[fiducialIds.size()];
+            int i = 0;
+            for (var id: fiducialIds) {
+                fiducialIdsArray[i] = id;
+                i++;
             }
-            Logger.recordOutput(key("AprilTagIds"), ids);
+            Logger.recordOutput(key("AprilTagIds"), fiducialIdsArray);
             Logger.recordOutput(key("NumAmbiguityExceeded"), ambHighCount);
             Logger.recordOutput(key("NumErrExceeded"), errHighCount);
             Logger.recordOutput(key("Poses"), poses.toArray(new Pose3d[0]));
