@@ -24,145 +24,103 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj FarSideAuto_Grab1 = new ChoreoTraj(
-	    "FarSideAuto_Grab1",
+    public static final ChoreoTraj HPOneSwipe = new ChoreoTraj(
+	    "HPOneSwipe",
 	    OptionalInt.empty(),
-	    3.6915,
+	    10.14857,
+	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
+	);
+	public static final ChoreoTraj HPOneSwipe$0 = new ChoreoTraj(
+	    "HPOneSwipe",
+	    OptionalInt.of(0),
+	    1.6913,
+	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj HPOneSwipe$1 = new ChoreoTraj(
+	    "HPOneSwipe",
+	    OptionalInt.of(1),
+	    8.45727,
+	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
+	);
+	public static final ChoreoTraj mirrored_HPOneSwipe = new ChoreoTraj(
+	    "mirrored_HPOneSwipe",
+	    OptionalInt.empty(),
+	    10.14901,
+	    new Pose2d(3.65, 7.143, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.355, 6.403, Rotation2d.fromRadians(-0.822))
+	);
+	public static final ChoreoTraj mirrored_HPOneSwipe$0 = new ChoreoTraj(
+	    "mirrored_HPOneSwipe",
+	    OptionalInt.of(0),
+	    1.6913,
+	    new Pose2d(3.65, 7.143, Rotation2d.fromRadians(0)),
+	    new Pose2d(0.77, 7.363, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj mirrored_HPOneSwipe$1 = new ChoreoTraj(
+	    "mirrored_HPOneSwipe",
+	    OptionalInt.of(1),
+	    8.45771,
+	    new Pose2d(0.77, 7.363, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.355, 6.403, Rotation2d.fromRadians(-0.822))
+	);
+	public static final ChoreoTraj mirrored_OneSwipe_Grab1 = new ChoreoTraj(
+	    "mirrored_OneSwipe_Grab1",
+	    OptionalInt.empty(),
+	    3.47955,
+	    new Pose2d(3.612, 7.137, Rotation2d.fromRadians(-3.142)),
+	    new Pose2d(7.9, 4.643, Rotation2d.fromRadians(1.57))
+	);
+	public static final ChoreoTraj mirrored_OneSwipe_Score1 = new ChoreoTraj(
+	    "mirrored_OneSwipe_Score1",
+	    OptionalInt.empty(),
+	    3.21438,
+	    new Pose2d(7.5, 6.143, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(2.7, 5.843, Rotation2d.fromRadians(-0.748))
+	);
+	public static final ChoreoTraj mirrored_TwoSwipe_V1_1 = new ChoreoTraj(
+	    "mirrored_TwoSwipe_V1_1",
+	    OptionalInt.empty(),
+	    6.48763,
+	    new Pose2d(4.205, 7.18, Rotation2d.fromRadians(-3.142)),
+	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.887))
+	);
+	public static final ChoreoTraj mirrored_TwoSwipe_V1_2 = new ChoreoTraj(
+	    "mirrored_TwoSwipe_V1_2",
+	    OptionalInt.empty(),
+	    7.03573,
+	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897)),
+	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897))
+	);
+	public static final ChoreoTraj OneSwipe_Grab1 = new ChoreoTraj(
+	    "OneSwipe_Grab1",
+	    OptionalInt.empty(),
+	    3.47955,
 	    new Pose2d(3.612, 0.906, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(7.9, 3.4, Rotation2d.fromRadians(-1.571))
 	);
-	public static final ChoreoTraj FarSideAuto_Score1 = new ChoreoTraj(
-	    "FarSideAuto_Score1",
+	public static final ChoreoTraj OneSwipe_Score1 = new ChoreoTraj(
+	    "OneSwipe_Score1",
 	    OptionalInt.empty(),
-	    3.37166,
+	    3.21438,
 	    new Pose2d(7.5, 1.9, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(2.7, 2.2, Rotation2d.fromRadians(0.75))
+	    new Pose2d(2.7, 2.2, Rotation2d.fromRadians(0.764))
 	);
-	public static final ChoreoTraj mirrored_FarSideAuto_Grab1 = new ChoreoTraj(
-	    "mirrored_FarSideAuto_Grab1",
+	public static final ChoreoTraj TwoSwipe_V1_1 = new ChoreoTraj(
+	    "TwoSwipe_V1_1",
 	    OptionalInt.empty(),
-	    3.6915,
-	    new Pose2d(3.612, 7.145, Rotation2d.fromRadians(-3.142)),
-	    new Pose2d(7.9, 4.652, Rotation2d.fromRadians(1.571))
+	    6.48791,
+	    new Pose2d(4.205, 0.863, Rotation2d.fromRadians(3.142)),
+	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
-	public static final ChoreoTraj mirrored_FarSideAuto_Score1 = new ChoreoTraj(
-	    "mirrored_FarSideAuto_Score1",
+	public static final ChoreoTraj TwoSwipe_V1_2 = new ChoreoTraj(
+	    "TwoSwipe_V1_2",
 	    OptionalInt.empty(),
-	    3.37112,
-	    new Pose2d(7.5, 6.152, Rotation2d.fromRadians(1.571)),
-	    new Pose2d(2.7, 5.852, Rotation2d.fromRadians(-0.736))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto = new ChoreoTraj(
-	    "mirrored_NearSideAuto",
-	    OptionalInt.empty(),
-	    7.89005,
-	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 2.575, Rotation2d.fromRadians(0.486))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto$0 = new ChoreoTraj(
-	    "mirrored_NearSideAuto",
-	    OptionalInt.of(0),
-	    2.02207,
-	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto$1 = new ChoreoTraj(
-	    "mirrored_NearSideAuto",
-	    OptionalInt.of(1),
-	    2.3555000000000006,
-	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.6, 4.052, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto$2 = new ChoreoTraj(
-	    "mirrored_NearSideAuto",
-	    OptionalInt.of(2),
-	    2.1854699999999996,
-	    new Pose2d(2.6, 4.052, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.79, 2.122, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto$3 = new ChoreoTraj(
-	    "mirrored_NearSideAuto",
-	    OptionalInt.of(3),
-	    1.3270099999999996,
-	    new Pose2d(0.79, 2.122, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 2.575, Rotation2d.fromRadians(0.486))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto_2 = new ChoreoTraj(
-	    "mirrored_NearSideAuto_2",
-	    OptionalInt.empty(),
-	    11.94966,
-	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 6.412, Rotation2d.fromRadians(-0.824))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto_2$0 = new ChoreoTraj(
-	    "mirrored_NearSideAuto_2",
-	    OptionalInt.of(0),
-	    2.02207,
-	    new Pose2d(3.65, 7.152, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj mirrored_NearSideAuto_2$1 = new ChoreoTraj(
-	    "mirrored_NearSideAuto_2",
-	    OptionalInt.of(1),
-	    9.92759,
-	    new Pose2d(0.77, 7.372, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 6.412, Rotation2d.fromRadians(-0.824))
-	);
-	public static final ChoreoTraj NearSideAuto = new ChoreoTraj(
-	    "NearSideAuto",
-	    OptionalInt.empty(),
-	    7.88973,
-	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
-	);
-	public static final ChoreoTraj NearSideAuto$0 = new ChoreoTraj(
-	    "NearSideAuto",
-	    OptionalInt.of(0),
-	    2.02207,
-	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj NearSideAuto$1 = new ChoreoTraj(
-	    "NearSideAuto",
-	    OptionalInt.of(1),
-	    2.3555000000000006,
-	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj NearSideAuto$2 = new ChoreoTraj(
-	    "NearSideAuto",
-	    OptionalInt.of(2),
-	    2.1854699999999996,
-	    new Pose2d(2.6, 4, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj NearSideAuto$3 = new ChoreoTraj(
-	    "NearSideAuto",
-	    OptionalInt.of(3),
-	    1.3266900000000001,
-	    new Pose2d(0.79, 5.93, Rotation2d.fromRadians(0)),
-	    new Pose2d(1.936, 5.477, Rotation2d.fromRadians(-0.472))
-	);
-	public static final ChoreoTraj NearSideAuto_2 = new ChoreoTraj(
-	    "NearSideAuto_2",
-	    OptionalInt.empty(),
-	    11.94925,
-	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
-	);
-	public static final ChoreoTraj NearSideAuto_2$0 = new ChoreoTraj(
-	    "NearSideAuto_2",
-	    OptionalInt.of(0),
-	    2.02207,
-	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj NearSideAuto_2$1 = new ChoreoTraj(
-	    "NearSideAuto_2",
-	    OptionalInt.of(1),
-	    9.92718,
-	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
+	    7.01881,
+	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897)),
+	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
 
     /**
@@ -170,26 +128,20 @@ public record ChoreoTraj(
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("FarSideAuto_Grab1", FarSideAuto_Grab1),
-		Map.entry("FarSideAuto_Score1", FarSideAuto_Score1),
-		Map.entry("mirrored_FarSideAuto_Grab1", mirrored_FarSideAuto_Grab1),
-		Map.entry("mirrored_FarSideAuto_Score1", mirrored_FarSideAuto_Score1),
-		Map.entry("mirrored_NearSideAuto", mirrored_NearSideAuto),
-		Map.entry("mirrored_NearSideAuto$0", mirrored_NearSideAuto$0),
-		Map.entry("mirrored_NearSideAuto$1", mirrored_NearSideAuto$1),
-		Map.entry("mirrored_NearSideAuto$2", mirrored_NearSideAuto$2),
-		Map.entry("mirrored_NearSideAuto$3", mirrored_NearSideAuto$3),
-		Map.entry("mirrored_NearSideAuto_2", mirrored_NearSideAuto_2),
-		Map.entry("mirrored_NearSideAuto_2$0", mirrored_NearSideAuto_2$0),
-		Map.entry("mirrored_NearSideAuto_2$1", mirrored_NearSideAuto_2$1),
-		Map.entry("NearSideAuto", NearSideAuto),
-		Map.entry("NearSideAuto$0", NearSideAuto$0),
-		Map.entry("NearSideAuto$1", NearSideAuto$1),
-		Map.entry("NearSideAuto$2", NearSideAuto$2),
-		Map.entry("NearSideAuto$3", NearSideAuto$3),
-		Map.entry("NearSideAuto_2", NearSideAuto_2),
-		Map.entry("NearSideAuto_2$0", NearSideAuto_2$0),
-		Map.entry("NearSideAuto_2$1", NearSideAuto_2$1)
+    	Map.entry("HPOneSwipe", HPOneSwipe),
+		Map.entry("HPOneSwipe$0", HPOneSwipe$0),
+		Map.entry("HPOneSwipe$1", HPOneSwipe$1),
+		Map.entry("mirrored_HPOneSwipe", mirrored_HPOneSwipe),
+		Map.entry("mirrored_HPOneSwipe$0", mirrored_HPOneSwipe$0),
+		Map.entry("mirrored_HPOneSwipe$1", mirrored_HPOneSwipe$1),
+		Map.entry("mirrored_OneSwipe_Grab1", mirrored_OneSwipe_Grab1),
+		Map.entry("mirrored_OneSwipe_Score1", mirrored_OneSwipe_Score1),
+		Map.entry("mirrored_TwoSwipe_V1_1", mirrored_TwoSwipe_V1_1),
+		Map.entry("mirrored_TwoSwipe_V1_2", mirrored_TwoSwipe_V1_2),
+		Map.entry("OneSwipe_Grab1", OneSwipe_Grab1),
+		Map.entry("OneSwipe_Score1", OneSwipe_Score1),
+		Map.entry("TwoSwipe_V1_1", TwoSwipe_V1_1),
+		Map.entry("TwoSwipe_V1_2", TwoSwipe_V1_2)
     );
 
     /**

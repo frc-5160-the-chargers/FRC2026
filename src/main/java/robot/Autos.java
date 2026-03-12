@@ -37,75 +37,57 @@ public class Autos {
         this.drive = drive;
     }
 
-    private void setupAutoRoutine(AutoRoutine routine) {
+    private AutoRoutine newAutoRoutine(String name) {
+        var routine = autoFactory.newRoutine(name);
         routine.active()
             .onTrue(shooter.setIdleBehaviorToSpinupCmd())
             .onFalse(shooter.setIdleBehaviorToCoastCmd());
+        return routine;
     }
 
-    public Command nearSide() {
-        var routine = autoFactory.newRoutine("NearSide");
-        var goToLoadingStation = ChoreoTraj.NearSideAuto$0.asAutoTraj(routine);
-        var score1 = ChoreoTraj.NearSideAuto$1.asAutoTraj(routine);
-        var allianceSideIntake = ChoreoTraj.NearSideAuto$2.asAutoTraj(routine);
-        var score2 = ChoreoTraj.NearSideAuto$3.asAutoTraj(routine);
+    private AutoTrajectory newAutoTraj(AutoRoutine routine, ChoreoTraj trajFile, boolean mirrorVertically) {
+        var name = (mirrorVertically ? "mirrored_" : "") + trajFile.name();
+        return routine.trajectory(name);
+    }
 
-        setupAutoRoutine(routine);
-        routine.active().onTrue(
-            goToLoadingStation.resetOdometry().andThen(goToLoadingStation.spawnCmd())
-        );
-        routine.anyActive(goToLoadingStation, allianceSideIntake)
-            .whileTrue(intake.intakeCmd());
+    /** An auto routine that grabs balls from the center and shoots them. */
+    public Command oneSwipe(boolean mirrorVertically) {
+        var routine = newAutoRoutine("OneSwipe");
+        var grab1 = newAutoTraj(routine, ChoreoTraj.OneSwipe_Grab1, mirrorVertically);
+        var score1 = newAutoTraj(routine, ChoreoTraj.OneSwipe_Score1, mirrorVertically);
 
-        goToLoadingStation.done().onTrue(
-            Commands.waitSeconds(2).andThen(score1.spawnCmd())
-        );
-        score1.active().whileTrue(
-            superstructure.spinupForHubShotCmd(ChoreoTraj.NearSideAuto$1.endPoseBlue())
-        );
-        score1.done().onTrue(
+        routine.active().onTrue(grab1.resetOdometry().andThen(grab1.spawnCmd()));
+        grab1.active().whileTrue(intake.intakeCmd(drive::getFieldSpeeds));
+        grab1.done().onTrue(Commands.waitSeconds(1).andThen(score1.spawnCmd()));
+        score1.doneDelayed(0.2)
+            .onTrue(superstructure.shootCmd(Shooter.Target.HUB));
+
+        return routine.cmd();
+    }
+
+    /** An auto routine that grabs balls from the center and shoots them, repeating twice. */
+    public Command twoSwipe(boolean mirrorVertically) {
+        var routine = newAutoRoutine("TwoSwipe");
+        var traj1 = newAutoTraj(routine, ChoreoTraj.TwoSwipe_V1_1, mirrorVertically);
+        var traj2 = newAutoTraj(routine, ChoreoTraj.TwoSwipe_V1_2, mirrorVertically);
+
+        routine.active().onTrue(traj1.resetOdometry().andThen(traj1.spawnCmd()));
+        traj1.active()
+            .whileTrue(superstructure.spinupForHubShotCmd(ChoreoTraj.TwoSwipe_V1_1.endPoseBlue()))
+            .whileTrue(
+                intake.intakeCmd(drive::getFieldSpeeds).until(traj1.atTime(4.3))
+            );
+        traj1.done().onTrue(
             superstructure.shootCmd(Shooter.Target.HUB)
-                .withTimeout(5.0)
-                .andThen(allianceSideIntake.spawnCmd())
+                .withTimeout(4.0)
+                .andThen(traj2.spawnCmd())
         );
-        allianceSideIntake.done().onTrue(
-            Commands.waitSeconds(0.5)
-                .andThen(score2.spawnCmd())
-        );
-        score2.active().whileTrue(
-            superstructure.spinupForHubShotCmd(ChoreoTraj.NearSideAuto$3.endPoseBlue())
-        );
-        score2.done().onTrue(superstructure.shootCmd(Shooter.Target.HUB));
-
-        return routine.cmd();
-    }
-
-    public Command rightSide() {
-        var routine = autoFactory.newRoutine("RightSide");
-        var grab1 = ChoreoTraj.FarSideAuto_Grab1.asAutoTraj(routine);
-        var score1 = ChoreoTraj.FarSideAuto_Score1.asAutoTraj(routine);
-
-        setupAutoRoutine(routine);
-        routine.active().onTrue(grab1.resetOdometry().andThen(grab1.spawnCmd()));
-        grab1.active().whileTrue(intake.intakeCmd(drive::getFieldSpeeds));
-        grab1.done().onTrue(Commands.waitSeconds(1).andThen(score1.spawnCmd()));
-        score1.doneDelayed(0.2)
-            .onTrue(superstructure.shootCmd(Shooter.Target.HUB));
-
-        return routine.cmd();
-    }
-
-    public Command rightSideMirrored() {
-        var routine = autoFactory.newRoutine("RightSideMirrored");
-        var grab1 = ChoreoTraj.mirrored_FarSideAuto_Grab1.asAutoTraj(routine);
-        var score1 = ChoreoTraj.mirrored_FarSideAuto_Score1.asAutoTraj(routine);
-
-        setupAutoRoutine(routine);
-        routine.active().onTrue(grab1.resetOdometry().andThen(grab1.spawnCmd()));
-        grab1.active().whileTrue(intake.intakeCmd(drive::getFieldSpeeds));
-        grab1.done().onTrue(Commands.waitSeconds(1).andThen(score1.spawnCmd()));
-        score1.doneDelayed(0.2)
-            .onTrue(superstructure.shootCmd(Shooter.Target.HUB));
+        traj2.active()
+            .whileTrue(superstructure.spinupForHubShotCmd(ChoreoTraj.TwoSwipe_V1_2.endPoseBlue()))
+            .whileTrue(
+                intake.intakeCmd(drive::getFieldSpeeds).until(traj2.atTime(6.0))
+            );
+        traj2.done().onTrue(superstructure.shootCmd(Shooter.Target.HUB));
 
         return routine.cmd();
     }
