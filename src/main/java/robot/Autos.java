@@ -47,7 +47,12 @@ public class Autos {
 
     private AutoTrajectory newAutoTraj(AutoRoutine routine, ChoreoTraj trajFile, boolean mirrorVertically) {
         var name = (mirrorVertically ? "mirrored_" : "") + trajFile.name();
-        return routine.trajectory(name);
+        try {
+            return ChoreoTraj.ALL_TRAJECTORIES.get(name).asAutoTraj(routine);
+        } catch (Exception e) {
+            // return null-op trajectory if invalid
+            return routine.trajectory("");
+        }
     }
 
     /** An auto routine that grabs balls from the center and shoots them. */
@@ -73,6 +78,8 @@ public class Autos {
 
         routine.active().onTrue(traj1.resetOdometry().andThen(traj1.spawnCmd()));
         traj1.active()
+            // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
+            // because the hub is perfectly centered in the vertical direction.
             .whileTrue(superstructure.spinupForHubShotCmd(ChoreoTraj.TwoSwipe_V1_1.endPoseBlue()))
             .whileTrue(
                 intake.intakeCmd(drive::getFieldSpeeds).until(traj1.atTime(4.3))

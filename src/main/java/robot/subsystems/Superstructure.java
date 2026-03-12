@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.AllianceColor;
 import lib.Tunable;
-import lib.commands.NonBlockingCmds;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -64,16 +63,9 @@ public class Superstructure {
     @AutoLogOutput(key = "ShotCalcs/Setpoint")
     private Shooter.Setpoint shotSetpoint = Shooter.Setpoint.NULL;
 
-    @AutoLogOutput(key = "Swerve/YawErr")
-    private Rotation2d yawErr = Rotation2d.kZero;
-
-    private double swerveNetSpeed = 0.0;
-
     private void updateState(Target target, Pose2d pose, ChassisSpeeds speeds) {
         shotTarget = Optional.of(target);
         shotSetpoint = ShotCalcsKt.getHubShotSetpoint(pose, speeds, shooter, true, target);
-        yawErr = drive.getPose().getRotation().minus(shotSetpoint.yaw());
-        swerveNetSpeed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
     }
 
     private void resetState() {
@@ -85,11 +77,9 @@ public class Superstructure {
     private boolean shouldSerialize(List<Rectangle2d> noShootZones) {
         if (DriverStation.isTeleopEnabled()) return serializeOverride.getAsBoolean();
         if (!shotSetpoint.isPossible()) return false;
-//        double yawTolerance = YAW_TOLERANCE.get() * (1 + swerveNetSpeed);
-//        if (Math.abs(yawErr.getRadians()) > yawTolerance) return false;
-//        for (var zone: noShootZones) {
-//            if (zone.contains(drive.getPose().getTranslation())) return false;
-//        }
+        for (var zone: noShootZones) {
+            if (zone.contains(drive.getPose().getTranslation())) return false;
+        }
         return true;
     }
 

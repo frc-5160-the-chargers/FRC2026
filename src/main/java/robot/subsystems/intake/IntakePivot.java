@@ -3,7 +3,6 @@ package robot.subsystems.intake;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLog;
-import robot.subsystems.common.PivotDataAutoLogged;
 
 public class IntakePivot {
     @AutoLog

@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import lib.Convert;
 import lib.hardware.MotorStats;
 import org.littletonrobotics.junction.AutoLogOutput;
-import robot.subsystems.common.PivotDataAutoLogged;
+
 
 import static edu.wpi.first.units.Units.Rotations;
 
