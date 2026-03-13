@@ -23,26 +23,29 @@ public class VisionConsts {
         AprilTagFields.k2026RebuiltAndymark
     );
 
+    // GOOD
     public static final AprilTagCamConsts FL_CONSTS = new AprilTagCamConsts(
         "Chargers-1",
         new Transform3d(
-            Inches.of(5.753),
-            Inches.of(12.189),
-            Inches.of(21.122 - 0.5), // TODO fix
+            Inches.of(6.351),
+            Inches.of(12.136),
+            Inches.of(20.715),
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-15),
-                Degrees.of(-30)
+                Degrees.of(-20)
             )
         ),
         FIELD_LAYOUT, 1.0, Optional.empty()
     );
+
+    // GOOD
     public static final AprilTagCamConsts FR_CONSTS = new AprilTagCamConsts(
         "Chargers-2",
         new Transform3d(
-            Inches.of(5.78),
-            Inches.of(-12.317),
-            Inches.of(21.183 - 0.5).minus(Meters.of(0.03)), // TODO fix
+            Inches.of(6.1),
+            Inches.of(-12.228),
+            Inches.of(20.8),
             new Rotation3d(
                 Degrees.zero(),
                 Degrees.of(-25),
@@ -57,8 +60,8 @@ public class VisionConsts {
     public static final double MAX_AMBIGUITY = 0.2;
     public static final Distance MAX_Z_ERROR = Meters.of(0.1);
     public static final double Z_ERROR_SCALAR = 100.0;
-    public static final double SINGLE_TAG_SCALAR = 2.0;
-    public static final double LINEAR_STD_DEV_BASELINE = 0.1;
+    public static final double SINGLE_TAG_SCALAR = 2.5;
+    public static final double LINEAR_STD_DEV_BASELINE = 0.2;
     public static final double ANGULAR_STD_DEV = 10000000;
     public static final SimCameraProperties DEFAULT_CAM_PROPERTIES = new SimCameraProperties();
 
