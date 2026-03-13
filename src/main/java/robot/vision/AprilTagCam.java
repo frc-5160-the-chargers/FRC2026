@@ -86,7 +86,7 @@ public class AprilTagCam {
             }
             if (ambiguityExceeded) {
                 ambHighCount++;
-                continue;
+//                continue;
             }
             // updates the pose, and makes sure that the estimated pose
             // has a z coordinate near 0 and x and y coordinates within the field.
@@ -101,7 +101,7 @@ public class AprilTagCam {
                 || pose.getY() < 0.0
                 || pose.getY() > FIELD_LAYOUT.getFieldWidth()) {
                 errHighCount++;
-                continue;
+//                continue;
             }
             // Calculates standard deviations
             double areaSumMultiplier = Math.pow(result.targets.size() / Math.abs(tagAreaSum), 0.2);
