@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import lib.Convert;
 import lib.RobotMode;
 import lib.Tunable;
+import lib.commands.CmdSequence;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -124,7 +125,7 @@ public class GroundIntake extends ChargerSubsystem {
             Logger.recordOutput(key("PivotFF"), ff);
             pivotIO.setRadians(setpoint.position, ff);
         });
-        return resetStateCmd.andThen(targetAngleCmd);
+        return CmdSequence.of(resetStateCmd, targetAngleCmd);
     }
 
     public Command stowCmd() {

@@ -118,7 +118,7 @@ public record ChoreoTraj(
 	public static final ChoreoTraj TwoSwipe_V1_2 = new ChoreoTraj(
 	    "TwoSwipe_V1_2",
 	    OptionalInt.empty(),
-	    7.01881,
+	    7.08472,
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897)),
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);

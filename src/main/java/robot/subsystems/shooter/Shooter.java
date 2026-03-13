@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.Convert;
 import lib.Tunable;
+import lib.commands.CmdSequence;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
@@ -121,7 +122,7 @@ public class Shooter extends ChargerSubsystem {
      * lowering the current limit, to allow it to build momentum.
      */
     public Command spinupCmd(Supplier<AngularVelocity> velocity) {
-        var cmd = Commands.sequence(
+        var cmd = CmdSequence.of(
             this.runOnce(() -> setCurrentLimit(spinupLimit.get())),
             Commands.parallel(
                 setVelocityCmdImpl(velocity),

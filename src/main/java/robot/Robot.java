@@ -14,7 +14,6 @@ import lib.RobotMode;
 import lib.Tunable;
 import lib.commands.CmdLogger;
 import lib.commands.LoggedAutoChooser;
-import lib.commands.NonBlockingCmds;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import org.ironmaple.simulation.SimulatedArena;
@@ -169,7 +168,7 @@ public class Robot extends LoggedRobot {
         );
         testChooser.addCmd(
             "Test Pulsing",
-            () -> NonBlockingCmds.parallel(
+            () -> Commands.parallel(
                 serializer.pulseCmd(() -> true),
                 shooter.setVelocityCmd(() -> RadiansPerSecond.of(20))
             ).withName("Pulse Testing")

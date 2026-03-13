@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import robot.constants.RobotConfig;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.shooter.Shooter;
@@ -33,8 +34,11 @@ public class DriverController extends CommandPS5Controller {
         HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.5),
         HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.0);
 
-    // Equation: X = C * x_current + (1 - C) * x_previous, C = e^-(0.02/0.1) = e^(-0.2).
-    // Effectively, this filter prevents the robot's target angular velocity from oscillating.
+    // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
+    // C = e^-(0.02/0.1) = e^(-0.2)
+    // X = wanted angular velocity
+    // Y = filtered angular velocity
+    // Effectively, this filter prevents the robot's target angular velocity from changing too quickly.
     private final LinearFilter rotationFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
 
     // A SlewRateLimiter limits the acceleration of the input.
@@ -98,6 +102,7 @@ public class DriverController extends CommandPS5Controller {
             strafe = strafeLimiter.calculate(strafe);
         }
         double deltaRad = MathUtil.angleModulus(heading.get().getRadians() - prevTargetRad);
+        Logger.recordOutput("ShotCalcs/YawError", deltaRad);
         double radiansPerSec = rotationFilter.calculate(deltaRad / 0.02);
         prevTargetRad = heading.get().getRadians();
 

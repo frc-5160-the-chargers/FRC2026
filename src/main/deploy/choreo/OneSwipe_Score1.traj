@@ -13,7 +13,7 @@
     {"from":"first", "to":"last", "data":{"type":"KeepInRectangle", "props":{"x":0.0, "y":0.0, "w":16.541, "h":8.0692}}, "enabled":false},
     {"from":1, "to":2, "data":{"type":"MaxAngularVelocity", "props":{"max":0.0}}, "enabled":true},
     {"from":3, "to":3, "data":{"type":"PointAt", "props":{"x":4.62, "y":4.05, "tolerance":0.017453292519943295, "flip":false}}, "enabled":true},
-    {"from":0, "to":3, "data":{"type":"MaxAcceleration", "props":{"max":3.0}}, "enabled":true}],
+    {"from":"first", "to":"last", "data":{"type":"MaxAcceleration", "props":{"max":3.0}}, "enabled":true}],
   "targetDt":0.05
  },
  "params":{
@@ -28,7 +28,7 @@
     {"from":"first", "to":"last", "data":{"type":"KeepInRectangle", "props":{"x":{"exp":"0 m", "val":0.0}, "y":{"exp":"0 m", "val":0.0}, "w":{"exp":"16.541 m", "val":16.541}, "h":{"exp":"8.0692 m", "val":8.0692}}}, "enabled":false},
     {"from":1, "to":2, "data":{"type":"MaxAngularVelocity", "props":{"max":{"exp":"0 rad / s", "val":0.0}}}, "enabled":true},
     {"from":3, "to":3, "data":{"type":"PointAt", "props":{"x":{"exp":"HubPos.x", "val":4.62}, "y":{"exp":"HubPos.y", "val":4.05}, "tolerance":{"exp":"1 deg", "val":0.017453292519943295}, "flip":false}}, "enabled":true},
-    {"from":0, "to":3, "data":{"type":"MaxAcceleration", "props":{"max":{"exp":"3 m / s ^ 2", "val":3.0}}}, "enabled":true}],
+    {"from":"first", "to":"last", "data":{"type":"MaxAcceleration", "props":{"max":{"exp":"3 m / s ^ 2", "val":3.0}}}, "enabled":true}],
   "targetDt":{
    "exp":"0.05 s",
    "val":0.05

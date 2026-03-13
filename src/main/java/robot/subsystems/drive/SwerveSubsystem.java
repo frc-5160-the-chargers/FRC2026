@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
+import lib.commands.CmdSequence;
 import lombok.Getter;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -270,13 +271,13 @@ public class SwerveSubsystem extends ChargerSubsystem {
         var limiter = new SlewRateLimiter(0.05);
         var state = new CharacterizationState();
         var req = new SwerveRequest.RobotCentric();
-        var movementCmd = Commands.sequence(
+        var movementCmd = CmdSequence.of(
             // Reset acceleration limiter
             Commands.runOnce(() -> limiter.reset(0.0)),
             // Turn in place, accelerating up to full speed
             driveCmd(() -> req.withRotationalRate(limiter.calculate(wrcMaxSpeed.get())))
         );
-        var measurementCmd = Commands.sequence(
+        var measurementCmd = CmdSequence.of(
             Commands.waitSeconds(2.0),
             Commands.runOnce(() -> {
                 state.positions = getModPositions();

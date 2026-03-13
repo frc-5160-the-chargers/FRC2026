@@ -5,6 +5,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import lib.commands.CmdSequence;
 import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
 import robot.subsystems.Superstructure;
@@ -61,9 +62,12 @@ public class Autos {
         var grab1 = newAutoTraj(routine, ChoreoTraj.OneSwipe_Grab1, mirrorVertically);
         var score1 = newAutoTraj(routine, ChoreoTraj.OneSwipe_Score1, mirrorVertically);
 
-        routine.active().onTrue(grab1.resetOdometry().andThen(grab1.spawnCmd()));
-        grab1.active().whileTrue(intake.intakeCmd(drive::getFieldSpeeds));
-        grab1.done().onTrue(Commands.waitSeconds(1).andThen(score1.spawnCmd()));
+        routine.active()
+            .onTrue(CmdSequence.of(grab1.resetOdometry(), grab1.spawnCmd()));
+        grab1.active()
+            .whileTrue(intake.intakeCmd(drive::getFieldSpeeds));
+        grab1.doneDelayed(0.5)
+            .onTrue(score1.spawnCmd());
         score1.doneDelayed(0.2)
             .onTrue(superstructure.shootCmd(Shooter.Target.HUB));
 
@@ -76,7 +80,8 @@ public class Autos {
         var traj1 = newAutoTraj(routine, ChoreoTraj.TwoSwipe_V1_1, mirrorVertically);
         var traj2 = newAutoTraj(routine, ChoreoTraj.TwoSwipe_V1_2, mirrorVertically);
 
-        routine.active().onTrue(traj1.resetOdometry().andThen(traj1.spawnCmd()));
+        routine.active()
+            .onTrue(CmdSequence.of(traj1.resetOdometry(), traj1.spawnCmd()));
         traj1.active()
             // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
             // because the hub is perfectly centered in the vertical direction.
@@ -85,9 +90,10 @@ public class Autos {
                 intake.intakeCmd(drive::getFieldSpeeds).until(traj1.atTime(4.3))
             );
         traj1.done().onTrue(
-            superstructure.shootCmd(Shooter.Target.HUB)
-                .withTimeout(4.0)
-                .andThen(traj2.spawnCmd())
+            CmdSequence.of(
+                superstructure.shootCmd(Shooter.Target.HUB).withTimeout(4.0),
+                traj2.spawnCmd()
+            )
         );
         traj2.active()
             .whileTrue(superstructure.spinupForHubShotCmd(ChoreoTraj.TwoSwipe_V1_2.endPoseBlue()))

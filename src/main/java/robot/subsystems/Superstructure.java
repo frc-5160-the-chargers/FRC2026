@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.AllianceColor;
 import lib.Tunable;
+import lib.commands.CmdSequence;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -20,7 +21,6 @@ import robot.subsystems.shooter.Shooter.Target;
 import robot.subsystems.shooter.ShotCalcsKt;
 import robot.subsystems.shooter.Shooter;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -33,13 +33,6 @@ import static lib.commands.CmdLogger.logged;
 @RequiredArgsConstructor
 public class Superstructure {
     // Constants
-    private static final List<Rectangle2d>
-        HUB_NO_SHOOT_ZONES = List.of(
-            new Rectangle2d(new Translation2d(4.3, 0), new Translation2d(12.3, 8.1))
-        ),
-        FERRY_NO_SHOOT_ZONES = List.of(
-            new Rectangle2d(new Translation2d(4.6, 3.05), new Translation2d(11.9, 5.0))
-        );
     private static final Tunable<Double> YAW_TOLERANCE = Tunable.of("HubAiming/Tolerance (rad)", 0.15);
     private static final Tunable<Boolean> rotationEnabled = Tunable.of("HubAiming/Rotation Enabled", true);
 
@@ -74,31 +67,24 @@ public class Superstructure {
         rotationOverride = Optional.empty();
     }
 
-    private boolean shouldSerialize(List<Rectangle2d> noShootZones) {
+    private boolean shouldSerialize() {
         if (DriverStation.isTeleopEnabled()) return serializeOverride.getAsBoolean();
-        if (!shotSetpoint.isPossible()) return false;
-        for (var zone: noShootZones) {
-            if (zone.contains(drive.getPose().getTranslation())) return false;
-        }
-        return true;
+        return shotSetpoint.isPossible();
     }
 
     // Commands
     public Command shootCmd(Target target, boolean shouldAim, boolean shouldPulse) {
-        var noShootZones = target == Target.HUB ? HUB_NO_SHOOT_ZONES : FERRY_NO_SHOOT_ZONES;
-        var serializeCmd = shouldPulse
-            ? serializer.pulseCmd(() -> shouldSerialize(List.of()))
-            : serializer.runCmd(() -> shouldSerialize(List.of()));
         var cmd = Commands.parallel(
             shooter.setVelocityCmd(() -> {
                 updateState(target, drive.getPose(), drive.getFieldSpeeds());
                 if (rotationEnabled.get()) rotationOverride = Optional.of(shotSetpoint.yaw());
                 return RadiansPerSecond.of(shotSetpoint.radPerSec() * speedAdjustment.getAsDouble());
             }),
-            Commands.sequence(
+            CmdSequence.of(
                 Commands.waitUntil(() -> shooter.atGoal(1.0)),
-                Commands.waitSeconds(1.0),
-                serializeCmd
+                shouldPulse
+                    ? serializer.pulseCmd(this::shouldSerialize)
+                    : serializer.runCmd(this::shouldSerialize)
             )
         )
             .finallyDo(this::resetState);
@@ -129,11 +115,12 @@ public class Superstructure {
     }
 
     public Command visionlessHubShotCmd() {
-        var resetPoseCmd = Commands.runOnce(() -> {
-            var pose = new Pose2d(1.45, 4.05, Rotation2d.kZero);
-            drive.resetPose(AllianceColor.isRed() ? flip(pose) : pose);
-        });
-        return logged(resetPoseCmd, "ResetPoseForVisionlessHubShot")
-            .andThen(shootCmd(Target.HUB));
+        return CmdSequence.of(
+            Commands.runOnce(() -> {
+                var pose = new Pose2d(1.45, 4.05, Rotation2d.kZero);
+                drive.resetPose(AllianceColor.isRed() ? flip(pose) : pose);
+            }),
+            shootCmd(Target.HUB)
+        );
     }
 }

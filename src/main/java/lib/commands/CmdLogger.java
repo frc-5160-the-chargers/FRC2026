@@ -14,9 +14,8 @@ import java.util.Set;
  * while the "InterruptMsgs" and "DuplicateNameMsgs" fields should be dragged into the console section
  * (click +, then "Console", then drag the field in). <br />
  * - Green commands are default commands, while yellow commands are non-default ones.
- * - This class will log all scheduled commands. Commands that are in a sequence or parallel group
- * (Commands.parallel, Commands.sequence, NonBlockingCmds.sequence) will not be logged; rather,
- * use the {@link CmdLogger#logged} method to create a logged command.
+ * - This class will log all scheduled commands. Commands that are in a sequence
+ *   or parallel group will not be logged; use {@link CmdLogger#logged} to log those instead
  */
 public class CmdLogger {
     private static boolean hasStarted = false, logDupeNames = false;

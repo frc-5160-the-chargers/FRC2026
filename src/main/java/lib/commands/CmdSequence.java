@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A command composition that runs a list of commands in sequence, but faster.
+ * A command composition that runs a list of commands in sequence,
+ * faster than WPILib's builtin ```Commands.sequence()``` factory.
  *
  * <p>This command group initializes the next command in line immediately after the previous ends,
  * while wpilib's base SequentialCommandGroup does so one loop later(making this slightly faster).
@@ -16,20 +17,17 @@ import java.util.List;
  * added to any other composition or scheduled individually, and the composition requires all
  * subsystems its components require.
  */
-public class FasterSequenceCommand extends Command {
+public class CmdSequence extends Command {
     private final List<Command> m_commands = new ArrayList<>();
     private int m_currentCommandIndex = -1;
     private boolean m_runWhenDisabled = true;
     private InterruptionBehavior m_interruptBehavior = InterruptionBehavior.kCancelIncoming;
 
-    /**
-     * Creates a new SequentialCommandGroup. The given commands will be run sequentially, with the
-     * composition finishing when the last command finishes.
-     *
-     * @param commands the commands to include in this composition.
-     */
-    public FasterSequenceCommand(Command... commands) {
-        addCommands(commands);
+    /** Creates a new CmdSequence. */
+    public static CmdSequence of(Command... commands) {
+        var sequence = new CmdSequence();
+        sequence.addCommands(commands);
+        return sequence;
     }
 
     /**
