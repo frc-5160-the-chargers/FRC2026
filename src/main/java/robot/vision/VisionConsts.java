@@ -61,7 +61,7 @@ public class VisionConsts {
     public static final Distance MAX_Z_ERROR = Meters.of(0.1);
     public static final double Z_ERROR_SCALAR = 100.0;
     public static final double SINGLE_TAG_SCALAR = 2.5;
-    public static final double LINEAR_STD_DEV_BASELINE = 0.2;
+    public static final double LINEAR_STD_DEV_BASELINE = 0.3;
     public static final double ANGULAR_STD_DEV = 10000000;
     public static final SimCameraProperties DEFAULT_CAM_PROPERTIES = new SimCameraProperties();
 

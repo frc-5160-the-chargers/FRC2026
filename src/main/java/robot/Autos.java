@@ -80,7 +80,7 @@ public class Autos {
         var traj2 = newAutoTraj(routine, ChoreoTraj.TwoSwipe_V1_2, mirrorVertically);
 
         routine.active()
-            .onTrue(CmdSequence.of(traj1.resetOdometry(), traj1.spawnCmd()));
+            .onTrue(CmdSequence.of(traj1.resetOdometry(), intake.deployCmd(drive::getFieldSpeeds).withTimeout(2.0), traj1.spawnCmd()));
         traj1.active()
             // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
             // because the hub is perfectly centered in the vertical direction.

@@ -127,7 +127,7 @@ private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.0)
 private val BALL_TO_FLYWHEEL_SPEED =
     TunableLerpTable("ShotCalcs/Ball Speed(mps) -> Flywheel Speed(rad per s)")
         .put(6.0, 260.0)
-        .put(12.0, 460.0)
+        .put(12.0, 440.0)
 private val DISTANCE_TO_BALL_SPEED_HUB =
     TunableLerpTable("ShotCalcs/(Hub) Distance(m) -> Ball Velocity(mps)")
         .put(1.7, 6.2)

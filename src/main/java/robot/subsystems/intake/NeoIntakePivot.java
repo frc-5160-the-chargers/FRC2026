@@ -7,6 +7,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.*;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -35,6 +36,7 @@ public class NeoIntakePivot extends IntakePivot {
             .positionConversionFactor(1 / GroundIntake.PIVOT_REDUCTION)
             .velocityConversionFactor(1 / GroundIntake.PIVOT_REDUCTION);
         config.idleMode(SparkBaseConfig.IdleMode.kBrake);
+        absoluteEncoder.setInverted(true);
         configureMotor();
         var initCmd = Commands.waitSeconds(5)
             .andThen(() -> encoder.setPosition(getAbsoluteRot()))
@@ -45,7 +47,7 @@ public class NeoIntakePivot extends IntakePivot {
 
     @AutoLogOutput(key = "GroundIntake/Pivot/AbsoluteRotations")
     private double getAbsoluteRot() {
-        return -absoluteEncoder.get() + GroundIntake.PIVOT_OFFSET.in(Rotations);
+        return MathUtil.inputModulus(absoluteEncoder.get() + GroundIntake.PIVOT_OFFSET.in(Rotations), -0.8, 0.2);
     }
 
     @Override

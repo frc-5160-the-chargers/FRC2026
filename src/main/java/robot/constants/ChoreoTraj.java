@@ -27,98 +27,98 @@ public record ChoreoTraj(
     public static final ChoreoTraj HPOneSwipe = new ChoreoTraj(
 	    "HPOneSwipe",
 	    OptionalInt.empty(),
-	    10.14857,
+	    12.84036,
 	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
 	);
 	public static final ChoreoTraj HPOneSwipe$0 = new ChoreoTraj(
 	    "HPOneSwipe",
 	    OptionalInt.of(0),
-	    1.6913,
+	    2.18347,
 	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj HPOneSwipe$1 = new ChoreoTraj(
 	    "HPOneSwipe",
 	    OptionalInt.of(1),
-	    8.45727,
+	    10.65689,
 	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
 	);
 	public static final ChoreoTraj mirrored_HPOneSwipe = new ChoreoTraj(
 	    "mirrored_HPOneSwipe",
 	    OptionalInt.empty(),
-	    10.14901,
+	    12.84092,
 	    new Pose2d(3.65, 7.143, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.355, 6.403, Rotation2d.fromRadians(-0.822))
 	);
 	public static final ChoreoTraj mirrored_HPOneSwipe$0 = new ChoreoTraj(
 	    "mirrored_HPOneSwipe",
 	    OptionalInt.of(0),
-	    1.6913,
+	    2.18347,
 	    new Pose2d(3.65, 7.143, Rotation2d.fromRadians(0)),
 	    new Pose2d(0.77, 7.363, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj mirrored_HPOneSwipe$1 = new ChoreoTraj(
 	    "mirrored_HPOneSwipe",
 	    OptionalInt.of(1),
-	    8.45771,
+	    10.65745,
 	    new Pose2d(0.77, 7.363, Rotation2d.fromRadians(0)),
 	    new Pose2d(2.355, 6.403, Rotation2d.fromRadians(-0.822))
 	);
 	public static final ChoreoTraj mirrored_OneSwipe_Grab1 = new ChoreoTraj(
 	    "mirrored_OneSwipe_Grab1",
 	    OptionalInt.empty(),
-	    3.47955,
+	    3.98741,
 	    new Pose2d(3.612, 7.137, Rotation2d.fromRadians(-3.142)),
-	    new Pose2d(7.9, 4.643, Rotation2d.fromRadians(1.57))
+	    new Pose2d(7.9, 4.643, Rotation2d.fromRadians(1.571))
 	);
 	public static final ChoreoTraj mirrored_OneSwipe_Score1 = new ChoreoTraj(
 	    "mirrored_OneSwipe_Score1",
 	    OptionalInt.empty(),
-	    3.21438,
+	    3.64113,
 	    new Pose2d(7.5, 6.143, Rotation2d.fromRadians(1.571)),
-	    new Pose2d(2.7, 5.843, Rotation2d.fromRadians(-0.748))
+	    new Pose2d(2.7, 5.843, Rotation2d.fromRadians(-0.734))
 	);
 	public static final ChoreoTraj mirrored_TwoSwipe_V1_1 = new ChoreoTraj(
 	    "mirrored_TwoSwipe_V1_1",
 	    OptionalInt.empty(),
-	    6.48763,
+	    8.37529,
 	    new Pose2d(4.205, 7.18, Rotation2d.fromRadians(-3.142)),
 	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.887))
 	);
 	public static final ChoreoTraj mirrored_TwoSwipe_V1_2 = new ChoreoTraj(
 	    "mirrored_TwoSwipe_V1_2",
 	    OptionalInt.empty(),
-	    7.03573,
+	    9.0824,
 	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897)),
 	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897))
 	);
 	public static final ChoreoTraj OneSwipe_Grab1 = new ChoreoTraj(
 	    "OneSwipe_Grab1",
 	    OptionalInt.empty(),
-	    3.47955,
+	    3.9874,
 	    new Pose2d(3.612, 0.906, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(7.9, 3.4, Rotation2d.fromRadians(-1.571))
 	);
 	public static final ChoreoTraj OneSwipe_Score1 = new ChoreoTraj(
 	    "OneSwipe_Score1",
 	    OptionalInt.empty(),
-	    3.21438,
+	    3.64182,
 	    new Pose2d(7.5, 1.9, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(2.7, 2.2, Rotation2d.fromRadians(0.764))
+	    new Pose2d(2.7, 2.2, Rotation2d.fromRadians(0.75))
 	);
 	public static final ChoreoTraj TwoSwipe_V1_1 = new ChoreoTraj(
 	    "TwoSwipe_V1_1",
 	    OptionalInt.empty(),
-	    6.48791,
-	    new Pose2d(4.205, 0.863, Rotation2d.fromRadians(3.142)),
+	    8.31476,
+	    new Pose2d(4.404, 0.902, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
 	public static final ChoreoTraj TwoSwipe_V1_2 = new ChoreoTraj(
 	    "TwoSwipe_V1_2",
 	    OptionalInt.empty(),
-	    7.08472,
+	    9.27581,
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897)),
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);

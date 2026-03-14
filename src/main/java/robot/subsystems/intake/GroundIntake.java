@@ -29,7 +29,7 @@ import static lib.Convert.CustomUnits.PoundSquareInches;
 @SuppressWarnings("FieldCanBeLocal")
 public class GroundIntake extends ChargerSubsystem {
     static final double PIVOT_REDUCTION = 25.0 * 24.0 / 22.0; // MaxPlanetary + Sprockets
-    static final Angle PIVOT_OFFSET = Radians.of(5.28);
+    static final Angle PIVOT_OFFSET = Radians.of(5.28 - 6.28);
     static final Distance PIVOT_LENGTH = Inches.of(12.4);
     static final MomentOfInertia PIVOT_MOI = PoundSquareInches.of(1344.71);
     static final DCMotor PIVOT_MOTOR_KIND = DCMotor.getNEO(1);
@@ -165,7 +165,7 @@ public class GroundIntake extends ChargerSubsystem {
             this.run(() -> {
                 setPivotPosition(intakePos.get());
                 var vx = robotRelativeSpeeds.get().vxMetersPerSecond;
-                var targetVel = rollerTargetVel.get() + 1.5 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                var targetVel = rollerTargetVel.get() + 1.2 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
                 var velocityErr = targetVel - rollerInputs.velocityRadPerSec;
                 setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
             })
