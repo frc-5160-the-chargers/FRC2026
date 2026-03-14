@@ -1,11 +1,9 @@
 package robot.subsystems;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.AllianceColor;
@@ -22,7 +20,6 @@ import robot.subsystems.shooter.ShotCalcsKt;
 import robot.subsystems.shooter.Shooter;
 
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import static choreo.util.ChoreoAllianceFlipUtil.flip;
@@ -33,11 +30,11 @@ import static lib.commands.CmdLogger.logged;
 @RequiredArgsConstructor
 public class Superstructure {
     // Constants
-    private static final Tunable<Double> YAW_TOLERANCE = Tunable.of("HubAiming/Tolerance (rad)", 0.15);
-    private static final Tunable<Boolean> rotationEnabled = Tunable.of("HubAiming/Rotation Enabled", true);
+    private static final Tunable<Double>
+        YAW_TOLERANCE = Tunable.of("ShotCalcs/Aiming/Tolerance (rad)", 0.15),
+        SOTM_TOLERANCE_MULTIPLIER = Tunable.of("ShotCalcs/SOTM tolerance multiplier (scalar)", 0.2);
 
     // Constructor Parameters
-    @AutoLogOutput private final BooleanSupplier serializeOverride;
     private final DoubleSupplier speedAdjustment;
     private final SwerveSubsystem drive;
     private final GroundIntake groundIntake;
@@ -56,71 +53,77 @@ public class Superstructure {
     @AutoLogOutput(key = "ShotCalcs/Setpoint")
     private Shooter.Setpoint shotSetpoint = Shooter.Setpoint.NULL;
 
-    private void updateState(Target target, Pose2d pose, ChassisSpeeds speeds) {
-        shotTarget = Optional.of(target);
-        shotSetpoint = ShotCalcsKt.getHubShotSetpoint(pose, speeds, shooter, true, target);
+    @AutoLogOutput(key = "ShotCalcs/YawErrorRadians")
+    private double yawError = 0.0;
+
+    /** Whether the shot trajectory is good enough to run the serializer. */
+    @AutoLogOutput
+    public boolean canSerialize() {
+        double robotSpeed = Math.hypot(
+            drive.getRobotSpeeds().vxMetersPerSecond,
+            drive.getRobotSpeeds().vyMetersPerSecond
+        );
+        double toleranceMultiplier = 1.0 + robotSpeed * SOTM_TOLERANCE_MULTIPLIER.get();
+        return Math.abs(yawError) < YAW_TOLERANCE.get()
+            && shotSetpoint.isPossible()
+            // increase shooter tolerance when running shoot-on-the-move
+            && shooter.atGoal(toleranceMultiplier);
     }
 
     private void resetState() {
         shotSetpoint = Shooter.Setpoint.NULL;
         shotTarget = Optional.empty();
         rotationOverride = Optional.empty();
-    }
-
-    private boolean shouldSerialize() {
-        if (DriverStation.isTeleopEnabled()) return serializeOverride.getAsBoolean();
-        return shotSetpoint.isPossible();
+        yawError = 0.0;
     }
 
     // Commands
-    public Command shootCmd(Target target, boolean shouldAim, boolean shouldPulse) {
-        var cmd = Commands.parallel(
-            shooter.setVelocityCmd(() -> {
-                updateState(target, drive.getPose(), drive.getFieldSpeeds());
-                if (rotationEnabled.get()) rotationOverride = Optional.of(shotSetpoint.yaw());
-                return RadiansPerSecond.of(shotSetpoint.radPerSec() * speedAdjustment.getAsDouble());
-            }),
-            CmdSequence.of(
-                Commands.waitUntil(() -> shooter.atGoal(1.0)),
-                shouldPulse
-                    ? serializer.pulseCmd(this::shouldSerialize)
-                    : serializer.runCmd(this::shouldSerialize)
-            )
-        )
-            .finallyDo(this::resetState);
-        return logged(cmd, "ShootAtHub");
-    }
-
-    public Command shootCmd(Target target) {
-        return shootCmd(target, true, false);
-    }
-
-    public Command hubAimCmd() {
-        var cmd = Commands.run(() -> {
-            updateState(Target.HUB, drive.getPose(), drive.getFieldSpeeds());
-            rotationOverride = Optional.of(shotSetpoint.yaw());
-        });
-        return logged(cmd, "AimAtHub");
-    }
-
-    public Command spinupForHubShotCmd(Pose2d blueTargetPose) {
-        var speeds = new ChassisSpeeds();
+    public Command spinupAndAimCmd(Target target) {
         var cmd = shooter.setVelocityCmd(() -> {
-            var pose = AllianceColor.isRed() ? flip(blueTargetPose) : blueTargetPose;
-            updateState(Target.HUB, blueTargetPose, speeds);
+            shotSetpoint = ShotCalcsKt.getHubShotSetpoint(
+                drive.getPose(), drive.getFieldSpeeds(), shooter, true, target
+            );
+            shotTarget = Optional.of(target);
+            rotationOverride = Optional.of(shotSetpoint.yaw());
+            yawError = MathUtil.angleModulus(shotSetpoint.yaw().minus(drive.getPose().getRotation()).getRadians());
             return RadiansPerSecond.of(shotSetpoint.radPerSec() * speedAdjustment.getAsDouble());
         })
             .finallyDo(this::resetState);
-        return logged(cmd, "SpinupForHubShot");
+        return logged(cmd, "SpinupAndAim(" + target + ")");
     }
 
-    public Command visionlessHubShotCmd() {
+    public Command shootInAutoCmd(Target target) {
+        return Commands.parallel(
+            spinupAndAimCmd(target),
+            CmdSequence.of(
+                Commands.waitUntil(this::canSerialize),
+                Commands.waitSeconds(0.3),
+                serializer.runCmd()
+            )
+        );
+    }
+
+    public Command spinupCmd(Target target, Pose2d blueTargetPose) {
+        var speeds = new ChassisSpeeds();
+        var cmd = shooter.setVelocityCmd(() -> {
+            var pose = AllianceColor.isRed() ? flip(blueTargetPose) : blueTargetPose;
+            shotSetpoint = ShotCalcsKt.getHubShotSetpoint(
+                drive.getPose(), drive.getFieldSpeeds(), shooter, true, target
+            );
+            shotTarget = Optional.of(target);
+            return RadiansPerSecond.of(shotSetpoint.radPerSec());
+        })
+            .finallyDo(this::resetState);
+        return logged(cmd, "SpinupAndAim(" + target + ")");
+    }
+
+    public Command manualHubShotCmd() {
         return CmdSequence.of(
             Commands.runOnce(() -> {
                 var pose = new Pose2d(1.45, 4.05, Rotation2d.kZero);
                 drive.resetPose(AllianceColor.isRed() ? flip(pose) : pose);
             }),
-            shootCmd(Target.HUB)
+            spinupAndAimCmd(Target.HUB)
         );
     }
 }

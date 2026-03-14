@@ -87,11 +87,7 @@ fun getHubShotSetpoint(
     val futureShooterToGoal = shooterToGoal - shooterVelocity * airTime
     val targetDist = futureShooterToGoal.norm
     val ballSpeed = distanceToSpeed.get(targetDist)
-    val targetYaw = if (AllianceColor.isRed()) {
-        flip(futureShooterToGoal.angle)
-    } else {
-        futureShooterToGoal.angle
-    }
+    val targetYaw = futureShooterToGoal.angle
     Logger.recordOutput("ShotCalcs/BallSpeed", ballSpeed)
     Logger.recordOutput("ShotCalcs/FutureShooterToGoal", Translation2d.struct, futureShooterToGoal)
     Logger.recordOutput("ShotCalcs/TargetDistance(m)", targetDist)

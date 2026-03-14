@@ -8,7 +8,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import lib.Convert;
 import lib.RobotMode;
 import lib.Tunable;
@@ -104,6 +103,11 @@ public class GroundIntake extends ChargerSubsystem {
         rollerIO.setCurrentLimit(rollerCurrentLimit.get());
     }
 
+    @AutoLogOutput
+    private boolean atHardStop() {
+        return pivotInputs.positionRad < -100 * Convert.DEGREES_TO_RADIANS;
+    }
+
     private void setRollerVolts(double volts) {
         rollerIO.setVolts(volts);
         if (sim.isEmpty()) return;
@@ -114,58 +118,72 @@ public class GroundIntake extends ChargerSubsystem {
         }
     }
 
-    private Command setAngleCmd(Supplier<Angle> target) {
-        var resetStateCmd = this.runOnce(() -> setpoint = pivotInputs.getMotionState());
-        var targetAngleCmd = this.run(() -> {
-            var goal = new TrapezoidProfile.State(target.get().in(Radians), 0);
-            setpoint = motionProfile.calculate(0.02, setpoint, goal);
-            double ff = pivotKg.get() * Math.cos(pivotInputs.positionRad); // pivotInputs.radians must be 0 degrees when horizontal.
-            ff += Math.signum(setpoint.velocity) * pivotKs.get();
-            ff += PIVOT_KV * setpoint.velocity;
-            Logger.recordOutput(key("PivotFF"), ff);
-            pivotIO.setRadians(setpoint.position, ff);
-        });
-        return CmdSequence.of(resetStateCmd, targetAngleCmd);
+    private void setPivotPosition(Angle angle) {
+        var goal = new TrapezoidProfile.State(angle.in(Radians), 0);
+        setpoint = motionProfile.calculate(0.02, setpoint, goal);
+        double ff = pivotKg.get() * Math.cos(pivotInputs.positionRad); // pivotInputs.radians must be 0 degrees when horizontal.
+        ff += Math.signum(setpoint.velocity) * pivotKs.get();
+        ff += PIVOT_KV * setpoint.velocity;
+        Logger.recordOutput(key("PivotFF"), ff);
+        pivotIO.setRadians(setpoint.position, ff);
     }
 
+    /**
+     * A command that moves the intake to its stow position,
+     * with a little bit of voltage to push away fuel.
+     */
     public Command stowCmd() {
-        var cmd = setAngleCmd(stowPos::get)
-            .alongWith(Commands.run(() -> setRollerVolts(1.0)));
+        var cmd = CmdSequence.of(
+            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
+            this.run(() -> {
+                setPivotPosition(stowPos.get());
+                setRollerVolts(1.0);
+            })
+        );
         return logged(cmd, "Stow");
     }
 
-    @AutoLogOutput
-    private boolean atHardStop() {
-        return pivotInputs.positionRad < -100 * Convert.DEGREES_TO_RADIANS;
+    /** A command that runs the intake and deploys the pivot. */
+    public Command deployCmd() {
+        var cmd = CmdSequence.of(
+            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
+            this.run(() -> {
+                setPivotPosition(intakePos.get());
+                setRollerVolts(atHardStop() ? 0 : rollerVolts.get());
+            })
+        );
+        return logged(cmd, "Deploy & Run");
     }
 
-    public Command intakeCmd() {
-        var cmd = setAngleCmd(intakePos::get)
-            .alongWith(
-                Commands.run(() -> setRollerVolts(atHardStop() ? 0 : rollerVolts.get()))
-            );
-        return logged(cmd, "Intake");
+    /**
+     * A command that runs the intake and deploys the pivot.
+     * Uses the robot's relative velocity to increase the speed of the intake proportionally.
+     */
+    public Command deployCmd(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
+        var cmd = CmdSequence.of(
+            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
+            this.run(() -> {
+                setPivotPosition(intakePos.get());
+                var vx = robotRelativeSpeeds.get().vxMetersPerSecond;
+                var targetVel = rollerTargetVel.get() + 1.5 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                var velocityErr = targetVel - rollerInputs.velocityRadPerSec;
+                setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
+            })
+        );
+        return logged(cmd, "Deploy & Run (Velocity-Based)");
     }
 
-    public Command intakeCmd(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
-        var cmd = setAngleCmd(intakePos::get)
-            .alongWith(
-                Commands.run(() -> {
-                    var vx = robotRelativeSpeeds.get().vxMetersPerSecond;
-                    var target = rollerTargetVel.get() + 2.5 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
-                    var error = target - rollerInputs.velocityRadPerSec;
-                    Logger.recordOutput(key("ClosedLoopErr"), error);
-                    setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * error + ROLLER_KV * target));
-                })
-            );
-        return logged(cmd, "Intake (Velocity-Based)");
+    /** Alternates between the deploy and stow positions to agitate fuel. */
+    public Command agitateCmd() {
+        var cmd = CmdSequence.of(
+            stowCmd().withTimeout(2.0),
+            deployCmd().withTimeout(2.0)
+        )
+            .repeatedly();
+        return logged(cmd, "Agitate");
     }
 
-    public Command idleCmd() {
-        var cmd = this.run(() -> setRollerVolts(rollerVolts.get()));
-        return logged(cmd, "Idle");
-    }
-
+    /** Runs manual control on the pivot and the intake. */
     public Command manualCmd(DoubleSupplier volts, BooleanSupplier shouldRunIntake) {
         var cmd = this.run(() -> {
             double antiGravityVolts = pivotKg.get() * Math.cos(pivotInputs.positionRad);
@@ -175,6 +193,7 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "ManualPivot");
     }
 
+    // TODO maybe use this for zeroing instead
     public Command currentZeroCmd(boolean resetEncoder) {
         var cmd = this.run(() -> pivotIO.setVolts(pivotCurrentZeroVolts.get()))
             .until(this::hardStopHit)

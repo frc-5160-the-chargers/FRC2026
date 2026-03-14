@@ -4,7 +4,6 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import lib.commands.CmdSequence;
 import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
@@ -12,7 +11,7 @@ import robot.subsystems.Superstructure;
 import robot.subsystems.drive.SwerveSubsystem;
 import robot.subsystems.intake.GroundIntake;
 import robot.subsystems.shooter.Shooter;
-import robot.subsystems.shooter.Shooter.IdleBehavior;
+import robot.subsystems.shooter.Shooter.Target;
 
 public class Autos {
     private final AutoFactory autoFactory;
@@ -65,11 +64,11 @@ public class Autos {
         routine.active()
             .onTrue(CmdSequence.of(grab1.resetOdometry(), grab1.spawnCmd()));
         grab1.active()
-            .whileTrue(intake.intakeCmd(drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(drive::getFieldSpeeds));
         grab1.doneDelayed(0.5)
             .onTrue(score1.spawnCmd());
         score1.doneDelayed(0.2)
-            .onTrue(superstructure.shootCmd(Shooter.Target.HUB));
+            .onTrue(superstructure.shootInAutoCmd(Target.HUB));
 
         return routine.cmd();
     }
@@ -85,22 +84,22 @@ public class Autos {
         traj1.active()
             // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
             // because the hub is perfectly centered in the vertical direction.
-            .whileTrue(superstructure.spinupForHubShotCmd(ChoreoTraj.TwoSwipe_V1_1.endPoseBlue()))
+            .whileTrue(superstructure.spinupCmd(Target.HUB, ChoreoTraj.TwoSwipe_V1_1.endPoseBlue()))
             .whileTrue(
-                intake.intakeCmd(drive::getFieldSpeeds).until(traj1.atTime(4.3))
+                intake.deployCmd(drive::getFieldSpeeds).until(traj1.atTime(4.3))
             );
         traj1.done().onTrue(
             CmdSequence.of(
-                superstructure.shootCmd(Shooter.Target.HUB).withTimeout(4.0),
+                superstructure.shootInAutoCmd(Target.HUB).withTimeout(4.0),
                 traj2.spawnCmd()
             )
         );
         traj2.active()
-            .whileTrue(superstructure.spinupForHubShotCmd(ChoreoTraj.TwoSwipe_V1_2.endPoseBlue()))
+            .whileTrue(superstructure.spinupCmd(Target.HUB, ChoreoTraj.TwoSwipe_V1_2.endPoseBlue()))
             .whileTrue(
-                intake.intakeCmd(drive::getFieldSpeeds).until(traj2.atTime(6.0))
+                intake.deployCmd(drive::getFieldSpeeds).until(traj2.atTime(6.0))
             );
-        traj2.done().onTrue(superstructure.shootCmd(Shooter.Target.HUB));
+        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB));
 
         return routine.cmd();
     }

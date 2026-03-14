@@ -4,17 +4,17 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 import robot.constants.RobotConfig;
 import robot.subsystems.drive.SwerveConfig;
 import robot.subsystems.shooter.Shooter;
@@ -23,12 +23,11 @@ import java.util.Optional;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kLeftRumble;
+import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 
-/**
- * Handles inputs from the driver controller.
- */
 @SuppressWarnings("FieldCanBeLocal")
-public class DriverController extends CommandPS5Controller {
+public class DriverController extends CommandPS5Controller implements Subsystem {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
         HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.5),
@@ -50,7 +49,8 @@ public class DriverController extends CommandPS5Controller {
     private final FieldCentric swerveReq = new FieldCentric()
         .withDriveRequestType(DriveRequestType.Velocity);
     private final FieldCentricFacingAngle facingAngleSwerveReq = new FieldCentricFacingAngle()
-        .withDriveRequestType(DriveRequestType.Velocity);
+        .withDriveRequestType(DriveRequestType.Velocity)
+        .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance); // always
 
     private double prevTargetRad = 0.0; // the previous target angle of the robot.
     private final double maxVelMetersPerSec, maxVelRadPerSec;
@@ -102,7 +102,6 @@ public class DriverController extends CommandPS5Controller {
             strafe = strafeLimiter.calculate(strafe);
         }
         double deltaRad = MathUtil.angleModulus(heading.get().getRadians() - prevTargetRad);
-        Logger.recordOutput("ShotCalcs/YawError", deltaRad);
         double radiansPerSec = rotationFilter.calculate(deltaRad / 0.02);
         prevTargetRad = heading.get().getRadians();
 
@@ -115,10 +114,18 @@ public class DriverController extends CommandPS5Controller {
             .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
     }
 
-    public Command rumbleCmd(GenericHID.RumbleType type, double value) {
-        return Commands.run(() -> setRumble(type, value))
-            .finallyDo(() -> setRumble(GenericHID.RumbleType.kBothRumble, 0))
-            .withName("DriverControllerRumble");
+    public Command notifySerializerReadyCmd() {
+        return this.run(() -> setRumble(kRightRumble, 0.1))
+            .withTimeout(0.5)
+            .finallyDo(() -> setRumble(kRightRumble, 0.0))
+            .withName("Driver#NotifySerializerReady");
+    }
+
+    public Command notifyHubShiftCmd() {
+        return this.run(() -> setRumble(kLeftRumble, 0.2))
+            .withTimeout(0.5)
+            .finallyDo(() -> setRumble(kLeftRumble, 0.0))
+            .withName("Driver#NotifySerializerReady");
     }
 
     // For Rumble to work on PS5 Controllers, we have to run a custom script on the driver station computer.
