@@ -24,103 +24,89 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj HPOneSwipe = new ChoreoTraj(
-	    "HPOneSwipe",
+    public static final ChoreoTraj CenterGrab = new ChoreoTraj(
+	    "CenterGrab",
 	    OptionalInt.empty(),
-	    12.84036,
-	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
-	);
-	public static final ChoreoTraj HPOneSwipe$0 = new ChoreoTraj(
-	    "HPOneSwipe",
-	    OptionalInt.of(0),
-	    2.18347,
-	    new Pose2d(3.65, 0.9, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj HPOneSwipe$1 = new ChoreoTraj(
-	    "HPOneSwipe",
-	    OptionalInt.of(1),
-	    10.65689,
-	    new Pose2d(0.77, 0.68, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 1.64, Rotation2d.fromRadians(0.834))
-	);
-	public static final ChoreoTraj mirrored_HPOneSwipe = new ChoreoTraj(
-	    "mirrored_HPOneSwipe",
-	    OptionalInt.empty(),
-	    12.84092,
-	    new Pose2d(3.65, 7.143, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 6.403, Rotation2d.fromRadians(-0.822))
-	);
-	public static final ChoreoTraj mirrored_HPOneSwipe$0 = new ChoreoTraj(
-	    "mirrored_HPOneSwipe",
-	    OptionalInt.of(0),
-	    2.18347,
-	    new Pose2d(3.65, 7.143, Rotation2d.fromRadians(0)),
-	    new Pose2d(0.77, 7.363, Rotation2d.fromRadians(0))
-	);
-	public static final ChoreoTraj mirrored_HPOneSwipe$1 = new ChoreoTraj(
-	    "mirrored_HPOneSwipe",
-	    OptionalInt.of(1),
-	    10.65745,
-	    new Pose2d(0.77, 7.363, Rotation2d.fromRadians(0)),
-	    new Pose2d(2.355, 6.403, Rotation2d.fromRadians(-0.822))
-	);
-	public static final ChoreoTraj mirrored_OneSwipe_Grab1 = new ChoreoTraj(
-	    "mirrored_OneSwipe_Grab1",
-	    OptionalInt.empty(),
-	    3.98741,
-	    new Pose2d(3.612, 7.137, Rotation2d.fromRadians(-3.142)),
-	    new Pose2d(7.9, 4.643, Rotation2d.fromRadians(1.571))
-	);
-	public static final ChoreoTraj mirrored_OneSwipe_Score1 = new ChoreoTraj(
-	    "mirrored_OneSwipe_Score1",
-	    OptionalInt.empty(),
-	    3.64113,
-	    new Pose2d(7.5, 6.143, Rotation2d.fromRadians(1.571)),
-	    new Pose2d(2.7, 5.843, Rotation2d.fromRadians(-0.734))
-	);
-	public static final ChoreoTraj mirrored_TwoSwipe_V1_1 = new ChoreoTraj(
-	    "mirrored_TwoSwipe_V1_1",
-	    OptionalInt.empty(),
-	    8.37529,
-	    new Pose2d(4.205, 7.18, Rotation2d.fromRadians(-3.142)),
-	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.887))
-	);
-	public static final ChoreoTraj mirrored_TwoSwipe_V1_2 = new ChoreoTraj(
-	    "mirrored_TwoSwipe_V1_2",
-	    OptionalInt.empty(),
-	    9.0824,
-	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897)),
-	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897))
-	);
-	public static final ChoreoTraj OneSwipe_Grab1 = new ChoreoTraj(
-	    "OneSwipe_Grab1",
-	    OptionalInt.empty(),
-	    3.9874,
+	    3.54488,
 	    new Pose2d(3.612, 0.906, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(7.9, 3.4, Rotation2d.fromRadians(-1.571))
 	);
-	public static final ChoreoTraj OneSwipe_Score1 = new ChoreoTraj(
-	    "OneSwipe_Score1",
+	public static final ChoreoTraj CenterLoopClose = new ChoreoTraj(
+	    "CenterLoopClose",
 	    OptionalInt.empty(),
-	    3.64182,
-	    new Pose2d(7.5, 1.9, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(2.7, 2.2, Rotation2d.fromRadians(0.75))
+	    8.25153,
+	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897)),
+	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
-	public static final ChoreoTraj TwoSwipe_V1_1 = new ChoreoTraj(
-	    "TwoSwipe_V1_1",
+	public static final ChoreoTraj CenterLoopFar = new ChoreoTraj(
+	    "CenterLoopFar",
 	    OptionalInt.empty(),
-	    8.31476,
+	    7.45568,
 	    new Pose2d(4.404, 0.902, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
-	public static final ChoreoTraj TwoSwipe_V1_2 = new ChoreoTraj(
-	    "TwoSwipe_V1_2",
+	public static final ChoreoTraj CenterScore = new ChoreoTraj(
+	    "CenterScore",
 	    OptionalInt.empty(),
-	    9.27581,
+	    3.22134,
+	    new Pose2d(7.5, 1.9, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.7, 2.2, Rotation2d.fromRadians(0.754))
+	);
+	public static final ChoreoTraj mirrored_CenterGrab = new ChoreoTraj(
+	    "mirrored_CenterGrab",
+	    OptionalInt.empty(),
+	    3.54487,
+	    new Pose2d(3.612, 7.137, Rotation2d.fromRadians(-3.142)),
+	    new Pose2d(7.9, 4.643, Rotation2d.fromRadians(1.571))
+	);
+	public static final ChoreoTraj mirrored_CenterLoopClose = new ChoreoTraj(
+	    "mirrored_CenterLoopClose",
+	    OptionalInt.empty(),
+	    8.25153,
+	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897)),
+	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897))
+	);
+	public static final ChoreoTraj mirrored_CenterLoopFar = new ChoreoTraj(
+	    "mirrored_CenterLoopFar",
+	    OptionalInt.empty(),
+	    7.45497,
+	    new Pose2d(4.404, 7.141, Rotation2d.fromRadians(-3.142)),
+	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.887))
+	);
+	public static final ChoreoTraj mirrored_CenterScore = new ChoreoTraj(
+	    "mirrored_CenterScore",
+	    OptionalInt.empty(),
+	    3.22134,
+	    new Pose2d(7.5, 6.143, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(2.7, 5.843, Rotation2d.fromRadians(-0.739))
+	);
+	public static final ChoreoTraj SubstationGrab = new ChoreoTraj(
+	    "SubstationGrab",
+	    OptionalInt.empty(),
+	    1.54148,
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897)),
-	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
+	    new Pose2d(0.72, 0.65, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj SubstationScore = new ChoreoTraj(
+	    "SubstationScore",
+	    OptionalInt.empty(),
+	    1.39281,
+	    new Pose2d(0.72, 0.65, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.236, 2.119, Rotation2d.fromRadians(0.502))
+	);
+	public static final ChoreoTraj CloseFuelGrab = new ChoreoTraj(
+	    "CloseFuelGrab",
+	    OptionalInt.empty(),
+	    1.61158,
+	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897)),
+	    new Pose2d(0.685, 6.1, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj CloseFuelScore = new ChoreoTraj(
+	    "CloseFuelScore",
+	    OptionalInt.empty(),
+	    0.98575,
+	    new Pose2d(0.685, 6.1, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.359, 6.443, Rotation2d.fromRadians(-0.616))
 	);
 
     /**
@@ -128,20 +114,18 @@ public record ChoreoTraj(
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("HPOneSwipe", HPOneSwipe),
-		Map.entry("HPOneSwipe$0", HPOneSwipe$0),
-		Map.entry("HPOneSwipe$1", HPOneSwipe$1),
-		Map.entry("mirrored_HPOneSwipe", mirrored_HPOneSwipe),
-		Map.entry("mirrored_HPOneSwipe$0", mirrored_HPOneSwipe$0),
-		Map.entry("mirrored_HPOneSwipe$1", mirrored_HPOneSwipe$1),
-		Map.entry("mirrored_OneSwipe_Grab1", mirrored_OneSwipe_Grab1),
-		Map.entry("mirrored_OneSwipe_Score1", mirrored_OneSwipe_Score1),
-		Map.entry("mirrored_TwoSwipe_V1_1", mirrored_TwoSwipe_V1_1),
-		Map.entry("mirrored_TwoSwipe_V1_2", mirrored_TwoSwipe_V1_2),
-		Map.entry("OneSwipe_Grab1", OneSwipe_Grab1),
-		Map.entry("OneSwipe_Score1", OneSwipe_Score1),
-		Map.entry("TwoSwipe_V1_1", TwoSwipe_V1_1),
-		Map.entry("TwoSwipe_V1_2", TwoSwipe_V1_2)
+    	Map.entry("CenterGrab", CenterGrab),
+		Map.entry("CenterLoopClose", CenterLoopClose),
+		Map.entry("CenterLoopFar", CenterLoopFar),
+		Map.entry("CenterScore", CenterScore),
+		Map.entry("mirrored_CenterGrab", mirrored_CenterGrab),
+		Map.entry("mirrored_CenterLoopClose", mirrored_CenterLoopClose),
+		Map.entry("mirrored_CenterLoopFar", mirrored_CenterLoopFar),
+		Map.entry("mirrored_CenterScore", mirrored_CenterScore),
+		Map.entry("SubstationGrab", SubstationGrab),
+		Map.entry("SubstationScore", SubstationScore),
+		Map.entry("CloseFuelGrab", CloseFuelGrab),
+		Map.entry("CloseFuelScore", CloseFuelScore)
     );
 
     /**

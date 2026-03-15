@@ -5,7 +5,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
@@ -72,8 +71,9 @@ public class MapleSimSwerveHardware extends SwerveHardware {
 
     @Override
     public void resetNotReplayedPose(Pose2d pose) {
-        swerveSim.setSimulationWorldPose(pose);
         super.drivetrain.resetTranslation(pose.getTranslation());
+        swerveSim.setSimulationWorldPose(pose);
+        swerveSim.setSimulationWorldPose(pose);
     }
 
     /**

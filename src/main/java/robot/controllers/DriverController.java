@@ -52,6 +52,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         .withDriveRequestType(DriveRequestType.Velocity)
         .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance); // always
 
+    private boolean aimToTargetInit = false;
     private double prevTargetRad = 0.0; // the previous target angle of the robot.
     private final double maxVelMetersPerSec, maxVelRadPerSec;
 
@@ -80,6 +81,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         // don't use slew rate limits for normal drive requests
         forwardLimiter.reset(forward);
         strafeLimiter.reset(strafe);
+        aimToTargetInit = false;
         return swerveReq
             .withVelocityX(forward * maxVelMetersPerSec)
             .withVelocityY(strafe * maxVelMetersPerSec)
@@ -102,8 +104,9 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
             strafe = strafeLimiter.calculate(strafe);
         }
         double deltaRad = MathUtil.angleModulus(heading.get().getRadians() - prevTargetRad);
-        double radiansPerSec = rotationFilter.calculate(deltaRad / 0.02);
+        double radiansPerSec = aimToTargetInit ? rotationFilter.calculate(deltaRad / 0.02) : 0;
         prevTargetRad = heading.get().getRadians();
+        aimToTargetInit = true;
 
         return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec / 3.0)

@@ -20,8 +20,8 @@ import java.io.BufferedWriter
 import java.io.FileWriter
 import kotlin.math.roundToInt
 
-/** Calculates the desired shot parameters to launch fuel into the hub. */
-fun getHubShotSetpoint(
+/** Calculates the desired shot parameters to launch fuel into the specified target. */
+fun getShotSetpoint(
     robotPose: Pose2d,
     fieldCentricVel: ChassisSpeeds,
     shooter: Shooter,

@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -14,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lib.RobotMode;
 import lib.Tunable;
 import lib.commands.CmdLogger;
+import lib.commands.CmdSequence;
 import lib.commands.LoggedAutoChooser;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
@@ -102,12 +104,23 @@ public class Robot extends LoggedRobot {
             .or(driver.triangle())
             .onTrue(shooter.setIdleBehaviorToCoastCmd());
 
+        // TODO fix
         new Trigger(superstructure::canSerialize)
             .debounce(0.2, Debouncer.DebounceType.kFalling)
             .whileTrue(driver.notifySerializerReadyCmd())
             .whileTrue(operator.notifySerializerReadyCmd());
 
         initDashboard();
+        if (RobotMode.isSim()) {
+            RobotModeTriggers.autonomous()
+                .whileTrue(
+                    CmdSequence.of(
+                        Commands.waitSeconds(20),
+                        Commands.runOnce(() -> DriverStationSim.setEnabled(false))
+                    )
+                        .withName("Simulated Auto Ender")
+                );
+        }
     }
 
     private void initDashboard() {
@@ -157,11 +170,13 @@ public class Robot extends LoggedRobot {
         );
         autoChooser.addCmd("One Swipe, Right", () -> autos.oneSwipe(false));
         autoChooser.addCmd("One Swipe, Left", () -> autos.oneSwipe(true));
-        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipe(false));
-        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true));
+        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipeFar(false));
+        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipeFar(true));
+        autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.twoSwipeClose(false));
+        autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
 
-        testChooser.addCmd("Test Hub Shot", () -> superstructure.shootInAutoCmd(Shooter.Target.HUB));
-        testChooser.addCmd("Test Ferry", () -> superstructure.shootInAutoCmd(Shooter.Target.GROUND));
+        testChooser.addCmd("Test Hub Shot", () -> superstructure.shootInAutoCmd(Shooter.Target.HUB, 2));
+        testChooser.addCmd("Test Ferry", () -> superstructure.shootInAutoCmd(Shooter.Target.GROUND, 2));
         testChooser.addCmd(
             "Change heading to photonvision cam heading",
             () -> Commands.runOnce(() -> {

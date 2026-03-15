@@ -56,10 +56,10 @@ public class Autos {
     }
 
     /** An auto routine that grabs balls from the center and shoots them. */
-    public Command oneSwipe(boolean mirrorVertically) {
+    public Command oneSwipe(boolean leftSide) {
         var routine = newAutoRoutine("OneSwipe");
-        var grab1 = newAutoTraj(routine, ChoreoTraj.OneSwipe_Grab1, mirrorVertically);
-        var score1 = newAutoTraj(routine, ChoreoTraj.OneSwipe_Score1, mirrorVertically);
+        var grab1 = newAutoTraj(routine, ChoreoTraj.CenterGrab, leftSide);
+        var score1 = newAutoTraj(routine, ChoreoTraj.CenterScore, leftSide);
 
         routine.active()
             .onTrue(CmdSequence.of(grab1.resetOdometry(), grab1.spawnCmd()));
@@ -68,38 +68,96 @@ public class Autos {
         grab1.doneDelayed(0.5)
             .onTrue(score1.spawnCmd());
         score1.doneDelayed(0.2)
-            .onTrue(superstructure.shootInAutoCmd(Target.HUB));
+            .onTrue(superstructure.shootInAutoCmd(Target.HUB, 100.0));
 
         return routine.cmd();
     }
 
     /** An auto routine that grabs balls from the center and shoots them, repeating twice. */
-    public Command twoSwipe(boolean mirrorVertically) {
+    public Command twoSwipeFar(boolean leftSide) {
         var routine = newAutoRoutine("TwoSwipe");
-        var traj1 = newAutoTraj(routine, ChoreoTraj.TwoSwipe_V1_1, mirrorVertically);
-        var traj2 = newAutoTraj(routine, ChoreoTraj.TwoSwipe_V1_2, mirrorVertically);
+        var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
+        var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopClose, leftSide);
 
         routine.active()
-            .onTrue(CmdSequence.of(traj1.resetOdometry(), intake.deployCmd(drive::getFieldSpeeds).withTimeout(2.0), traj1.spawnCmd()));
+            .onTrue(
+                CmdSequence.of(
+                    traj1.resetOdometry(),
+                    intake.deployCmd(drive::getFieldSpeeds).withTimeout(1.5),
+                    traj1.spawnCmd()
+                )
+            );
         traj1.active()
             // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
             // because the hub is perfectly centered in the vertical direction.
-            .whileTrue(superstructure.spinupCmd(Target.HUB, ChoreoTraj.TwoSwipe_V1_1.endPoseBlue()))
+            .whileTrue(superstructure.hubShotSpinupCmd(traj1))
             .whileTrue(
-                intake.deployCmd(drive::getFieldSpeeds).until(traj1.atTime(4.3))
+                intake.deployCmd(drive::getFieldSpeeds).until(traj1.atTime(5.3))
             );
         traj1.done().onTrue(
             CmdSequence.of(
-                superstructure.shootInAutoCmd(Target.HUB).withTimeout(4.0),
+                superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
                 traj2.spawnCmd()
             )
         );
         traj2.active()
-            .whileTrue(superstructure.spinupCmd(Target.HUB, ChoreoTraj.TwoSwipe_V1_2.endPoseBlue()))
+            .whileTrue(superstructure.hubShotSpinupCmd(traj2))
             .whileTrue(
                 intake.deployCmd(drive::getFieldSpeeds).until(traj2.atTime(6.0))
             );
-        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB));
+        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
+
+        return routine.cmd();
+    }
+
+    /**
+     * An auto routine that grabs balls from the middle, then grabs them
+     * from either the human player station or the batch of balls on the ground.
+     */
+    public Command twoSwipeClose(boolean leftSide) {
+        var routine = newAutoRoutine("OneSwipeSubstation");
+        var centerScoop = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
+        var closeGrab = newAutoTraj(
+            routine,
+            leftSide ? ChoreoTraj.CloseFuelGrab : ChoreoTraj.SubstationGrab,
+            false
+        );
+        var closeScore = newAutoTraj(
+            routine,
+            leftSide ? ChoreoTraj.CloseFuelScore : ChoreoTraj.SubstationScore,
+            false
+        );
+
+        routine.active()
+            .onTrue(
+                CmdSequence.of(
+                    centerScoop.resetOdometry(),
+                    intake.deployCmd(drive::getFieldSpeeds).withTimeout(1.5),
+                    centerScoop.spawnCmd()
+                )
+            );
+        centerScoop.active()
+            .whileTrue(superstructure.hubShotSpinupCmd(centerScoop))
+            .whileTrue(
+                intake.deployCmd(drive::getFieldSpeeds).until(centerScoop.atTime(5.3))
+            );
+        centerScoop.done().onTrue(
+            CmdSequence.of(
+                superstructure.shootInAutoCmd(Target.HUB, 1.5).withTimeout(4),
+                closeGrab.spawnCmd()
+            )
+        );
+
+        double shootTime = leftSide ? 0.7 : 1.0;
+        routine.anyActive(closeGrab, closeScore)
+            .whileTrue(superstructure.hubShotSpinupCmd(closeScore, shootTime));
+        closeGrab.active()
+            .whileTrue(
+                intake.deployCmd(drive::getFieldSpeeds).until(closeGrab.atTime(1.2))
+            );
+        closeGrab.doneDelayed(leftSide ? 0.3 : 1.0).onTrue(closeScore.spawnCmd());
+        closeScore.atTime(shootTime)
+            .onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 
         return routine.cmd();
     }

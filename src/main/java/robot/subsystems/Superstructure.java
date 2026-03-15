@@ -1,5 +1,6 @@
 package robot.subsystems;
 
+import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,6 +22,7 @@ import robot.subsystems.shooter.Shooter;
 
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -78,9 +80,10 @@ public class Superstructure {
     }
 
     // Commands
+    /** Spins up the shooter and aims the robot to the specified target. */
     public Command spinupAndAimCmd(Target target) {
         var cmd = shooter.setVelocityCmd(() -> {
-            shotSetpoint = ShotCalcsKt.getHubShotSetpoint(
+            shotSetpoint = ShotCalcsKt.getShotSetpoint(
                 drive.getPose(), drive.getFieldSpeeds(), shooter, true, target
             );
             shotTarget = Optional.of(target);
@@ -92,29 +95,48 @@ public class Superstructure {
         return logged(cmd, "SpinupAndAim(" + target + ")");
     }
 
-    public Command shootInAutoCmd(Target target) {
+    public Command shootInAutoCmd(Target target, double agitateDelaySecs) {
         return Commands.parallel(
             spinupAndAimCmd(target),
             CmdSequence.of(
                 Commands.waitUntil(this::canSerialize),
                 Commands.waitSeconds(0.3),
                 serializer.runCmd()
+            ),
+            CmdSequence.of(
+                Commands.waitSeconds(agitateDelaySecs),
+                groundIntake.agitateCmd()
             )
         );
     }
 
-    public Command spinupCmd(Target target, Pose2d blueTargetPose) {
-        var speeds = new ChassisSpeeds();
+    public Command hubShotSpinupCmd(AutoTrajectory traj, double timestamp) {
+        var sample = traj.getRawTrajectory().sampleAt(timestamp, false);
+        if (sample.isEmpty()) return Commands.none();
+        var pose = sample.get().getPose();
+        var speeds = sample.get().getChassisSpeeds();
+        return hubShotSpinupCmd(() -> AllianceColor.isRed() ? flip(pose) : pose, () -> speeds);
+    }
+
+    public Command hubShotSpinupCmd(AutoTrajectory traj) {
+        var zeroSpeed = new ChassisSpeeds();
+        return hubShotSpinupCmd(() -> traj.getFinalPose().orElse(drive.getPose()), () -> zeroSpeed);
+    }
+
+    public Command hubShotSpinupCmd(
+        Supplier<Pose2d> poseSupplier,
+        Supplier<ChassisSpeeds> speedsSupplier
+    ) {
         var cmd = shooter.setVelocityCmd(() -> {
-            var pose = AllianceColor.isRed() ? flip(blueTargetPose) : blueTargetPose;
-            shotSetpoint = ShotCalcsKt.getHubShotSetpoint(
-                drive.getPose(), drive.getFieldSpeeds(), shooter, true, target
+            shotSetpoint = ShotCalcsKt.getShotSetpoint(
+                poseSupplier.get(), speedsSupplier.get(),
+                shooter, true, Target.HUB
             );
-            shotTarget = Optional.of(target);
+            shotTarget = Optional.of(Target.HUB);
             return RadiansPerSecond.of(shotSetpoint.radPerSec());
         })
             .finallyDo(this::resetState);
-        return logged(cmd, "SpinupAndAim(" + target + ")");
+        return logged(cmd, "HubShotSpinup");
     }
 
     public Command manualHubShotCmd() {

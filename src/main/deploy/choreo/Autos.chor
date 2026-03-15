@@ -155,8 +155,8 @@
    "val":628.3185307179587
   },
   "tmax":{
-   "exp":"0.3 N * m",
-   "val":0.3
+   "exp":"0.4 N * m",
+   "val":0.4
   },
   "cof":{
    "exp":"cof",
@@ -172,8 +172,8 @@
     "val":0.3683
    },
    "back":{
-    "exp":"moduleX + 3.5 in",
-    "val":0.36195
+    "exp":"24.6 in",
+    "val":0.6248400000000001
    }
   },
   "differentialTrackWidth":{
