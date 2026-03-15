@@ -64,7 +64,7 @@ public class Autos {
         routine.active()
             .onTrue(CmdSequence.of(grab1.resetOdometry(), grab1.spawnCmd()));
         grab1.active()
-            .whileTrue(intake.deployCmd(drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1, drive::getFieldSpeeds));
         grab1.doneDelayed(0.5)
             .onTrue(score1.spawnCmd());
         score1.doneDelayed(0.2)
@@ -83,7 +83,7 @@ public class Autos {
             .onTrue(
                 CmdSequence.of(
                     traj1.resetOdometry(),
-                    intake.deployCmd(drive::getFieldSpeeds).withTimeout(1.5),
+                    intake.deployCmd(1.2, drive::getFieldSpeeds).withTimeout(1.5),
                     traj1.spawnCmd()
                 )
             );
@@ -91,9 +91,7 @@ public class Autos {
             // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
             // because the hub is perfectly centered in the vertical direction.
             .whileTrue(superstructure.hubShotSpinupCmd(traj1))
-            .whileTrue(
-                intake.deployCmd(drive::getFieldSpeeds).until(traj1.atTime(5.3))
-            );
+            .whileTrue(intake.deployCmd(1.2, drive::getFieldSpeeds));
         traj1.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
@@ -102,9 +100,7 @@ public class Autos {
         );
         traj2.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj2))
-            .whileTrue(
-                intake.deployCmd(drive::getFieldSpeeds).until(traj2.atTime(6.0))
-            );
+            .whileTrue(intake.deployCmd(1.2, drive::getFieldSpeeds));
         traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 
         return routine.cmd();
@@ -132,15 +128,13 @@ public class Autos {
             .onTrue(
                 CmdSequence.of(
                     centerScoop.resetOdometry(),
-                    intake.deployCmd(drive::getFieldSpeeds).withTimeout(1.5),
+                    intake.deployCmd(1.2, drive::getFieldSpeeds).withTimeout(1.5),
                     centerScoop.spawnCmd()
                 )
             );
         centerScoop.active()
             .whileTrue(superstructure.hubShotSpinupCmd(centerScoop))
-            .whileTrue(
-                intake.deployCmd(drive::getFieldSpeeds).until(centerScoop.atTime(5.3))
-            );
+            .whileTrue(intake.deployCmd(1.2, drive::getFieldSpeeds));
         centerScoop.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 1.5).withTimeout(4),
@@ -151,11 +145,13 @@ public class Autos {
         double shootTime = leftSide ? 0.7 : 1.0;
         routine.anyActive(closeGrab, closeScore)
             .whileTrue(superstructure.hubShotSpinupCmd(closeScore, shootTime));
+        // If on the right side, the robot is grabbing fuel from the substation,
+        // so the intake rollers are run at very low speed. Otherwise, the robot
+        // is grabbing the alliance side prestaged balls from the floor.
         closeGrab.active()
-            .whileTrue(
-                intake.deployCmd(drive::getFieldSpeeds).until(closeGrab.atTime(1.2))
-            );
-        closeGrab.doneDelayed(leftSide ? 0.3 : 1.0).onTrue(closeScore.spawnCmd());
+            .whileTrue(intake.deployCmd(leftSide ? 1.2 : 0.1, drive::getFieldSpeeds));
+        closeGrab.doneDelayed(leftSide ? 0.3 : 1.0)
+            .onTrue(closeScore.spawnCmd());
         closeScore.atTime(shootTime)
             .onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 

@@ -156,16 +156,18 @@ public class GroundIntake extends ChargerSubsystem {
     }
 
     /**
-     * A command that runs the intake and deploys the pivot.
-     * Uses the robot's relative velocity to increase the speed of the intake proportionally.
+     * A command that runs the intake and deploys the pivot, with scaling based off the robot's speed.
+     * @param robotSpeeds The robot-relative chassis speeds of the robot.
+     * @param intakeSpeedMultiplier A multiplier for intaking speed.
      */
-    public Command deployCmd(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
+    public Command deployCmd(double intakeSpeedMultiplier, Supplier<ChassisSpeeds> robotSpeeds) {
         var cmd = CmdSequence.of(
             this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
             this.run(() -> {
                 setPivotPosition(intakePos.get());
-                var vx = robotRelativeSpeeds.get().vxMetersPerSecond;
-                var targetVel = rollerTargetVel.get() + 1.2 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                var vx = robotSpeeds.get().vxMetersPerSecond;
+                var targetVel = rollerTargetVel.get() + Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                targetVel *= intakeSpeedMultiplier;
                 var velocityErr = targetVel - rollerInputs.velocityRadPerSec;
                 setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
             })

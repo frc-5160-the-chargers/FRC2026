@@ -97,15 +97,15 @@ public record ChoreoTraj(
 	public static final ChoreoTraj CloseFuelGrab = new ChoreoTraj(
 	    "CloseFuelGrab",
 	    OptionalInt.empty(),
-	    1.61158,
+	    1.58948,
 	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897)),
-	    new Pose2d(0.685, 6.1, Rotation2d.fromRadians(0))
+	    new Pose2d(0.74, 6.1, Rotation2d.fromRadians(0))
 	);
 	public static final ChoreoTraj CloseFuelScore = new ChoreoTraj(
 	    "CloseFuelScore",
 	    OptionalInt.empty(),
-	    0.98575,
-	    new Pose2d(0.685, 6.1, Rotation2d.fromRadians(0)),
+	    0.95535,
+	    new Pose2d(0.74, 6.1, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.359, 6.443, Rotation2d.fromRadians(-0.616))
 	);
 

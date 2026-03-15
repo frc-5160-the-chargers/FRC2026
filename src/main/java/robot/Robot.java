@@ -83,7 +83,8 @@ public class Robot extends LoggedRobot {
     }
 
     private void setCompButtonBindings() {
-        operator.leftBumper().whileTrue(groundIntake.deployCmd(drive::getRobotSpeeds));
+        operator.leftTrigger().whileTrue(groundIntake.deployCmd(1.2, drive::getRobotSpeeds));
+        operator.leftBumper().whileTrue(groundIntake.deployCmd(1.0, drive::getRobotSpeeds));
         operator.rightBumper().whileTrue(serializer.runCmd());
         operator.povUp().whileTrue(groundIntake.agitateCmd());
         operator.povDown().whileTrue(groundIntake.stowCmd());
