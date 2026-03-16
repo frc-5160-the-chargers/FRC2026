@@ -4,6 +4,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import lib.commands.CmdSequence;
 import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
@@ -35,6 +36,9 @@ public class Autos {
         this.intake = intake;
         this.shooter = shooter;
         this.drive = drive;
+        // By Scheduling an invalid trajectory, we warm up java's runtime
+        // so that there isn't a 0.2 sec delay in auto.
+        CommandScheduler.getInstance().schedule(autoFactory.trajectoryCmd(""));
     }
 
     private AutoRoutine newAutoRoutine(String name) {
@@ -75,7 +79,7 @@ public class Autos {
 
     /** An auto routine that grabs balls from the center and shoots them, repeating twice. */
     public Command twoSwipeFar(boolean leftSide) {
-        var routine = newAutoRoutine("TwoSwipe");
+        var routine = newAutoRoutine("TwoSwipeFar");
         var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
         var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopClose, leftSide);
 
@@ -91,7 +95,7 @@ public class Autos {
             // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
             // because the hub is perfectly centered in the vertical direction.
             .whileTrue(superstructure.hubShotSpinupCmd(traj1))
-            .whileTrue(intake.deployCmd(1.2, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1.3, drive::getFieldSpeeds));
         traj1.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
@@ -100,7 +104,7 @@ public class Autos {
         );
         traj2.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj2))
-            .whileTrue(intake.deployCmd(1.2, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1.3, drive::getFieldSpeeds));
         traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 
         return routine.cmd();
@@ -111,7 +115,7 @@ public class Autos {
      * from either the human player station or the batch of balls on the ground.
      */
     public Command twoSwipeClose(boolean leftSide) {
-        var routine = newAutoRoutine("OneSwipeSubstation");
+        var routine = newAutoRoutine("TwoSwipeClose");
         var centerScoop = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
         var closeGrab = newAutoTraj(
             routine,
@@ -128,13 +132,13 @@ public class Autos {
             .onTrue(
                 CmdSequence.of(
                     centerScoop.resetOdometry(),
-                    intake.deployCmd(1.2, drive::getFieldSpeeds).withTimeout(1.5),
+                    intake.deployCmd(1.3, drive::getFieldSpeeds).withTimeout(1.5),
                     centerScoop.spawnCmd()
                 )
             );
         centerScoop.active()
             .whileTrue(superstructure.hubShotSpinupCmd(centerScoop))
-            .whileTrue(intake.deployCmd(1.2, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1.3, drive::getFieldSpeeds));
         centerScoop.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 1.5).withTimeout(4),
@@ -149,7 +153,7 @@ public class Autos {
         // so the intake rollers are run at very low speed. Otherwise, the robot
         // is grabbing the alliance side prestaged balls from the floor.
         closeGrab.active()
-            .whileTrue(intake.deployCmd(leftSide ? 1.2 : 0.1, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(leftSide ? 1.3 : 0.1, drive::getFieldSpeeds));
         closeGrab.doneDelayed(leftSide ? 0.3 : 1.0)
             .onTrue(closeScore.spawnCmd());
         closeScore.atTime(shootTime)

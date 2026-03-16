@@ -111,11 +111,14 @@ public class Superstructure {
     }
 
     public Command hubShotSpinupCmd(AutoTrajectory traj, double timestamp) {
-        var sample = traj.getRawTrajectory().sampleAt(timestamp, false);
-        if (sample.isEmpty()) return Commands.none();
-        var pose = sample.get().getPose();
-        var speeds = sample.get().getChassisSpeeds();
-        return hubShotSpinupCmd(() -> AllianceColor.isRed() ? flip(pose) : pose, () -> speeds);
+        var potentialSample = traj.getRawTrajectory().sampleAt(timestamp, false);
+        if (potentialSample.isEmpty()) return Commands.none();
+        var sample = potentialSample.get();
+        var flippedSample = sample.flipped();
+        return hubShotSpinupCmd(
+            () -> (AllianceColor.isRed() ? flippedSample : sample).getPose(),
+            () -> (AllianceColor.isRed() ? flippedSample : sample).getChassisSpeeds()
+        );
     }
 
     public Command hubShotSpinupCmd(AutoTrajectory traj) {

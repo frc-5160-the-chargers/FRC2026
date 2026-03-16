@@ -4,11 +4,12 @@ Using the -exclude option can exclude certain trajectories from being mirrored.
 """
 import json
 import os
-import sys
 import subprocess
 
 field_height = 8.043
 choreo_dir = "../../src/main/deploy/choreo"
+# The traj files that shouldn't be mirrored.
+ignore_mirrored = ["CloseFuelGrab.traj", "CloseFuelScore.traj", "SubstationGrab.traj", "SubstationScore.traj"]
 
 def load_traj(file_path):
     with open(file_path, 'r') as f:
@@ -61,14 +62,7 @@ def main():
 
     # Find only .traj files that do not contain the word "mirrored"
     traj_files = [file for file in choreo_files if file.endswith(".traj") and "mirrored" not in file]
-    if "-exclude" in sys.argv:
-        for filename in sys.argv[sys.argv.index("-exclude") + 1:]:
-            if not filename.endswith(".traj"):
-                filename += ".traj"
-            try:
-                traj_files.remove(filename)
-            except ValueError:
-                print("Not excluding " + filename + ", trajectory doesnt exist")
+    traj_files = [file for file in traj_files if file not in ignore_mirrored]
     for file in traj_files:
         traj = load_traj(choreo_dir + "\\" + file)
         waypoints = traj["params"]["waypoints"]
@@ -90,8 +84,10 @@ def main():
             json.dump(traj, f, indent=2)
 
     # Uses Choreo CLI to generate trajectories
+    mirrored_traj_files = ["mirrored_" + file for file in traj_files]
     subprocess.run(
-        f"%USERPROFILE%/AppData/Local/Choreo/choreo-cli.exe --chor {choreo_dir}/Autos.chor --all-trajectory -g",
+        f"%USERPROFILE%/AppData/Local/Choreo/choreo-cli.exe --chor {choreo_dir}/Autos.chor"
+        f" --trajectory {",".join(mirrored_traj_files)} -g",
         shell=True
     )
 

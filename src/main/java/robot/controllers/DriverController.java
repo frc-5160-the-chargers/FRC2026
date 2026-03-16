@@ -11,8 +11,10 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import robot.constants.RobotConfig;
@@ -30,8 +32,8 @@ import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 public class DriverController extends CommandPS5Controller implements Subsystem {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        HUB_AIM_KP = Tunable.of("HubAiming/KP", 5.5),
-        HUB_AIM_KD = Tunable.of("HubAiming/KD", 0.0);
+        AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (Moving)", 5.5),
+        AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.0);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -52,6 +54,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         .withDriveRequestType(DriveRequestType.Velocity)
         .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance); // always
 
+    private final Trigger agitateEnabled = L1();
     private boolean aimToTargetInit = false;
     private double prevTargetRad = 0.0; // the previous target angle of the robot.
     private final double maxVelMetersPerSec, maxVelRadPerSec;
@@ -107,6 +110,9 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         double radiansPerSec = aimToTargetInit ? rotationFilter.calculate(deltaRad / 0.02) : 0;
         prevTargetRad = heading.get().getRadians();
         aimToTargetInit = true;
+        if (agitateEnabled.getAsBoolean()) {
+            radiansPerSec += (radiansPerSec > 0) ? 1.0 : -1.0;
+        }
 
         return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec / 3.0)
@@ -114,7 +120,7 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
             .withTargetDirection(heading.get())
             .withTargetRateFeedforward(radiansPerSec)
-            .withHeadingPID(HUB_AIM_KP.get(), 0, HUB_AIM_KD.get());
+            .withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
     }
 
     public Command notifySerializerReadyCmd() {

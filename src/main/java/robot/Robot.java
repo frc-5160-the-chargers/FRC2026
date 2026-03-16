@@ -83,11 +83,15 @@ public class Robot extends LoggedRobot {
     }
 
     private void setCompButtonBindings() {
-        operator.leftTrigger().whileTrue(groundIntake.deployCmd(1.2, drive::getRobotSpeeds));
-        operator.leftBumper().whileTrue(groundIntake.deployCmd(1.0, drive::getRobotSpeeds));
+        operator.leftBumper()
+            .and(operator.leftTrigger())
+            .whileTrue(groundIntake.deployCmd(1.5, drive::getRobotSpeeds));
+        operator.leftBumper()
+            .and(operator.leftTrigger().negate())
+            .whileTrue(groundIntake.deployCmd(1.0, drive::getRobotSpeeds));
         operator.rightBumper().whileTrue(serializer.runCmd());
         operator.povUp().whileTrue(groundIntake.agitateCmd());
-        operator.povDown().whileTrue(groundIntake.stowCmd());
+        operator.povDown().whileTrue(groundIntake.outtakeCmd());
 
         driver.touchpad()
             .multiPress(2, 1.0)
@@ -96,7 +100,7 @@ public class Robot extends LoggedRobot {
                     .ignoringDisable(true)
                     .withName("Drive Reset Heading")
             );
-        driver.R2().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.GROUND));
+        driver.R1().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.GROUND));
         driver.circle().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.HUB));
         driver.square().whileTrue(superstructure.manualHubShotCmd());
         driver.cross().onTrue(shooter.setIdleBehaviorToSpinupCmd());

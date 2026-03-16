@@ -164,12 +164,12 @@
   },
   "bumper":{
    "front":{
-    "exp":"moduleX + 3.5 in",
-    "val":0.36195
+    "exp":"13.25 in + 3.5 in",
+    "val":0.42545
    },
    "side":{
-    "exp":"moduleY + 3.5 in",
-    "val":0.3683
+    "exp":"13.5 in + 3.5 in",
+    "val":0.4318
    },
    "back":{
     "exp":"24.6 in",

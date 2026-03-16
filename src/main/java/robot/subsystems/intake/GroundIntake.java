@@ -41,7 +41,7 @@ public class GroundIntake extends ChargerSubsystem {
     static final Distance ROLLER_WHEEL_RADIUS = Inches.of(2);
 
     private final Tunable<Double>
-        rollerVolts = Tunable.of(key("Rollers/Volts"), 2.5),
+        rollerReverseVolts = Tunable.of(key("Rollers/ReverseVolts"), 6.0),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
         rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 150),
         rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.02);
@@ -50,8 +50,8 @@ public class GroundIntake extends ChargerSubsystem {
         pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
         pivotCurrentZeroLimit = Tunable.of(key("Pivot/CurrentZeroing/Limit (amps)"), 20.0);
     private final Tunable<Double>
-        pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 4.0),
-        pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 2.0),
+        pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 7.0),
+        pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 7.0),
         pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.03),
         pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), -0.38),
         pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
@@ -143,18 +143,6 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "Stow");
     }
 
-    /** A command that runs the intake and deploys the pivot. */
-    public Command deployCmd() {
-        var cmd = CmdSequence.of(
-            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
-            this.run(() -> {
-                setPivotPosition(intakePos.get());
-                setRollerVolts(atHardStop() ? 0 : rollerVolts.get());
-            })
-        );
-        return logged(cmd, "Deploy & Run");
-    }
-
     /**
      * A command that runs the intake and deploys the pivot, with scaling based off the robot's speed.
      * @param robotSpeeds The robot-relative chassis speeds of the robot.
@@ -175,11 +163,16 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "Deploy & Run (Velocity-Based)");
     }
 
+    public Command outtakeCmd() {
+        return logged(this.run(() -> rollerIO.setVolts(rollerReverseVolts.get())), "Outtake");
+    }
+
     /** Alternates between the deploy and stow positions to agitate fuel. */
     public Command agitateCmd() {
+        var zeroSpeed = new ChassisSpeeds();
         var cmd = CmdSequence.of(
             stowCmd().withTimeout(2.0),
-            deployCmd().withTimeout(2.0)
+            deployCmd(1.0, () -> zeroSpeed).withTimeout(2.0)
         )
             .repeatedly();
         return logged(cmd, "Agitate");
@@ -190,7 +183,7 @@ public class GroundIntake extends ChargerSubsystem {
         var cmd = this.run(() -> {
             double antiGravityVolts = pivotKg.get() * Math.cos(pivotInputs.positionRad);
             pivotIO.setVolts(volts.getAsDouble() + antiGravityVolts);
-            setRollerVolts(shouldRunIntake.getAsBoolean() ? rollerVolts.get() : 0);
+            setRollerVolts(shouldRunIntake.getAsBoolean() ? 2.5 : 0);
         });
         return logged(cmd, "ManualPivot");
     }

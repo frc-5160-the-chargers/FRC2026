@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.motorsims.SimulatedBattery;
@@ -16,6 +17,7 @@ import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 import org.jetbrains.annotations.Nullable;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.drive.SwerveConfig;
+import robot.vision.DataTypes.CamPoseEstimate;
 
 import static edu.wpi.first.units.Units.Seconds;
 
@@ -27,6 +29,7 @@ public class MapleSimSwerveHardware extends SwerveHardware {
 
     private final Pigeon2SimState gyroSim;
     private final SwerveDriveSimulation swerveSim;
+    private final Timer poseResetTimer = new Timer();
 
     private MapleSimSwerveHardware(SwerveDriveSimulation swerveSim, SwerveConfig config) {
         super(config);
@@ -46,6 +49,7 @@ public class MapleSimSwerveHardware extends SwerveHardware {
             sim.useDriveMotorController(new TalonFXSim(module.getDriveMotor(), null));
             sim.useSteerMotorController(new TalonFXSim(module.getSteerMotor(), module.getEncoder()));
         }
+        poseResetTimer.start();
     }
 
     /** Creates an instance of a {@link MapleSimSwerveHardware}. */
@@ -71,9 +75,17 @@ public class MapleSimSwerveHardware extends SwerveHardware {
 
     @Override
     public void resetNotReplayedPose(Pose2d pose) {
+        swerveSim.setSimulationWorldPose(pose);
         super.drivetrain.resetTranslation(pose.getTranslation());
-        swerveSim.setSimulationWorldPose(pose);
-        swerveSim.setSimulationWorldPose(pose);
+        poseResetTimer.restart();
+    }
+
+    @Override
+    public void addVisionMeasurement(CamPoseEstimate estimate, double timeOffsetSecs) {
+        // in sim, we add a delay between a pose reset and the applying
+        // of vision updates, due to syncing issues.
+        if (!poseResetTimer.hasElapsed(0.04)) return;
+        super.addVisionMeasurement(estimate, timeOffsetSecs);
     }
 
     /**
