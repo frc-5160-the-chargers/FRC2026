@@ -14,26 +14,28 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import lib.AllianceColor;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import robot.constants.RobotConfig;
 import robot.subsystems.drive.SwerveConfig;
-import robot.subsystems.shooter.Shooter;
+import robot.subsystems.shooter.Shooter.Target;
 
 import java.util.Optional;
 
+import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kLeftRumble;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 
 @SuppressWarnings("FieldCanBeLocal")
-public class DriverController extends CommandPS5Controller implements Subsystem {
+public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (Moving)", 5.5),
+        AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (Moving)", 4.5),
         AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.0);
+    private static final Rotation2d BUMP_APPROACH_ANGLE = Rotation2d.fromRadians(0.904);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -44,8 +46,8 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
 
     // A SlewRateLimiter limits the acceleration of the input.
     private final SlewRateLimiter
-        forwardLimiter = new SlewRateLimiter(1.3, -4.0, 0.0),
-        strafeLimiter = new SlewRateLimiter(1.3, -4.0, 0.0);
+        forwardLimiter = new SlewRateLimiter(0.5),
+        strafeLimiter = new SlewRateLimiter(0.5);
 
     // The swerve request this controller calculates.
     private final FieldCentric swerveReq = new FieldCentric()
@@ -54,7 +56,6 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
         .withDriveRequestType(DriveRequestType.Velocity)
         .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance); // always
 
-    private final Trigger agitateEnabled = L1();
     private boolean aimToTargetInit = false;
     private double prevTargetRad = 0.0; // the previous target angle of the robot.
     private final double maxVelMetersPerSec, maxVelRadPerSec;
@@ -70,17 +71,33 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
 
     @AutoLogOutput
     private double swerveSpeedModifier() {
+        if (L1().getAsBoolean()) {
+            return SPEED_REDUCTION.get() / 3.0;
+        }
         double output = getL2Axis();
-        output = MathUtil.applyDeadband(output, 0.2, 1);
+        output = MathUtil.applyDeadband(output, 0.1, 1);
         output = (2 - output) / 2;
         return output * SPEED_REDUCTION.get();
     }
 
     public SwerveRequest getSwerveRequest() {
+        if (R1().getAsBoolean()) {
+            return getSwerveRequest(
+                Optional.of(AllianceColor.isRed() ? flip(BUMP_APPROACH_ANGLE) : BUMP_APPROACH_ANGLE),
+                Optional.empty()
+            );
+        }
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
         rotation = -getRightX() * scalar;
+        if (povLeft().getAsBoolean()) {
+            strafe = 0.12;
+            forward = 0;
+        } else if (povRight().getAsBoolean()) {
+            strafe = -0.12;
+            forward = 0;
+        }
         // don't use slew rate limits for normal drive requests
         forwardLimiter.reset(forward);
         strafeLimiter.reset(strafe);
@@ -94,44 +111,41 @@ public class DriverController extends CommandPS5Controller implements Subsystem 
     }
 
     public SwerveRequest getSwerveRequest(
-        Optional<Rotation2d> heading,
-        Optional<Shooter.Target> shotTarget
+        Optional<Rotation2d> targetHeading,
+        Optional<Target> shotTarget
     ) {
-        if (heading.isEmpty()) return getSwerveRequest();
+        if (targetHeading.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
-        forward = -getLeftY() * scalar;
-        strafe = -getLeftX() * scalar;
-        if (shotTarget.isPresent() && shotTarget.get() == Shooter.Target.HUB) {
-            // add slew rate limiting if shooting in hub
+        forward = -getLeftY() * scalar / 3.0;
+        strafe = -getLeftX() * scalar / 3.0;
+        if (shotTarget.isPresent() && shotTarget.get() == Target.HUB) {
             forward = forwardLimiter.calculate(forward);
             strafe = strafeLimiter.calculate(strafe);
         }
-        double deltaRad = MathUtil.angleModulus(heading.get().getRadians() - prevTargetRad);
+        double deltaRad = MathUtil.angleModulus(targetHeading.get().getRadians() - prevTargetRad);
         double radiansPerSec = aimToTargetInit ? rotationFilter.calculate(deltaRad / 0.02) : 0;
-        prevTargetRad = heading.get().getRadians();
+        prevTargetRad = targetHeading.get().getRadians();
         aimToTargetInit = true;
-        if (agitateEnabled.getAsBoolean()) {
-            radiansPerSec += (radiansPerSec > 0) ? 1.0 : -1.0;
-        }
+        rotation = radiansPerSec / maxVelRadPerSec;
 
         return facingAngleSwerveReq
-            .withVelocityX(forward * maxVelMetersPerSec / 3.0)
-            .withVelocityY(strafe * maxVelMetersPerSec / 3.0)
+            .withVelocityX(forward * maxVelMetersPerSec)
+            .withVelocityY(strafe * maxVelMetersPerSec)
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
-            .withTargetDirection(heading.get())
+            .withTargetDirection(targetHeading.get())
             .withTargetRateFeedforward(radiansPerSec)
             .withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
     }
 
     public Command notifySerializerReadyCmd() {
-        return this.run(() -> setRumble(kRightRumble, 0.1))
+        return Commands.run(() -> setRumble(kRightRumble, 0.1))
             .withTimeout(0.5)
             .finallyDo(() -> setRumble(kRightRumble, 0.0))
             .withName("Driver#NotifySerializerReady");
     }
 
     public Command notifyHubShiftCmd() {
-        return this.run(() -> setRumble(kLeftRumble, 0.2))
+        return Commands.run(() -> setRumble(kLeftRumble, 0.2))
             .withTimeout(0.5)
             .finallyDo(() -> setRumble(kLeftRumble, 0.0))
             .withName("Driver#NotifySerializerReady");

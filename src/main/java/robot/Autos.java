@@ -38,7 +38,12 @@ public class Autos {
         this.drive = drive;
         // By Scheduling an invalid trajectory, we warm up java's runtime
         // so that there isn't a 0.2 sec delay in auto.
-        CommandScheduler.getInstance().schedule(autoFactory.trajectoryCmd(""));
+        CommandScheduler.getInstance().schedule(
+            autoFactory.trajectoryCmd("DummyWarmupTraj")
+                .withTimeout(0.2)
+                .ignoringDisable(true)
+                .withName("Dummy warmup command")
+        );
     }
 
     private AutoRoutine newAutoRoutine(String name) {
@@ -83,19 +88,18 @@ public class Autos {
         var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
         var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopClose, leftSide);
 
-        routine.active()
-            .onTrue(
-                CmdSequence.of(
-                    traj1.resetOdometry(),
-                    intake.deployCmd(1.2, drive::getFieldSpeeds).withTimeout(1.5),
-                    traj1.spawnCmd()
-                )
-            );
+        routine.active().onTrue(
+            CmdSequence.of(
+                traj1.resetOdometry(),
+                intake.deployCmd(1.15, drive::getFieldSpeeds).withTimeout(1.5),
+                traj1.spawnCmd()
+            )
+        );
         traj1.active()
             // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
             // because the hub is perfectly centered in the vertical direction.
             .whileTrue(superstructure.hubShotSpinupCmd(traj1))
-            .whileTrue(intake.deployCmd(1.3, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1.15, drive::getFieldSpeeds));
         traj1.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
@@ -104,7 +108,7 @@ public class Autos {
         );
         traj2.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj2))
-            .whileTrue(intake.deployCmd(1.3, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1.15, drive::getFieldSpeeds));
         traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 
         return routine.cmd();
@@ -128,17 +132,16 @@ public class Autos {
             false
         );
 
-        routine.active()
-            .onTrue(
-                CmdSequence.of(
-                    centerScoop.resetOdometry(),
-                    intake.deployCmd(1.3, drive::getFieldSpeeds).withTimeout(1.5),
-                    centerScoop.spawnCmd()
-                )
-            );
+        routine.active().onTrue(
+            CmdSequence.of(
+                centerScoop.resetOdometry(),
+                intake.deployCmd(leftSide ? 1.15 : 0.1, drive::getFieldSpeeds).withTimeout(1.5),
+                centerScoop.spawnCmd()
+            )
+        );
         centerScoop.active()
             .whileTrue(superstructure.hubShotSpinupCmd(centerScoop))
-            .whileTrue(intake.deployCmd(1.3, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1.15, drive::getFieldSpeeds));
         centerScoop.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 1.5).withTimeout(4),
@@ -148,12 +151,11 @@ public class Autos {
 
         double shootTime = leftSide ? 0.7 : 1.0;
         routine.anyActive(closeGrab, closeScore)
-            .whileTrue(superstructure.hubShotSpinupCmd(closeScore, shootTime));
-        // If on the right side, the robot is grabbing fuel from the substation,
-        // so the intake rollers are run at very low speed. Otherwise, the robot
-        // is grabbing the alliance side prestaged balls from the floor.
-        closeGrab.active()
-            .whileTrue(intake.deployCmd(leftSide ? 1.3 : 0.1, drive::getFieldSpeeds));
+            .whileTrue(superstructure.hubShotSpinupCmd(closeScore, shootTime))
+            // If on the right side, the robot is grabbing fuel from the substation,
+            // so the intake rollers are run at very low speed. Otherwise, the robot
+            // is grabbing the alliance side prestaged balls from the floor.
+            .whileTrue(intake.deployCmd(leftSide ? 1.15 : 0.1, drive::getFieldSpeeds));
         closeGrab.doneDelayed(leftSide ? 0.3 : 1.0)
             .onTrue(closeScore.spawnCmd());
         closeScore.atTime(shootTime)

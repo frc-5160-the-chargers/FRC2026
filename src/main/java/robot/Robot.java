@@ -16,12 +16,13 @@ import lib.RobotMode;
 import lib.Tunable;
 import lib.commands.CmdLogger;
 import lib.commands.CmdSequence;
-import lib.commands.LoggedAutoChooser;
+import lib.commands.CommandChooser;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
+import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
 import robot.controllers.DriverController;
 import robot.controllers.OperatorController;
@@ -65,9 +66,9 @@ public class Robot extends LoggedRobot {
         );
     private final Autos autos = new Autos(drive, groundIntake, superstructure, shooter);
 
-    private final LoggedAutoChooser
-        testChooser = new LoggedAutoChooser("TestModeChoices"),
-        autoChooser = new LoggedAutoChooser("AutoModeChoices");
+    private final CommandChooser
+        testChooser = new CommandChooser("TestModeChoices"),
+        autoChooser = new CommandChooser("AutoModeChoices");
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -92,6 +93,9 @@ public class Robot extends LoggedRobot {
         operator.rightBumper().whileTrue(serializer.runCmd());
         operator.povUp().whileTrue(groundIntake.agitateCmd());
         operator.povDown().whileTrue(groundIntake.outtakeCmd());
+        operator.x()
+            .or(driver.cross())
+            .whileTrue(shooter.setIdleBehaviorToSpinupCmd());
 
         driver.touchpad()
             .multiPress(2, 1.0)
@@ -100,10 +104,9 @@ public class Robot extends LoggedRobot {
                     .ignoringDisable(true)
                     .withName("Drive Reset Heading")
             );
-        driver.R1().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.GROUND));
+        driver.R2().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.GROUND));
         driver.circle().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.HUB));
         driver.square().whileTrue(superstructure.manualHubShotCmd());
-        driver.cross().onTrue(shooter.setIdleBehaviorToSpinupCmd());
 
         RobotModeTriggers.disabled()
             .or(driver.triangle())
@@ -137,10 +140,6 @@ public class Robot extends LoggedRobot {
             RobotModeTriggers.teleop()
                 .and(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time + 0.3))
                 .onTrue(driver.notifyHubShiftCmd());
-
-            RobotModeTriggers.teleop()
-                .and(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time))
-                .onTrue(operator.notifyHubShiftCmd());
         }
     }
 
@@ -165,9 +164,9 @@ public class Robot extends LoggedRobot {
 
     private void mapAutoAndTestModes() {
         RobotModeTriggers.test()
-            .whileTrue(testChooser.autoScheduler());
+            .whileTrue(testChooser.selectedCommandScheduler());
         RobotModeTriggers.autonomous()
-            .whileTrue(autoChooser.autoScheduler());
+            .whileTrue(autoChooser.selectedCommandScheduler());
 
         autoChooser.addCmd(
             "Reset Heading, shooter pointing towards DS",
@@ -180,6 +179,9 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.twoSwipeClose(false));
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
 
+        testChooser.addCmd("Test Reset Pose To Trench Left", () -> Commands.runOnce(() -> drive.resetPose(ChoreoTraj.mirrored_CenterLoopFar.initialPoseBlue())).ignoringDisable(true));
+        testChooser.addCmd("Test Rumble", operator::notifySerializerReadyCmd);
+        testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);
         testChooser.addCmd("Test Hub Shot", () -> superstructure.shootInAutoCmd(Shooter.Target.HUB, 2));
         testChooser.addCmd("Test Ferry", () -> superstructure.shootInAutoCmd(Shooter.Target.GROUND, 2));
         testChooser.addCmd(

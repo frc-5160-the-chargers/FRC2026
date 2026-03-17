@@ -20,15 +20,17 @@ import java.util.function.Supplier;
  * Note that for this chooser to work in simulation, you must change the driver station mode
  * from "disconnected" to "disabled", then from "disabled" to "autonomous".
  */
-public class LoggedAutoChooser {
-    private static final String NONE_NAME = "No Auto";
+public class CommandChooser {
+    private static final String NONE_NAME = "No Command";
 
+    private final String name;
     private final LoggedDashboardChooser<String> impl;
     private final HashMap<String, Supplier<Command>> choices = new HashMap<>();
     private Optional<DriverStation.Alliance> alliance = Optional.empty();
     private Command selectedAuto = Commands.none();
 
-    public LoggedAutoChooser(String name) {
+    public CommandChooser(String name) {
+        this.name = name;
         impl = new LoggedDashboardChooser<>(name);
         impl.onChange(this::onChange);
         new Trigger(() -> !DriverStation.getAlliance().equals(alliance))
@@ -43,8 +45,11 @@ public class LoggedAutoChooser {
     }
 
     private void onChange(String option) {
+        var cmdSupplier = choices.get(option);
         alliance = DriverStation.getAlliance();
-        selectedAuto = alliance.isEmpty() ? Commands.none() : choices.get(option).get();
+        selectedAuto = cmdSupplier == null || alliance.isEmpty()
+            ? Commands.none().withName("No Option Selected for " + name)
+            : cmdSupplier.get();
     }
 
     /**
@@ -71,7 +76,8 @@ public class LoggedAutoChooser {
      *     RobotModeTriggers.autonomous().whileTrue(chooser.autoScheduler());
      * </code>
      */
-    public Command autoScheduler() {
-        return Commands.deferredProxy(() -> selectedAuto).withName("Auto Command Scheduler");
+    public Command selectedCommandScheduler() {
+        return Commands.deferredProxy(() -> selectedAuto)
+            .withName("CommandChooser Scheduler");
     }
 }

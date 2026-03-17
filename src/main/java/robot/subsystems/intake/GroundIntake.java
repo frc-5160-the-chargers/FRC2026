@@ -41,9 +41,9 @@ public class GroundIntake extends ChargerSubsystem {
     static final Distance ROLLER_WHEEL_RADIUS = Inches.of(2);
 
     private final Tunable<Double>
-        rollerReverseVolts = Tunable.of(key("Rollers/ReverseVolts"), 6.0),
+        rollerReverseVolts = Tunable.of(key("Rollers/ReverseVolts"), -6.0),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
-        rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 150),
+        rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 180),
         rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.02);
     private final Tunable<Double>
         pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
@@ -57,7 +57,7 @@ public class GroundIntake extends ChargerSubsystem {
         pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
     private final Tunable<Angle>
         stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-120)),
-        intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-4));
+        intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-7));
 
     private IntakePivot pivotIO;
     private RollerHardware rollerIO;
@@ -121,9 +121,11 @@ public class GroundIntake extends ChargerSubsystem {
     private void setPivotPosition(Angle angle) {
         var goal = new TrapezoidProfile.State(angle.in(Radians), 0);
         setpoint = motionProfile.calculate(0.02, setpoint, goal);
-        double ff = pivotKg.get() * Math.cos(pivotInputs.positionRad); // pivotInputs.radians must be 0 degrees when horizontal.
-        ff += Math.signum(setpoint.velocity) * pivotKs.get();
-        ff += PIVOT_KV * setpoint.velocity;
+        double ff = PIVOT_KV * setpoint.velocity;
+        if (!RobotMode.isSim()) {
+            ff += Math.signum(setpoint.velocity) * pivotKs.get();
+            ff += pivotKg.get() * Math.cos(pivotInputs.positionRad);
+        }
         Logger.recordOutput(key("PivotFF"), ff);
         pivotIO.setRadians(setpoint.position, ff);
     }
@@ -154,7 +156,7 @@ public class GroundIntake extends ChargerSubsystem {
             this.run(() -> {
                 setPivotPosition(intakePos.get());
                 var vx = robotSpeeds.get().vxMetersPerSecond;
-                var targetVel = rollerTargetVel.get() + Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                var targetVel = rollerTargetVel.get() + 0.5 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
                 targetVel *= intakeSpeedMultiplier;
                 var velocityErr = targetVel - rollerInputs.velocityRadPerSec;
                 setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
@@ -181,7 +183,7 @@ public class GroundIntake extends ChargerSubsystem {
     /** Runs manual control on the pivot and the intake. */
     public Command manualCmd(DoubleSupplier volts, BooleanSupplier shouldRunIntake) {
         var cmd = this.run(() -> {
-            double antiGravityVolts = pivotKg.get() * Math.cos(pivotInputs.positionRad);
+            double antiGravityVolts = RobotMode.isSim() ? 0 : pivotKg.get() * Math.cos(pivotInputs.positionRad);
             pivotIO.setVolts(volts.getAsDouble() + antiGravityVolts);
             setRollerVolts(shouldRunIntake.getAsBoolean() ? 2.5 : 0);
         });
