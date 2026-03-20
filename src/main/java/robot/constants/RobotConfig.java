@@ -7,9 +7,12 @@ import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
+import lib.AllianceColor;
 import lib.RobotMode;
+import lib.Tunable;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.Logger;
@@ -23,10 +26,13 @@ import robot.subsystems.drive.TunerConstants;
 import java.io.File;
 import java.util.Optional;
 
+import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static edu.wpi.first.units.Units.Inches;
 
 @SuppressWarnings("DataFlowIssue")
 public class RobotConfig {
+    private static final Tunable<Double> BUMP_ANGLE_RAD = Tunable.of("BumpTravelAngleRad", -2.12);
+
     /** The configuration for this year's swerve robot. */
     public static final SwerveConfig swerveCfg = new SwerveConfig(
         "Swerve",
@@ -59,6 +65,12 @@ public class RobotConfig {
             30
         );
         return Optional.of(sim);
+    }
+
+    /** Gets the angle needed to travel over the bump. */
+    public static Optional<Rotation2d> getBumpTravelingAngle() {
+        var angle = Rotation2d.fromRadians(BUMP_ANGLE_RAD.get());
+        return Optional.of(AllianceColor.isRed() ? flip(angle) : angle);
     }
 
     /** Logs a choreo trajectory. */

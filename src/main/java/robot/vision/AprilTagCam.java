@@ -62,8 +62,8 @@ public class AprilTagCam {
         // process vision data into vision updates
         // process vision data into esvision updates
         var poseEstimates = new ArrayList<CamPoseEstimate>();
+        var posesWithErrExceeded = new ArrayList<Pose3d>();
         int ambHighCount = 0;
-        int errHighCount = 0;
         String estimationStrat = "";
         fiducialIds.clear();
         poses.clear();
@@ -100,7 +100,7 @@ public class AprilTagCam {
                 || pose.getX() > FIELD_LAYOUT.getFieldLength()
                 || pose.getY() < 0.0
                 || pose.getY() > FIELD_LAYOUT.getFieldWidth()) {
-                errHighCount++;
+                posesWithErrExceeded.add(pose);
                 continue;
             }
             // Calculates standard deviations
@@ -126,7 +126,7 @@ public class AprilTagCam {
             }
             Logger.recordOutput(key("AprilTagIds"), fiducialIdsArray);
             Logger.recordOutput(key("NumAmbiguityExceeded"), ambHighCount);
-            Logger.recordOutput(key("NumErrExceeded"), errHighCount);
+            Logger.recordOutput(key("ErraneousPoses"), posesWithErrExceeded.toArray(new Pose3d[0]));
             Logger.recordOutput(key("Poses"), poses.toArray(new Pose3d[0]));
             Logger.recordOutput(key("EstimationStrategy"), estimationStrat);
         }
@@ -138,5 +138,9 @@ public class AprilTagCam {
     public void updateWithoutCompute() {
         io.refreshData(inputs);
         Logger.processInputs(key(""), inputs);
+    }
+
+    public void setPipeline(AprilTagPipeline pipeline) {
+        io.setPipelineIndex(pipeline.index);
     }
 }

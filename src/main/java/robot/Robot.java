@@ -56,12 +56,12 @@ public class Robot extends LoggedRobot {
             new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS)
         );
 
-    private final DriverController driver = new DriverController(0, RobotConfig.swerveCfg);
-    private final OperatorController operator = new OperatorController(1);
+    private final DriverController driverPS5 = new DriverController(0, RobotConfig.swerveCfg);
+    private final OperatorController operatorXbox = new OperatorController(1);
 
     private final Superstructure superstructure =
         new Superstructure(
-            operator::getFlywheelSpeedAdjustment,
+            operatorXbox::getFlywheelSpeedAdjustment,
             drive, groundIntake, shooter, serializer
         );
     private final Autos autos = new Autos(drive, groundIntake, superstructure, shooter);
@@ -81,42 +81,46 @@ public class Robot extends LoggedRobot {
 
         CameraServer.startAutomaticCapture();
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
+        for (var cam: cameras) {
+            cam.setPipeline(VisionConsts.AprilTagPipeline.WAKE_WEEK_2);
+        }
     }
 
     private void setCompButtonBindings() {
-        operator.leftBumper()
-            .and(operator.leftTrigger())
+        operatorXbox.leftBumper()
+            .and(operatorXbox.leftTrigger())
             .whileTrue(groundIntake.deployCmd(1.5, drive::getRobotSpeeds));
-        operator.leftBumper()
-            .and(operator.leftTrigger().negate())
+        operatorXbox.leftBumper()
+            .and(operatorXbox.leftTrigger().negate())
             .whileTrue(groundIntake.deployCmd(1.0, drive::getRobotSpeeds));
-        operator.rightBumper().whileTrue(serializer.runCmd());
-        operator.povUp().whileTrue(groundIntake.agitateCmd());
-        operator.povDown().whileTrue(groundIntake.outtakeCmd());
-        operator.x()
-            .or(driver.cross())
-            .whileTrue(shooter.setIdleBehaviorToSpinupCmd());
+        operatorXbox.rightBumper().whileTrue(serializer.runCmd());
+        operatorXbox.povUp().whileTrue(groundIntake.lowAgitateCmd());
+        operatorXbox.povDown().whileTrue(groundIntake.outtakeCmd());
+        operatorXbox.x().onTrue(shooter.setIdleBehaviorToSpinupCmd());
 
-        driver.touchpad()
+        driverPS5.touchpad()
             .multiPress(2, 1.0)
             .onTrue(
                 Commands.runOnce(() -> drive.resetHeading(Rotation2d.kZero))
                     .ignoringDisable(true)
                     .withName("Drive Reset Heading")
             );
-        driver.R2().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.GROUND));
-        driver.circle().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.HUB));
-        driver.square().whileTrue(superstructure.manualHubShotCmd());
+        driverPS5.R1().whileTrue(
+            drive.driveCmd(() -> driverPS5.getSwerveRequest(RobotConfig.getBumpTravelingAngle(), false))
+        );
+        driverPS5.R2().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.GROUND));
+        driverPS5.circle().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.HUB));
+        driverPS5.square().whileTrue(superstructure.manualHubShotCmd());
 
         RobotModeTriggers.disabled()
-            .or(driver.triangle())
             .onTrue(shooter.setIdleBehaviorToCoastCmd());
 
         // TODO fix
         new Trigger(superstructure::canSerialize)
             .debounce(0.2, Debouncer.DebounceType.kFalling)
-            .whileTrue(driver.notifySerializerReadyCmd())
-            .whileTrue(operator.notifySerializerReadyCmd());
+            .whileTrue(driverPS5.notifySerializerReadyCmd())
+            .whileTrue(operatorXbox.notifySerializerReadyCmd());
 
         initDashboard();
         if (RobotMode.isSim()) {
@@ -139,23 +143,23 @@ public class Robot extends LoggedRobot {
             // adds a bit of delay due to NetworkTables; so, we run the driver rumble commands a bit earlier.
             RobotModeTriggers.teleop()
                 .and(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time + 0.3))
-                .onTrue(driver.notifyHubShiftCmd());
+                .onTrue(driverPS5.notifyHubShiftCmd());
         }
     }
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(
             drive.driveCmd(
-                () -> driver.getSwerveRequest(
-                    superstructure.getRotationOverride(),
-                    superstructure.getShotTarget()
+                () -> driverPS5.getSwerveRequest(
+                    superstructure.rotationOverride,
+                    superstructure.shootingAtHub
                 )
             )
         );
         groundIntake.setDefaultCommand(
             groundIntake.manualCmd(
-                operator::getManualPivotVolts,
-                operator.a()
+                operatorXbox::getManualPivotVolts,
+                operatorXbox.a()
             )
         );
         serializer.setDefaultCommand(serializer.stopCmd());
@@ -180,7 +184,7 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
 
         testChooser.addCmd("Test Reset Pose To Trench Left", () -> Commands.runOnce(() -> drive.resetPose(ChoreoTraj.mirrored_CenterLoopFar.initialPoseBlue())).ignoringDisable(true));
-        testChooser.addCmd("Test Rumble", operator::notifySerializerReadyCmd);
+        testChooser.addCmd("Test Rumble", operatorXbox::notifySerializerReadyCmd);
         testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);
         testChooser.addCmd("Test Hub Shot", () -> superstructure.shootInAutoCmd(Shooter.Target.HUB, 2));
         testChooser.addCmd("Test Ferry", () -> superstructure.shootInAutoCmd(Shooter.Target.GROUND, 2));

@@ -12,18 +12,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import lib.AllianceColor;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import robot.constants.RobotConfig;
 import robot.subsystems.drive.SwerveConfig;
-import robot.subsystems.shooter.Shooter.Target;
 
 import java.util.Optional;
 
-import static choreo.util.ChoreoAllianceFlipUtil.flip;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kLeftRumble;
@@ -33,9 +29,8 @@ import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (Moving)", 4.5),
-        AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.0);
-    private static final Rotation2d BUMP_APPROACH_ANGLE = Rotation2d.fromRadians(0.904);
+        AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (Moving)", 5.5),
+        AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.01);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -81,12 +76,6 @@ public class DriverController extends CommandPS5Controller {
     }
 
     public SwerveRequest getSwerveRequest() {
-        if (R1().getAsBoolean()) {
-            return getSwerveRequest(
-                Optional.of(AllianceColor.isRed() ? flip(BUMP_APPROACH_ANGLE) : BUMP_APPROACH_ANGLE),
-                Optional.empty()
-            );
-        }
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar;
         strafe = -getLeftX() * scalar;
@@ -110,21 +99,18 @@ public class DriverController extends CommandPS5Controller {
             .withRotationalDeadband(0.1 * scalar * maxVelRadPerSec);
     }
 
-    public SwerveRequest getSwerveRequest(
-        Optional<Rotation2d> targetHeading,
-        Optional<Target> shotTarget
-    ) {
-        if (targetHeading.isEmpty()) return getSwerveRequest();
+    public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle, boolean limitAccel) {
+        if (targetAngle.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar / 3.0;
         strafe = -getLeftX() * scalar / 3.0;
-        if (shotTarget.isPresent() && shotTarget.get() == Target.HUB) {
+        if (limitAccel) {
             forward = forwardLimiter.calculate(forward);
             strafe = strafeLimiter.calculate(strafe);
         }
-        double deltaRad = MathUtil.angleModulus(targetHeading.get().getRadians() - prevTargetRad);
+        double deltaRad = MathUtil.angleModulus(targetAngle.get().getRadians() - prevTargetRad);
         double radiansPerSec = aimToTargetInit ? rotationFilter.calculate(deltaRad / 0.02) : 0;
-        prevTargetRad = targetHeading.get().getRadians();
+        prevTargetRad = targetAngle.get().getRadians();
         aimToTargetInit = true;
         rotation = radiansPerSec / maxVelRadPerSec;
 
@@ -132,7 +118,7 @@ public class DriverController extends CommandPS5Controller {
             .withVelocityX(forward * maxVelMetersPerSec)
             .withVelocityY(strafe * maxVelMetersPerSec)
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
-            .withTargetDirection(targetHeading.get())
+            .withTargetDirection(targetAngle.get())
             .withTargetRateFeedforward(radiansPerSec)
             .withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
     }

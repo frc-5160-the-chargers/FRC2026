@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import lib.AllianceColor;
 import lib.Tunable;
 import lib.commands.CmdSequence;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
 import robot.subsystems.drive.SwerveSubsystem;
@@ -39,18 +38,17 @@ public class Superstructure {
     // Constructor Parameters
     private final DoubleSupplier speedAdjustment;
     private final SwerveSubsystem drive;
-    private final GroundIntake groundIntake;
+    private final GroundIntake intake;
     private final Shooter shooter;
     private final Serializer serializer;
 
     // State
     /** A rotation override used for shooting. */
-    @Getter
-    private Optional<Rotation2d> rotationOverride = Optional.empty();
+    public Optional<Rotation2d> rotationOverride = Optional.empty();
 
-    /** The current shooting target of the robot. (Hub or Ground) */
-    @Getter
-    private Optional<Target> shotTarget = Optional.empty();
+    /** Whether the robot wants to shoot at the hub. */
+    @AutoLogOutput(key = "ShotCalcs/ShootingAtHub")
+    public boolean shootingAtHub = false;
 
     @AutoLogOutput(key = "ShotCalcs/Setpoint")
     private Shooter.Setpoint shotSetpoint = Shooter.Setpoint.NULL;
@@ -74,7 +72,7 @@ public class Superstructure {
 
     private void resetState() {
         shotSetpoint = Shooter.Setpoint.NULL;
-        shotTarget = Optional.empty();
+        shootingAtHub = false;
         rotationOverride = Optional.empty();
         yawError = 0.0;
     }
@@ -86,7 +84,7 @@ public class Superstructure {
             shotSetpoint = ShotCalcsKt.getShotSetpoint(
                 drive.getPose(), drive.getFieldSpeeds(), shooter, true, target
             );
-            shotTarget = Optional.of(target);
+            shootingAtHub = target == Target.HUB;
             rotationOverride = Optional.of(shotSetpoint.yaw());
             yawError = MathUtil.angleModulus(shotSetpoint.yaw().minus(drive.getPose().getRotation()).getRadians());
             return RadiansPerSecond.of(shotSetpoint.radPerSec() * speedAdjustment.getAsDouble());
@@ -104,9 +102,26 @@ public class Superstructure {
                 serializer.runCmd()
             ),
             CmdSequence.of(
-                Commands.waitSeconds(agitateDelaySecs),
-                groundIntake.agitateCmd()
+                intake.lowAgitateCmd().withTimeout(agitateDelaySecs),
+                intake.highAgitateCmd()
             )
+        );
+    }
+
+    public Command autoStartCmd(AutoTrajectory traj) {
+        return CmdSequence.of(
+            traj.resetOdometry(),
+            intake.deployCmd(1.15, drive::getFieldSpeeds)
+                .withTimeout(0.8),
+            traj.spawnCmd()
+        );
+    }
+
+    public Command intakeInAutoCmd(double timeUntilSpeedIncrease) {
+        return CmdSequence.of(
+            intake.deployCmd(1.0, drive::getFieldSpeeds)
+                .withTimeout(timeUntilSpeedIncrease),
+            intake.deployCmd(1.5, drive::getFieldSpeeds)
         );
     }
 
@@ -135,7 +150,7 @@ public class Superstructure {
                 poseSupplier.get(), speedsSupplier.get(),
                 shooter, true, Target.HUB
             );
-            shotTarget = Optional.of(Target.HUB);
+            shootingAtHub = true;
             return RadiansPerSecond.of(shotSetpoint.radPerSec());
         })
             .finallyDo(this::resetState);

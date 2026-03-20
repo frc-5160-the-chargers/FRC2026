@@ -29,7 +29,7 @@ public class Autos {
     ) {
         autoFactory = new AutoFactory(
             drive::getPose, drive::resetPose,
-            target -> drive.followChoreoTraj(target, superstructure.getRotationOverride()),
+            target -> drive.followChoreoTraj(target, superstructure.rotationOverride),
             true, drive, RobotConfig::logTrajectory
         );
         this.superstructure = superstructure;
@@ -88,18 +88,10 @@ public class Autos {
         var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
         var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopClose, leftSide);
 
-        routine.active().onTrue(
-            CmdSequence.of(
-                traj1.resetOdometry(),
-                intake.deployCmd(1.15, drive::getFieldSpeeds).withTimeout(1.5),
-                traj1.spawnCmd()
-            )
-        );
+        routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
-            // note that this works even with a mirrored trajectory (which doesn't have the same end pose)
-            // because the hub is perfectly centered in the vertical direction.
             .whileTrue(superstructure.hubShotSpinupCmd(traj1))
-            .whileTrue(intake.deployCmd(1.15, drive::getFieldSpeeds));
+            .whileTrue(superstructure.intakeInAutoCmd(2.3));
         traj1.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
@@ -108,7 +100,7 @@ public class Autos {
         );
         traj2.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj2))
-            .whileTrue(intake.deployCmd(1.15, drive::getFieldSpeeds));
+            .whileTrue(superstructure.intakeInAutoCmd(3.3));
         traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 
         return routine.cmd();
@@ -132,16 +124,10 @@ public class Autos {
             false
         );
 
-        routine.active().onTrue(
-            CmdSequence.of(
-                centerScoop.resetOdometry(),
-                intake.deployCmd(leftSide ? 1.15 : 0.1, drive::getFieldSpeeds).withTimeout(1.5),
-                centerScoop.spawnCmd()
-            )
-        );
+        routine.active().onTrue(superstructure.autoStartCmd(centerScoop));
         centerScoop.active()
             .whileTrue(superstructure.hubShotSpinupCmd(centerScoop))
-            .whileTrue(intake.deployCmd(1.15, drive::getFieldSpeeds));
+            .whileTrue(superstructure.intakeInAutoCmd(2.5));
         centerScoop.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 1.5).withTimeout(4),

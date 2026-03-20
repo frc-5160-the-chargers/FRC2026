@@ -52,12 +52,14 @@ public class GroundIntake extends ChargerSubsystem {
     private final Tunable<Double>
         pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 7.0),
         pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 7.0),
-        pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.03),
+        pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.07),
         pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), -0.38),
         pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
     private final Tunable<Angle>
+        intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-7)),
         stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-120)),
-        intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-7));
+        agitateHighPos = Tunable.of(key("Positions/AgitateHigh"), Degrees.of(-70)),
+        agitateLowPos = Tunable.of(key("Positions/AgitateLow"), Degrees.of(-30));
 
     private IntakePivot pivotIO;
     private RollerHardware rollerIO;
@@ -156,7 +158,7 @@ public class GroundIntake extends ChargerSubsystem {
             this.run(() -> {
                 setPivotPosition(intakePos.get());
                 var vx = robotSpeeds.get().vxMetersPerSecond;
-                var targetVel = rollerTargetVel.get() + 0.5 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+                var targetVel = rollerTargetVel.get() + 0.8 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
                 targetVel *= intakeSpeedMultiplier;
                 var velocityErr = targetVel - rollerInputs.velocityRadPerSec;
                 setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
@@ -170,14 +172,23 @@ public class GroundIntake extends ChargerSubsystem {
     }
 
     /** Alternates between the deploy and stow positions to agitate fuel. */
-    public Command agitateCmd() {
-        var zeroSpeed = new ChassisSpeeds();
+    public Command lowAgitateCmd() {
         var cmd = CmdSequence.of(
-            stowCmd().withTimeout(2.0),
-            deployCmd(1.0, () -> zeroSpeed).withTimeout(2.0)
+            this.run(() -> setPivotPosition(agitateLowPos.get())).withTimeout(0.5),
+            this.run(() -> setPivotPosition(intakePos.get())).withTimeout(0.5)
         )
             .repeatedly();
-        return logged(cmd, "Agitate");
+        return logged(cmd, "Agitate (Low)");
+    }
+
+    /** Alternates between the deploy and stow positions to agitate fuel. */
+    public Command highAgitateCmd() {
+        var cmd = CmdSequence.of(
+            this.run(() -> setPivotPosition(agitateHighPos.get())).withTimeout(0.5),
+            this.run(() -> setPivotPosition(stowPos.get())).withTimeout(0.5)
+        )
+            .repeatedly();
+        return logged(cmd, "Agitate (High)");
     }
 
     /** Runs manual control on the pivot and the intake. */
