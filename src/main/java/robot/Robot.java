@@ -90,7 +90,7 @@ public class Robot extends LoggedRobot {
     private void setCompButtonBindings() {
         operatorXbox.leftBumper()
             .and(operatorXbox.leftTrigger())
-            .whileTrue(groundIntake.deployCmd(1.5, drive::getRobotSpeeds));
+            .whileTrue(groundIntake.deployCmd(1.3, drive::getRobotSpeeds));
         operatorXbox.leftBumper()
             .and(operatorXbox.leftTrigger().negate())
             .whileTrue(groundIntake.deployCmd(1.0, drive::getRobotSpeeds));
@@ -116,10 +116,8 @@ public class Robot extends LoggedRobot {
         RobotModeTriggers.disabled()
             .onTrue(shooter.setIdleBehaviorToCoastCmd());
 
-        // TODO fix
         new Trigger(superstructure::canSerialize)
             .debounce(0.2, Debouncer.DebounceType.kFalling)
-            .whileTrue(driverPS5.notifySerializerReadyCmd())
             .whileTrue(operatorXbox.notifySerializerReadyCmd());
 
         initDashboard();

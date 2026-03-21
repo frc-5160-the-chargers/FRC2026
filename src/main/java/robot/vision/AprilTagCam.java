@@ -79,7 +79,7 @@ public class AprilTagCam {
             double tagDistSum = 0.0;
             double tagAreaSum = 0.0;
             for (var target: result.targets) {
-                ambiguityExceeded = ambiguityExceeded && target.poseAmbiguity > MAX_AMBIGUITY;
+                ambiguityExceeded = ambiguityExceeded && target.poseAmbiguity > MAX_AMBIGUITY.get();
                 tagDistSum += target.bestCameraToTarget.getTranslation().getNorm();
                 tagAreaSum += target.area;
                 fiducialIds.add(target.fiducialId);
@@ -95,7 +95,7 @@ public class AprilTagCam {
             estimationStrat += (poseEstimate.get().strategy + ",");
             var pose = poseEstimate.get().estimatedPose;
             var timestamp = poseEstimate.get().timestampSeconds;
-            if (Math.abs(pose.getZ()) > MAX_Z_ERROR.in(Meters)
+            if (Math.abs(pose.getZ()) > MAX_Z_ERROR.get().in(Meters)
                 || pose.getX() < 0.0
                 || pose.getX() > FIELD_LAYOUT.getFieldLength()
                 || pose.getY() < 0.0
@@ -105,14 +105,16 @@ public class AprilTagCam {
             }
             // Calculates standard deviations
             double areaSumMultiplier = Math.pow(result.targets.size() / Math.abs(tagAreaSum), 0.2);
-            double stdDevMultiplier = Math.pow(tagDistSum / result.targets.size(), 2) / result.targets.size();
-            stdDevMultiplier *= Math.pow(Z_ERROR_SCALAR, Math.abs(pose.getZ()));
+            double stdDevMultiplier = consts.stdDevFactor();
+            stdDevMultiplier *= Math.pow(tagDistSum / result.targets.size(), 2) / result.targets.size();
+            stdDevMultiplier *= Math.pow(Z_ERROR_SCALAR.get(), Math.abs(pose.getZ()));
             stdDevMultiplier *= Math.max(areaSumMultiplier, 1);
-            if (result.targets.size() <= 1) stdDevMultiplier *= SINGLE_TAG_SCALAR;
-            double linearStdDev = stdDevMultiplier * LINEAR_STD_DEV_BASELINE * consts.stdDevFactor();
+            if (result.targets.size() <= 1) stdDevMultiplier *= SINGLE_TAG_SCALAR.get();
+            double linearStdDev = stdDevMultiplier * LINEAR_STD_DEV_BASELINE.get();
+            double angularStdDev = stdDevMultiplier * ANGULAR_STD_DEV_BASELINE.get();
+            var standardDeviations = VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev);
+            poseEstimates.add(new CamPoseEstimate(pose.toPose2d(), timestamp, standardDeviations));
             poses.add(pose);
-            var stdDevs = VecBuilder.fill(linearStdDev, linearStdDev, ANGULAR_STD_DEV);
-            poseEstimates.add(new CamPoseEstimate(pose.toPose2d(), timestamp, stdDevs));
         }
 
         // logs relevant data

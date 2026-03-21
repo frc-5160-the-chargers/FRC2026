@@ -3,16 +3,11 @@ package robot.controllers;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import org.littletonrobotics.junction.AutoLogOutput;
 
-import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kLeftRumble;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 
-// implementing Subsystem allows you to use ChargerSubsystem's functionalities
-// while inheriting from another class. However, you use a lot of logging utilities
-// as a result, and must call register() manually in the constructor of your class.
 public class OperatorController extends CommandXboxController {
     public OperatorController(int port) {
         super(port);

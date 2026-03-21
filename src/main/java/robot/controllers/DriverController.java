@@ -123,13 +123,6 @@ public class DriverController extends CommandPS5Controller {
             .withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
     }
 
-    public Command notifySerializerReadyCmd() {
-        return Commands.run(() -> setRumble(kRightRumble, 0.1))
-            .withTimeout(0.5)
-            .finallyDo(() -> setRumble(kRightRumble, 0.0))
-            .withName("Driver#NotifySerializerReady");
-    }
-
     public Command notifyHubShiftCmd() {
         return Commands.run(() -> setRumble(kLeftRumble, 0.2))
             .withTimeout(0.5)
