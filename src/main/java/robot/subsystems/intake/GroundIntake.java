@@ -50,8 +50,8 @@ public class GroundIntake extends ChargerSubsystem {
         pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
         pivotCurrentZeroLimit = Tunable.of(key("Pivot/CurrentZeroing/Limit (amps)"), 20.0);
     private final Tunable<Double>
-        pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 7.0),
-        pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 7.0),
+        pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 9.0),
+        pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 8.5),
         pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.07),
         pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), -0.38),
         pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
@@ -103,6 +103,10 @@ public class GroundIntake extends ChargerSubsystem {
         pivotIO.setPDGains(pivotKp.get(), 0.0);
         pivotIO.setCurrentLimit(pivotCurrentLimit.get());
         rollerIO.setCurrentLimit(rollerCurrentLimit.get());
+    }
+
+    public boolean isRoughlyDeployed() {
+        return pivotInputs.positionRad > -60 * Convert.DEGREES_TO_RADIANS;
     }
 
     @AutoLogOutput

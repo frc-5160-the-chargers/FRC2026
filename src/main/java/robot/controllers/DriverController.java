@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import robot.constants.RobotConfig;
 import robot.subsystems.drive.SwerveConfig;
 
@@ -70,9 +71,10 @@ public class DriverController extends CommandPS5Controller {
             return SPEED_REDUCTION.get() / 3.0;
         }
         double output = getL2Axis();
+        Logger.recordOutput("RawL2Axis", output);
         output = MathUtil.applyDeadband(output, 0.1, 1);
-        output = (2 - output) / 2;
-        return output * SPEED_REDUCTION.get();
+        output = (2 - (output / 2.0 + 0.5)) / 2;
+        return Math.min(1.0, output * SPEED_REDUCTION.get());
     }
 
     public SwerveRequest getSwerveRequest() {
@@ -100,6 +102,9 @@ public class DriverController extends CommandPS5Controller {
     }
 
     public SwerveRequest getSwerveRequest(Optional<Rotation2d> targetAngle, boolean limitAccel) {
+        Logger.recordOutput("DriverController/RawLeftY", -getLeftY());
+        Logger.recordOutput("DriverController/RawLeftX", -getLeftX());
+        Logger.recordOutput("DriverController/Connected", isConnected());
         if (targetAngle.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar / 3.0;

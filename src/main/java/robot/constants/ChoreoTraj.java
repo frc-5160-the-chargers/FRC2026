@@ -34,14 +34,14 @@ public record ChoreoTraj(
 	public static final ChoreoTraj CenterLoopClose = new ChoreoTraj(
 	    "CenterLoopClose",
 	    OptionalInt.empty(),
-	    8.32154,
+	    8.3592,
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897)),
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
 	public static final ChoreoTraj CenterLoopFar = new ChoreoTraj(
 	    "CenterLoopFar",
 	    OptionalInt.empty(),
-	    7.56382,
+	    7.87364,
 	    new Pose2d(4.416, 0.811, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
@@ -76,14 +76,14 @@ public record ChoreoTraj(
 	public static final ChoreoTraj mirrored_CenterLoopClose = new ChoreoTraj(
 	    "mirrored_CenterLoopClose",
 	    OptionalInt.empty(),
-	    8.32154,
+	    8.3592,
 	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897)),
 	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.897))
 	);
 	public static final ChoreoTraj mirrored_CenterLoopFar = new ChoreoTraj(
 	    "mirrored_CenterLoopFar",
 	    OptionalInt.empty(),
-	    7.56327,
+	    7.87309,
 	    new Pose2d(4.416, 7.232, Rotation2d.fromRadians(-3.142)),
 	    new Pose2d(2.5, 6.743, Rotation2d.fromRadians(-0.887))
 	);

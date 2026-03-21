@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -79,12 +80,12 @@ public class Robot extends LoggedRobot {
         mapAutoAndTestModes();
         drive.resetPose(new Pose2d(2.5, 4, Rotation2d.kZero));
 
-        CameraServer.startAutomaticCapture();
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
 
         for (var cam: cameras) {
             cam.setPipeline(VisionConsts.AprilTagPipeline.WAKE_WEEK_2);
         }
+        RobotController.setBrownoutVoltage(6.0);
     }
 
     private void setCompButtonBindings() {

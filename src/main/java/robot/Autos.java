@@ -73,7 +73,7 @@ public class Autos {
         routine.active()
             .onTrue(CmdSequence.of(grab1.resetOdometry(), grab1.spawnCmd()));
         grab1.active()
-            .whileTrue(intake.deployCmd(1, drive::getFieldSpeeds));
+            .whileTrue(intake.deployCmd(1, drive::getRobotSpeeds));
         grab1.doneDelayed(0.5)
             .onTrue(score1.spawnCmd());
         score1.doneDelayed(0.2)
@@ -90,8 +90,9 @@ public class Autos {
 
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
-            .whileTrue(superstructure.hubShotSpinupCmd(traj1))
-            .whileTrue(superstructure.intakeInAutoCmd(2.3));
+            .whileTrue(superstructure.hubShotSpinupCmd(traj1));
+        traj1.atTime(0.5)
+            .onTrue(superstructure.intakeInAutoCmd(2.4));
         traj1.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
@@ -126,8 +127,9 @@ public class Autos {
 
         routine.active().onTrue(superstructure.autoStartCmd(centerScoop));
         centerScoop.active()
-            .whileTrue(superstructure.hubShotSpinupCmd(centerScoop))
-            .whileTrue(superstructure.intakeInAutoCmd(2.5));
+            .whileTrue(superstructure.hubShotSpinupCmd(centerScoop));
+        centerScoop.atTime(0.5)
+            .onTrue(superstructure.intakeInAutoCmd(2.4));
         centerScoop.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 1.5).withTimeout(4),
@@ -141,11 +143,11 @@ public class Autos {
             // If on the right side, the robot is grabbing fuel from the substation,
             // so the intake rollers are run at very low speed. Otherwise, the robot
             // is grabbing the alliance side prestaged balls from the floor.
-            .whileTrue(intake.deployCmd(leftSide ? 1.15 : 0.1, drive::getFieldSpeeds));
-        closeGrab.doneDelayed(leftSide ? 0.3 : 1.0)
+            .whileTrue(intake.deployCmd(leftSide ? 1.15 : 0.1, drive::getRobotSpeeds));
+        closeGrab.doneDelayed(leftSide ? 0.3 : 1.2)
             .onTrue(closeScore.spawnCmd());
         closeScore.atTime(shootTime)
-            .onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
+            .onTrue(superstructure.shootInAutoCmd(Target.HUB, 1.5));
 
         return routine.cmd();
     }

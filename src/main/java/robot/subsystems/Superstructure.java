@@ -111,17 +111,15 @@ public class Superstructure {
     public Command autoStartCmd(AutoTrajectory traj) {
         return CmdSequence.of(
             traj.resetOdometry(),
-            intake.deployCmd(1.15, drive::getFieldSpeeds)
-                .withTimeout(0.8),
             traj.spawnCmd()
         );
     }
 
     public Command intakeInAutoCmd(double timeUntilSpeedIncrease) {
         return CmdSequence.of(
-            intake.deployCmd(1.0, drive::getFieldSpeeds)
+            intake.deployCmd(1.0, drive::getRobotSpeeds)
                 .withTimeout(timeUntilSpeedIncrease),
-            intake.deployCmd(1.5, drive::getFieldSpeeds)
+            intake.deployCmd(1.25, drive::getRobotSpeeds)
         );
     }
 

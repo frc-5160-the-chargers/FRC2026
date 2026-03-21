@@ -122,14 +122,15 @@ public class Shooter extends ChargerSubsystem {
      * lowering the current limit, to allow it to build momentum.
      */
     public Command spinupCmd(Supplier<AngularVelocity> velocity) {
-        var cmd = CmdSequence.of(
-            this.runOnce(() -> setCurrentLimit(spinupLimit.get())),
-            Commands.parallel(
-                setVelocityCmdImpl(velocity),
-                Commands.waitUntil(() -> atGoal(1.0))
-                    .andThen(Commands.runOnce(() -> setCurrentLimit(shotLimit.get())))
+        var cmd = Commands.parallel(
+            Commands.runOnce(() -> setCurrentLimit(spinupLimit.get())),
+            setVelocityCmdImpl(velocity),
+            CmdSequence.of(
+                Commands.waitUntil(() -> atGoal(1.0)),
+                Commands.runOnce(() -> setCurrentLimit(shotLimit.get()))
             )
-        );
+        )
+            .finallyDo(() -> setCurrentLimit(shotLimit.get()));
         return logged(cmd, "Spinup");
     }
 

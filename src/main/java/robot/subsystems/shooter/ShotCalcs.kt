@@ -117,8 +117,8 @@ fun getShotSetpoint(
 
 private const val NEWTONS_METHOD_ITERATIONS = 7
 private val HUB_LOCATION = FieldConstants.Hub.topCenterPoint.toTranslation2d()
-private val PASS_LOC_TOP = Translation2d(2.0, 6.0)
-private val PASS_LOC_BOTTOM = Translation2d(2.0, 2.0)
+private val PASS_LOC_TOP = Translation2d(1.3, 6.0)
+private val PASS_LOC_BOTTOM = Translation2d(1.3, 2.0)
 private val MIN_DISTANCE_TO_SHOOT = Tunable.of("ShotCalcs/Minimum Distance to Shoot(m)", 1.5)
 private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.0)
 //private val DRAG_COMP_INVERSE_SECS = Tunable.of("ShotCalcs/Drag Compensation(secs ^ -1)", 0.02)
@@ -126,7 +126,9 @@ private val LOOKAHEAD_SECS = Tunable.of("ShotCalcs/Lookahead time(secs)", 0.0)
 // omega * r; so, we compensate for that with a lerp table.
 private val BALL_TO_FLYWHEEL_SPEED =
     TunableLerpTable("ShotCalcs/Ball Speed(mps) -> Flywheel Speed(rad per s)")
-        .put(6.0, 240.0)
+        .put(6.0, 245.0)
+        .put(7.8, 315.0)
+        .put(8.5, 328.0)
         .put(12.0, 450.0)
 private val DISTANCE_TO_BALL_SPEED_HUB =
     TunableLerpTable("ShotCalcs/(Hub) Distance(m) -> Ball Velocity(mps)")
