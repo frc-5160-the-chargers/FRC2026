@@ -1,6 +1,5 @@
 """
 Mirrors choreo trajectories, which are labeled with the "mirrored_" prefix.
-Using the -exclude option can exclude certain trajectories from being mirrored.
 """
 import json
 import os
@@ -10,6 +9,7 @@ field_height = 8.043
 choreo_dir = "../../src/main/deploy/choreo"
 # The traj files that shouldn't be mirrored.
 ignore_mirrored = ["CloseFuelGrab.traj", "CloseFuelScore.traj", "SubstationGrab.traj", "SubstationScore.traj"]
+
 
 def load_traj(file_path):
     with open(file_path, 'r') as f:

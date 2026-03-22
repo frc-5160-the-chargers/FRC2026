@@ -35,6 +35,7 @@ import robot.subsystems.shooter.Shooter;
 import robot.vision.AprilTagCam;
 import robot.vision.VisionConsts;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -51,11 +52,12 @@ public class Robot extends LoggedRobot {
     private final GroundIntake groundIntake = new GroundIntake(RobotConfig.createIntakeSim(drive));
     private final Serializer serializer = new Serializer();
     private final Shooter shooter = new Shooter();
+    private final AprilTagCam frontRightCam = new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS);
     private final List<AprilTagCam> cameras =
-        List.of(
+        new ArrayList<>(List.of(
             new AprilTagCam(drive.getSim(), VisionConsts.FL_CONSTS),
-            new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS)
-        );
+            frontRightCam
+        ));
 
     private final DriverController driverPS5 = new DriverController(0, RobotConfig.swerveCfg);
     private final OperatorController operatorXbox = new OperatorController(1);
@@ -99,6 +101,8 @@ public class Robot extends LoggedRobot {
         operatorXbox.povUp().whileTrue(groundIntake.lowAgitateCmd());
         operatorXbox.povDown().whileTrue(groundIntake.outtakeCmd());
         operatorXbox.x().onTrue(shooter.setIdleBehaviorToSpinupCmd());
+        operatorXbox.start().multiPress(2, 1.0)
+            .onTrue(Commands.runOnce(() -> cameras.remove(frontRightCam)).ignoringDisable(true));
 
         driverPS5.touchpad()
             .multiPress(2, 1.0)

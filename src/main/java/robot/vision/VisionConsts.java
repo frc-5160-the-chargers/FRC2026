@@ -73,6 +73,7 @@ public class VisionConsts {
         LINEAR_STD_DEV_BASELINE = Tunable.of("Vision/StdDevBaseline/Linear", 0.22),
         ANGULAR_STD_DEV_BASELINE = Tunable.of("Vision/StdDevBaseline/Angular", 2.5);
     static final Tunable<Distance> MAX_Z_ERROR = Tunable.of("Vision/MaxZErr", Meters.of(0.25));
+    static final Tunable<Boolean> DEBUG_MODE = Tunable.of("Vision/DebugMode", false);
     static final SimCameraProperties DEFAULT_CAM_PROPERTIES = new SimCameraProperties();
 
     static {
