@@ -1,5 +1,8 @@
 package robot.vision;
 
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.IntegerEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.photonvision.PhotonCamera;
@@ -14,9 +17,15 @@ import java.util.Optional;
 /** A class that handles fetching vision frames and sending requests to a camera. */
 public class CameraIO {
     protected final PhotonCamera cam;
+    private final IntegerEntry camHeartbeat;
+    private final DoubleEntry camFps;
 
     public CameraIO(String name) {
         this.cam = new PhotonCamera(name);
+        // Note: only use NetworkTableInstance inside of hardware/io classes. Use Tunable everywhere else.
+        var statsTable = NetworkTableInstance.getDefault().getTable("photonvision/" + name);
+        this.camHeartbeat = statsTable.getIntegerTopic("heartbeat").getEntry(0);
+        this.camFps = statsTable.getDoubleTopic("fps").getEntry(0.0);
     }
 
     /** Sets the pipeline number for this camera. */
@@ -27,13 +36,18 @@ public class CameraIO {
     /** Refreshes an instance of {@link CameraIO.RawData} with the latest frames. */
     public void refreshData(RawData inputs) {
         inputs.connected = cam.isConnected();
+        inputs.heartbeat = camHeartbeat.get();
+        inputs.fps = camFps.get();
         inputs.results = cam.getAllUnreadResults();
     }
 
     /** Represents raw camera data from a photon camera every 0.02 seconds. */
     public static class RawData implements LoggableInputs {
         public boolean connected = true;
+        public long heartbeat = 0L;
+        public double fps = 0.0;
         public List<PhotonPipelineResult> results = new ArrayList<>();
+
         private final Packet serializer = new Packet(800);
 
         /** Fetches the best target from this data. */
@@ -55,6 +69,8 @@ public class CameraIO {
                 serializer.clear();
             }
             table.put("Connected", connected);
+            table.put("Heartbeat", heartbeat);
+            table.put("FPS", fps);
             table.put("RawData/Total", results.size());
             table.put("SerializerSizeBytes", serializer.getSize()); // only for logging; not replayed
         }
@@ -63,6 +79,8 @@ public class CameraIO {
         @Override
         public void fromLog(LogTable table) {
             results = new ArrayList<>();
+            heartbeat = table.get("Heartbeat", 0L);
+            fps = table.get("FPS", 0.0);
             connected = table.get("Connected", false);
             int numResults = table.get("RawData/Total", 0);
             for (int i = 0; i < numResults; i++) {
