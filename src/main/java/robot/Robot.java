@@ -5,6 +5,8 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
@@ -74,6 +76,13 @@ public class Robot extends LoggedRobot {
         autoChooser = new CommandChooser("AutoModeChoices");
 
     public Robot() {
+        // TODO verify if this works
+        NetworkTableInstance.getDefault()
+            .startEntryDataLog(
+                DataLogManager.getLog(),
+                "photonvision",
+                "RealOutputs/PhotonVision"
+            );
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);

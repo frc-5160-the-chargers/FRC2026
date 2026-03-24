@@ -14,13 +14,13 @@ import robot.subsystems.common.SimRollerHardware;
 public class Serializer extends ChargerSubsystem {
     static final double CURRENT_LIMIT = 60;
     static final int SIM_FUEL_REMOVAL_RATE = 5; // # of game pieces per sec
-    static final double PULSE_ON_TIME_SECS = 1.0;
+    static final double PULSE_ON_TIME_SECS = 2.0;
     static final double PULSE_OFF_TIME_SECS = 0.5;
     public static final double FLYWHEEL_TO_SERIALIZER_SPEED_RATIO = 0.4;
 
     private final Tunable<Double>
         defaultVolts = Tunable.of(key("DefaultVolts"), 9.0),
-        pulseOffVolts = Tunable.of(key("PulseOffVolts"), 3.0);
+        pulseOffVolts = Tunable.of(key("PulseOffVolts"), -3.0);
     private final RollerHardware io = switch (RobotMode.get()) {
         case REAL -> new KrakenSerializerRollers();
         case SIM -> new SimRollerHardware(DCMotor.getKrakenX60(1), 1.0);

@@ -123,9 +123,9 @@ public class Shooter extends ChargerSubsystem {
      */
     public Command spinupCmd(Supplier<AngularVelocity> velocity) {
         var cmd = Commands.parallel(
-            Commands.runOnce(() -> setCurrentLimit(spinupLimit.get())),
             setVelocityCmdImpl(velocity),
             CmdSequence.of(
+                Commands.runOnce(() -> setCurrentLimit(spinupLimit.get())),
                 Commands.waitUntil(() -> atGoal(1.0)),
                 Commands.runOnce(() -> setCurrentLimit(shotLimit.get()))
             )
