@@ -67,7 +67,9 @@ public class AprilTagCam {
         String estimationStrat = "";
         fiducialIds.clear();
         poses.clear();
-        Logger.recordOutput(key("NumResults"), inputs.results.size());
+        if (!inputs.results.isEmpty()) {
+            Logger.recordOutput(key("Heartbeat"), inputs.results.get(0).metadata.sequenceID);
+        }
         for (var result: inputs.results) {
             // ignores result if ambiguity is exceeded or if there is no targets.
             if (result.targets.isEmpty()) {
