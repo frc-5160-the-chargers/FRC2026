@@ -18,6 +18,9 @@ import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
+// 76.07 - 75.01 = 1.06
+//         .put(2.3, 1.0)
+//        .put(3.3, 1.06) // VERIFIED UP TO HERE
 private const val RHO = 1.221 // Fluid density of air; kg / m^3
 private const val C_D = 0.47 // Drag Coefficient
 private const val C_L = 0.00025 // Lift Coefficient
