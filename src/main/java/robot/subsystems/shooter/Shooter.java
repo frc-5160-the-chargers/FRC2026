@@ -64,6 +64,7 @@ public class Shooter extends ChargerSubsystem {
     }
 
     public Shooter() {
+        ShotCalcsKt.initialize();
         configureGains();
         flywheelKp.onChange(this::configureGains);
         flywheelKd.onChange(this::configureGains);
