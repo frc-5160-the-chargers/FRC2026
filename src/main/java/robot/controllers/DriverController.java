@@ -5,6 +5,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
+import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -24,14 +25,15 @@ import java.util.Optional;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kLeftRumble;
-import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
         AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (Moving)", 5.5),
-        AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.01);
+        AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.01),
+        SWISHES_PER_SEC = Tunable.of("SwishesPerSecond", 1.0),
+        MAX_SWISH_OUTPUT = Tunable.of("MaxSwishOutput", 0.2);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -50,7 +52,9 @@ public class DriverController extends CommandPS5Controller {
         .withDriveRequestType(DriveRequestType.Velocity);
     private final FieldCentricFacingAngle facingAngleSwerveReq = new FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.Velocity)
-        .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance); // always
+        .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
+    private final RobotCentric swishingSwerveReq = new RobotCentric()
+        .withDriveRequestType(DriveRequestType.Velocity);
 
     private boolean aimToTargetInit = false;
     private double prevTargetRad = 0.0; // the previous target angle of the robot.
@@ -126,6 +130,12 @@ public class DriverController extends CommandPS5Controller {
             .withTargetDirection(targetAngle.get())
             .withTargetRateFeedforward(radiansPerSec)
             .withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
+    }
+
+    public SwerveRequest getSwishingSwerveRequest() {
+        double ticksPerSwish = SWISHES_PER_SEC.get() / 0.02;
+        double output = Math.sin(2 * Math.PI / ticksPerSwish) * MAX_SWISH_OUTPUT.get();
+        return swishingSwerveReq.withVelocityY(output * maxVelMetersPerSec);
     }
 
     public Command notifyHubShiftCmd() {

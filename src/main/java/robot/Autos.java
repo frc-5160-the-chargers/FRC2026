@@ -36,13 +36,8 @@ public class Autos {
         this.intake = intake;
         this.shooter = shooter;
         this.drive = drive;
-        // By Scheduling an invalid trajectory, we warm up java's runtime
-        // so that there isn't a 0.2 sec delay in auto.
         CommandScheduler.getInstance().schedule(
-            autoFactory.trajectoryCmd("DummyWarmupTraj")
-                .withTimeout(0.2)
-                .ignoringDisable(true)
-                .withName("Dummy warmup command")
+            autoFactory.warmupCmd()
         );
     }
 

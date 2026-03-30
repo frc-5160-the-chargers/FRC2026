@@ -34,16 +34,9 @@ public record ChoreoTraj(
 	public static final ChoreoTraj CenterLoopClose = new ChoreoTraj(
 	    "CenterLoopClose",
 	    OptionalInt.empty(),
-	    5.91953,
-	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897)),
+	    5.92972,
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046)),
 	    new Pose2d(2.745, 2.676, Rotation2d.fromRadians(0.649))
-	);
-	public static final ChoreoTraj CenterLoopFar = new ChoreoTraj(
-	    "CenterLoopFar",
-	    OptionalInt.empty(),
-	    6.93624,
-	    new Pose2d(4.416, 0.811, Rotation2d.fromRadians(3.142)),
-	    new Pose2d(2.5, 1.3, Rotation2d.fromRadians(0.897))
 	);
 	public static final ChoreoTraj CenterScore = new ChoreoTraj(
 	    "CenterScore",
@@ -108,19 +101,12 @@ public record ChoreoTraj(
 	    new Pose2d(0.72, 0.65, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.236, 2.119, Rotation2d.fromRadians(0.502))
 	);
-	public static final ChoreoTraj NewPath = new ChoreoTraj(
-	    "NewPath",
+	public static final ChoreoTraj CenterLoopFar = new ChoreoTraj(
+	    "CenterLoopFar",
 	    OptionalInt.empty(),
-	    1.77992,
-	    new Pose2d(4.351, 0.75, Rotation2d.fromRadians(1.571)),
-	    new Pose2d(7.849, 1.097, Rotation2d.fromRadians(-1.571))
-	);
-	public static final ChoreoTraj CenterLoopFar_copy1 = new ChoreoTraj(
-	    "CenterLoopFar_copy1",
-	    OptionalInt.empty(),
-	    6.47883,
-	    new Pose2d(4.416, 0.811, Rotation2d.fromRadians(3.142)),
-	    new Pose2d(4.3, 0.785, Rotation2d.fromRadians(1.571))
+	    6.60429,
+	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
 
     /**
@@ -130,7 +116,6 @@ public record ChoreoTraj(
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
     	Map.entry("CenterGrab", CenterGrab),
 		Map.entry("CenterLoopClose", CenterLoopClose),
-		Map.entry("CenterLoopFar", CenterLoopFar),
 		Map.entry("CenterScore", CenterScore),
 		Map.entry("CloseFuelGrab", CloseFuelGrab),
 		Map.entry("CloseFuelScore", CloseFuelScore),
@@ -140,8 +125,7 @@ public record ChoreoTraj(
 		Map.entry("mirrored_CenterScore", mirrored_CenterScore),
 		Map.entry("SubstationGrab", SubstationGrab),
 		Map.entry("SubstationScore", SubstationScore),
-		Map.entry("NewPath", NewPath),
-		Map.entry("CenterLoopFar_copy1", CenterLoopFar_copy1)
+		Map.entry("CenterLoopFar", CenterLoopFar)
     );
 
     /**

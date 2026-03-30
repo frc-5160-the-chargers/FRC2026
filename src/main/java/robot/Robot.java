@@ -1,6 +1,5 @@
 package robot;
 
-import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -76,13 +75,6 @@ public class Robot extends LoggedRobot {
         autoChooser = new CommandChooser("AutoModeChoices");
 
     public Robot() {
-        // TODO verify if this works
-        NetworkTableInstance.getDefault()
-            .startEntryDataLog(
-                DataLogManager.getLog(),
-                "photonvision",
-                "RealOutputs/PhotonVision"
-            );
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
@@ -195,6 +187,7 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.twoSwipeClose(false));
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
 
+        testChooser.addCmd("Test Swishing", () -> drive.driveCmd(driverPS5::getSwishingSwerveRequest));
         testChooser.addCmd("Test Reset Pose To Trench Left", () -> Commands.runOnce(() -> drive.resetPose(ChoreoTraj.mirrored_CenterLoopFar.initialPoseBlue())).ignoringDisable(true));
         testChooser.addCmd("Test Rumble", operatorXbox::notifySerializerReadyCmd);
         testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);

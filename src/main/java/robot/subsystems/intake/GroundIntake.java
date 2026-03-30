@@ -42,6 +42,7 @@ public class GroundIntake extends ChargerSubsystem {
 
     private final Tunable<Double>
         rollerReverseVolts = Tunable.of(key("Rollers/ReverseVolts"), -6.0),
+        agitateVolts = Tunable.of(key("Rollers/AgitateVolts"), 2.0),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
         rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 180),
         rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.02);
@@ -178,6 +179,7 @@ public class GroundIntake extends ChargerSubsystem {
     /** Alternates between the deploy and stow positions to agitate fuel. */
     public Command lowAgitateCmd() {
         var cmd = CmdSequence.of(
+            this.runOnce(() -> setRollerVolts(agitateVolts.get())),
             this.run(() -> setPivotPosition(agitateLowPos.get())).withTimeout(0.5),
             this.run(() -> setPivotPosition(intakePos.get())).withTimeout(0.5)
         )
@@ -188,6 +190,7 @@ public class GroundIntake extends ChargerSubsystem {
     /** Alternates between the deploy and stow positions to agitate fuel. */
     public Command highAgitateCmd() {
         var cmd = CmdSequence.of(
+            this.runOnce(() -> setRollerVolts(agitateVolts.get())),
             this.run(() -> setPivotPosition(agitateHighPos.get())).withTimeout(0.5),
             this.run(() -> setPivotPosition(stowPos.get())).withTimeout(0.5)
         )
