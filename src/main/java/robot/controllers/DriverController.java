@@ -11,6 +11,7 @@ import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -32,8 +33,9 @@ public class DriverController extends CommandPS5Controller {
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
         AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (Moving)", 5.5),
         AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.01),
-        SWISHES_PER_SEC = Tunable.of("SwishesPerSecond", 1.0),
-        MAX_SWISH_OUTPUT = Tunable.of("MaxSwishOutput", 0.2);
+        SWISHING_RATE_MULTIPLIER = Tunable.of("SwishingRateMultiplier", 13.0),
+        MAX_LINEAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Linear", 0.07),
+        MAX_ANGULAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Angular", 0.03);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -133,9 +135,11 @@ public class DriverController extends CommandPS5Controller {
     }
 
     public SwerveRequest getSwishingSwerveRequest() {
-        double ticksPerSwish = SWISHES_PER_SEC.get() / 0.02;
-        double output = Math.sin(2 * Math.PI / ticksPerSwish) * MAX_SWISH_OUTPUT.get();
-        return swishingSwerveReq.withVelocityY(output * maxVelMetersPerSec);
+        strafe = Math.sin(Timer.getTimestamp() * SWISHING_RATE_MULTIPLIER.get()) * MAX_LINEAR_SWISH_OUTPUT.get();
+        rotation = -Math.sin(Timer.getTimestamp() * SWISHING_RATE_MULTIPLIER.get()) * MAX_ANGULAR_SWISH_OUTPUT.get();
+        return swishingSwerveReq
+            .withVelocityY(strafe * maxVelMetersPerSec)
+            .withRotationalRate(rotation * maxVelRadPerSec);
     }
 
     public Command notifyHubShiftCmd() {

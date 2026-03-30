@@ -187,7 +187,15 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.twoSwipeClose(false));
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
 
-        testChooser.addCmd("Test Swishing", () -> drive.driveCmd(driverPS5::getSwishingSwerveRequest));
+        testChooser.addCmd(
+            "Hub Shot with Swish",
+            () -> superstructure.spinupAndAimCmd(Shooter.Target.HUB)
+                .alongWith(
+                    drive.driveCmd(() -> driverPS5.getSwerveRequest(superstructure.rotationOverride, superstructure.shootingAtHub))
+                        .withTimeout(4.0)
+                        .andThen(drive.driveCmd(driverPS5::getSwishingSwerveRequest))
+                )
+        );
         testChooser.addCmd("Test Reset Pose To Trench Left", () -> Commands.runOnce(() -> drive.resetPose(ChoreoTraj.mirrored_CenterLoopFar.initialPoseBlue())).ignoringDisable(true));
         testChooser.addCmd("Test Rumble", operatorXbox::notifySerializerReadyCmd);
         testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);
