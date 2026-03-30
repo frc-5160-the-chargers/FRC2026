@@ -55,21 +55,17 @@ public class AprilTagCam {
         io.refreshData(inputs);
         Logger.processInputs(key(""), inputs);
         disconnectedAlert.set(!inputs.connected);
-        if (RobotMode.get() == RobotMode.REAL && !inputs.connected) {
+        if (!inputs.connected || inputs.results.isEmpty()) {
             return List.of();
         }
 
         // process vision data into vision updates
-        // process vision data into esvision updates
         var poseEstimates = new ArrayList<CamPoseEstimate>();
         var posesWithErrExceeded = new ArrayList<Pose3d>();
         int ambHighCount = 0;
         String estimationStrat = "";
         fiducialIds.clear();
         poses.clear();
-        if (!inputs.results.isEmpty()) {
-            Logger.recordOutput(key("Heartbeat"), inputs.results.get(0).metadata.sequenceID);
-        }
         for (var result: inputs.results) {
             // ignores result if ambiguity is exceeded or if there is no targets.
             if (result.targets.isEmpty()) {
@@ -120,20 +116,18 @@ public class AprilTagCam {
         }
 
         // logs relevant data
-        boolean shouldLog = !inputs.results.isEmpty() && !DriverStation.isFMSAttached();
-        if (shouldLog || RobotMode.get() == RobotMode.REPLAY) {
-            int[] fiducialIdsArray = new int[fiducialIds.size()];
-            int i = 0;
-            for (var id: fiducialIds) {
-                fiducialIdsArray[i] = id;
-                i++;
-            }
-            Logger.recordOutput(key("AprilTagIds"), fiducialIdsArray);
-            Logger.recordOutput(key("NumAmbiguityExceeded"), ambHighCount);
-            Logger.recordOutput(key("ErraneousPoses"), posesWithErrExceeded.toArray(new Pose3d[0]));
-            Logger.recordOutput(key("Poses"), poses.toArray(new Pose3d[0]));
-            Logger.recordOutput(key("EstimationStrategy"), estimationStrat);
+        int[] fiducialIdsArray = new int[fiducialIds.size()];
+        int i = 0;
+        for (var id: fiducialIds) {
+            fiducialIdsArray[i] = id;
+            i++;
         }
+        Logger.recordOutput(key("AprilTagIds"), fiducialIdsArray);
+        Logger.recordOutput(key("NumAmbiguityExceeded"), ambHighCount);
+        Logger.recordOutput(key("ErraneousPoses"), posesWithErrExceeded.toArray(new Pose3d[0]));
+        Logger.recordOutput(key("Poses"), poses.toArray(new Pose3d[0]));
+        Logger.recordOutput(key("EstimationStrategy"), estimationStrat);
+        Logger.recordOutput(key("Heartbeat"), inputs.results.get(0).metadata.sequenceID);
 
         return poseEstimates;
     }
