@@ -81,11 +81,9 @@ public class Robot extends LoggedRobot {
         setDefaultCommands();
         mapAutoAndTestModes();
         drive.resetPose(new Pose2d(2.5, 4, Rotation2d.kZero));
-
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
-
         for (var cam: cameras) {
-            cam.setPipeline(VisionConsts.AprilTagPipeline.WAKE_WEEK_2);
+            cam.setPipeline(VisionConsts.AprilTagPipeline.HOME);
         }
         RobotController.setBrownoutVoltage(6.0);
     }
@@ -184,6 +182,7 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.twoSwipeClose(false));
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
 
+        testChooser.addCmd("Ground Intake Sim Test", () -> groundIntake.deployCmd(1.0, drive::getFieldSpeeds));
         testChooser.addCmd(
             "Hub Shot with Swish",
             () -> superstructure.spinupAndAimCmd(Shooter.Target.HUB)
@@ -228,8 +227,6 @@ public class Robot extends LoggedRobot {
         if (RobotMode.isSim()) {
             Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
-        RobotModeTriggers.autonomous()
-            .onTrue(Commands.runOnce(() -> SimulatedArena.getInstance().resetFieldForAuto()).ignoringDisable(true));
         canivoreLogger.periodic();
         for (var cam: cameras) {
             for (var update: cam.update()) {

@@ -41,7 +41,7 @@ public record ChoreoTraj(
 	public static final ChoreoTraj CenterLoopFar = new ChoreoTraj(
 	    "CenterLoopFar",
 	    OptionalInt.empty(),
-	    6.60429,
+	    6.18278,
 	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
@@ -122,6 +122,13 @@ public record ChoreoTraj(
 	    new Pose2d(9.6, 0.9, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(3.091, 0.957, Rotation2d.fromRadians(1.129))
 	);
+	public static final ChoreoTraj CenterLoopInverted = new ChoreoTraj(
+	    "CenterLoopInverted",
+	    OptionalInt.empty(),
+	    6.18278,
+	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
+	);
 
     /**
      * A map between trajectory names and their corresponding data.
@@ -141,7 +148,8 @@ public record ChoreoTraj(
 		Map.entry("SubstationGrab", SubstationGrab),
 		Map.entry("SubstationScore", SubstationScore),
 		Map.entry("NewPath", NewPath),
-		Map.entry("NewPath_copy1", NewPath_copy1)
+		Map.entry("NewPath_copy1", NewPath_copy1),
+		Map.entry("CenterLoopInverted", CenterLoopInverted)
     );
 
     /**
