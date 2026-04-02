@@ -107,6 +107,9 @@ public class Robot extends LoggedRobot {
                     .ignoringDisable(true)
                     .withName("Drive Reset Heading")
             );
+        driverPS5.povUp().whileTrue(
+            drive.driveCmd(driverPS5::getSwishingSwerveRequest)
+        );
         driverPS5.R1().whileTrue(
             drive.driveCmd(() -> driverPS5.getSwerveRequest(RobotConfig.getBumpTravelingAngle(), false))
         );

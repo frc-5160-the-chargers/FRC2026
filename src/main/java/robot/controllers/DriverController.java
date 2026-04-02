@@ -31,10 +31,11 @@ import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kLeftRumble;
 public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
-        AIM_KP = Tunable.of("ShotCalcs/Aiming/KP", 10.0),
+        AIM_KP = Tunable.of("ShotCalcs/Aiming/KP", 5.5),
         AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.01),
         SWISHING_RATE_MULTIPLIER = Tunable.of("SwishingRateMultiplier", 13.0),
-        MAX_LINEAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Linear", 0.07);
+        MAX_LINEAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Linear", 0.07),
+        MAX_ANGULAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Angular", 0.03);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -135,7 +136,10 @@ public class DriverController extends CommandPS5Controller {
 
     public SwerveRequest getSwishingSwerveRequest() {
         forward = Math.sin(Timer.getTimestamp() * SWISHING_RATE_MULTIPLIER.get()) * MAX_LINEAR_SWISH_OUTPUT.get();
-        return swishingSwerveReq.withVelocityX(forward * maxVelMetersPerSec);
+        strafe = Math.sin(Timer.getTimestamp() * SWISHING_RATE_MULTIPLIER.get()) * MAX_ANGULAR_SWISH_OUTPUT.get();
+        return swishingSwerveReq
+            .withVelocityY(forward * maxVelMetersPerSec)
+            .withRotationalRate(strafe * maxVelRadPerSec);
     }
 
     public Command notifyHubShiftCmd() {
