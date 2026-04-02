@@ -5,18 +5,19 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.RobotMode;
 import lib.Tunable;
+import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.Logger;
 import robot.subsystems.ChargerSubsystem;
 import robot.subsystems.common.RollerDataAutoLogged;
 import robot.subsystems.common.RollerHardware;
 import robot.subsystems.common.SimRollerHardware;
 
+import java.util.Optional;
+
 public class Serializer extends ChargerSubsystem {
     static final double CURRENT_LIMIT = 60;
-    static final int SIM_FUEL_REMOVAL_RATE = 5; // # of game pieces per sec
     static final double PULSE_ON_TIME_SECS = 2.0;
     static final double PULSE_OFF_TIME_SECS = 0.5;
-    public static final double FLYWHEEL_TO_SERIALIZER_SPEED_RATIO = 0.4;
 
     private final Tunable<Double>
         defaultVolts = Tunable.of(key("DefaultVolts"), 9.0),
@@ -27,25 +28,37 @@ public class Serializer extends ChargerSubsystem {
         case REPLAY -> new RollerHardware();
     };
     private final RollerDataAutoLogged inputs = new RollerDataAutoLogged();
+    private final Optional<IntakeSimulation> hopperSim;
+
+    public Serializer(Optional<IntakeSimulation> hopperSim) {
+        this.hopperSim = hopperSim;
+    }
 
     public Command pulseCmd() {
         var cmd = Commands.repeatingSequence(
-            this.run(() -> io.setVolts(defaultVolts.get()))
+            this.run(() -> setVolts(defaultVolts.get()))
                 .withTimeout(PULSE_ON_TIME_SECS),
-            this.run(() -> io.setVolts(pulseOffVolts.get()))
+            this.run(() -> setVolts(pulseOffVolts.get()))
                 .withTimeout(PULSE_OFF_TIME_SECS)
         );
         return logged(cmd, "Pulse");
     }
 
     public Command runCmd() {
-        var cmd = this.run(() -> io.setVolts(defaultVolts.get()));
+        var cmd = this.run(() -> setVolts(defaultVolts.get()));
         return logged(cmd, "Run");
     }
 
     public Command stopCmd() {
-        var cmd = this.run(() -> io.setVolts(0));
+        var cmd = this.run(() -> setVolts(0));
         return logged(cmd, "Idle");
+    }
+
+    private void setVolts(double volts) {
+        io.setVolts(volts);
+        if (volts != 0.0 && hopperSim.isPresent()) {
+            Logger.recordOutput(key("HasFuelInSim"), hopperSim.get().obtainGamePieceFromIntake());
+        }
     }
 
     @Override

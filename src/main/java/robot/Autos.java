@@ -4,6 +4,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj2.command.Command;
+import lib.Tunable;
 import lib.commands.CmdSequence;
 import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;

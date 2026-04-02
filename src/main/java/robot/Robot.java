@@ -4,8 +4,6 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
@@ -21,6 +19,7 @@ import lib.commands.CmdSequence;
 import lib.commands.CommandChooser;
 import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
+import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -36,8 +35,8 @@ import robot.subsystems.shooter.Shooter;
 import robot.vision.AprilTagCam;
 import robot.vision.VisionConsts;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -50,15 +49,15 @@ public class Robot extends LoggedRobot {
     private final CanBusLogger canivoreLogger = new CanBusLogger(RobotConfig.CANIVORE);
 
     private final SwerveSubsystem drive = new SwerveSubsystem(RobotConfig.swerveCfg);
-    private final GroundIntake groundIntake = new GroundIntake(RobotConfig.createIntakeSim(drive));
-    private final Serializer serializer = new Serializer();
+    private final Optional<IntakeSimulation> intakeSim = RobotConfig.createIntakeSim(drive);
+    private final GroundIntake groundIntake = new GroundIntake(intakeSim);
+    private final Serializer serializer = new Serializer(intakeSim);
     private final Shooter shooter = new Shooter();
-    private final AprilTagCam frontRightCam = new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS);
     private final List<AprilTagCam> cameras =
-        new ArrayList<>(List.of(
+        List.of(
             new AprilTagCam(drive.getSim(), VisionConsts.FL_CONSTS),
-            frontRightCam
-        ));
+            new AprilTagCam(drive.getSim(), VisionConsts.FR_CONSTS)
+        );
 
     private final DriverController driverPS5 = new DriverController(0, RobotConfig.swerveCfg);
     private final OperatorController operatorXbox = new OperatorController(1);
@@ -102,8 +101,6 @@ public class Robot extends LoggedRobot {
         operatorXbox.povUp().whileTrue(groundIntake.lowAgitateCmd());
         operatorXbox.povDown().whileTrue(groundIntake.outtakeCmd());
         operatorXbox.x().onTrue(shooter.setIdleBehaviorToSpinupCmd());
-        operatorXbox.start().multiPress(2, 1.0)
-            .onTrue(Commands.runOnce(() -> cameras.remove(frontRightCam)).ignoringDisable(true));
 
         driverPS5.touchpad()
             .multiPress(2, 1.0)
@@ -231,6 +228,8 @@ public class Robot extends LoggedRobot {
         if (RobotMode.isSim()) {
             Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
         }
+        RobotModeTriggers.autonomous()
+            .onTrue(Commands.runOnce(() -> SimulatedArena.getInstance().resetFieldForAuto()).ignoringDisable(true));
         canivoreLogger.periodic();
         for (var cam: cameras) {
             for (var update: cam.update()) {

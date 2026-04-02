@@ -34,8 +34,12 @@ public class SwerveHardware {
     protected final String name;
     private int cachedDrivetrainId;
     private SwerveJNI dataLogger;
+    private final BaseStatusSignal pitchDeg, accelX, accelY;
     private final BaseStatusSignal[] debugSignals = new BaseStatusSignal[5];
     private final Queue<OdometryFrame> poseEstBuffer = new ArrayDeque<>();
+
+    private double xTest, yTest;
+    private boolean velocityTestInit = false;
 
     public SwerveHardware(SwerveConfig config) {
         name = config.name() + "/";
@@ -48,6 +52,10 @@ public class SwerveHardware {
             cachedDrivetrainId = m_drivetrainId;
             dataLogger = m_jni.clone();
         }};
+        pitchDeg = drivetrain.getPigeon2().getPitch();
+        accelX = drivetrain.getPigeon2().getAccelerationX();
+        accelY = drivetrain.getPigeon2().getAccelerationY();
+        SignalRefresh.register(100.0, drivetrain.getPigeon2().getNetwork(), pitchDeg, accelX, accelY);
         // Makes the addPoseEstFrame() method execute every 0.004 secs(or 250hz).
         dataLogger.JNI_RegisterTelemetry(cachedDrivetrainId, this::addPoseEstFrame);
         drivetrain.getOdometryThread().setThreadPriority(2);
@@ -96,6 +104,7 @@ public class SwerveHardware {
             AllianceColor.isRed() ? Rotation2d.k180deg : Rotation2d.kZero
         );
         inputs.timeOffsetSecs = Utils.fpgaToCurrentTime(0);
+        inputs.pitchDeg = pitchDeg.getValueAsDouble();
         synchronized (this) {
             inputs.bufferOverflow = poseEstBuffer.size() > MAX_BUFFER_CAPACITY;
             inputs.poseEstFrames = poseEstBuffer.toArray(new OdometryFrame[0]);
@@ -108,6 +117,15 @@ public class SwerveHardware {
             inputs.pose = new Pose2d(state.PoseX, state.PoseY, Rotation2d.fromRadians(state.PoseTheta));
             inputs.robotRelativeSpeeds = new ChassisSpeeds(state.SpeedsVx, state.SpeedsVy, state.SpeedsOmega);
         }
+        if (!velocityTestInit) {
+            xTest = inputs.pose.getX();
+            yTest = inputs.pose.getY();
+            velocityTestInit = true;
+        } else {
+            xTest += accelX.getValueAsDouble() * 0.5 * 0.02 * 0.02;
+            yTest += accelY.getValueAsDouble() * 0.5 * 0.02 * 0.02;
+        }
+        Logger.recordOutput("PoseTest", new Pose2d(xTest, yTest, Rotation2d.kZero));
         if (RobotMode.get() != RobotMode.REPLAY) logDebugData();
     }
 
