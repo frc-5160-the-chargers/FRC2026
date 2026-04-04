@@ -32,7 +32,8 @@ public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
         AIM_KP = Tunable.of("ShotCalcs/Aiming/KP", 5.5),
-        AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.01),
+        SOTM_AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (SOTM)", 1.0),
+        AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.03),
         SWISHING_RATE_MULTIPLIER = Tunable.of("SwishingRateMultiplier", 13.0),
         MAX_LINEAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Linear", 0.07),
         MAX_ANGULAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Angular", 0.03),
@@ -138,15 +139,16 @@ public class DriverController extends CommandPS5Controller {
         prevTargetRad = targetAngle.get().getRadians();
         aimToTargetInit = true;
         rotation = radiansPerSec / maxVelRadPerSec;
+        boolean isSlowSotm = Math.hypot(forward, strafe) > 0.15 && Math.hypot(forward, strafe) < 0.3;
+        double kP = isSlowSotm ? SOTM_AIM_KP.get() : AIM_KP.get();
 
-        var req = facingAngleSwerveReq
+        return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec)
             .withVelocityY(strafe * maxVelMetersPerSec)
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
             .withTargetDirection(targetAngle.get())
-            .withTargetRateFeedforward(radiansPerSec);
-        req = req.withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
-        return req;
+            .withTargetRateFeedforward(radiansPerSec)
+            .withHeadingPID(kP, 0.0, AIM_KD.get());
     }
 
     public SwerveRequest getSwishingSwerveRequest() {

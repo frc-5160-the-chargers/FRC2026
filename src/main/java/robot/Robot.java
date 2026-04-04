@@ -67,7 +67,7 @@ public class Robot extends LoggedRobot {
             operatorXbox::getFlywheelSpeedAdjustment,
             drive, groundIntake, shooter, serializer
         );
-//    private final Autos autos = new Autos(drive, groundIntake, superstructure, shooter);
+    private final Autos autos = new Autos(drive, groundIntake, superstructure, shooter);
 
     private final CommandChooser
         testChooser = new CommandChooser("TestModeChoices"),
@@ -179,10 +179,11 @@ public class Robot extends LoggedRobot {
             "Reset Heading, shooter pointing towards DS",
             () -> Commands.runOnce(() -> drive.resetHeading(Rotation2d.k180deg))
         );
-//        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipe(false, false));
-//        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true, false));
-//        autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.oneSwipeGrab(false));
-//        autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.oneSwipeGrab(true));
+        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipe(false, false));
+        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true, false));
+        autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.oneSwipeGrab(false));
+        autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.oneSwipeGrab(true));
+        autoChooser.addCmd("Midline Bump Test", () -> autos.stealFuelOverBump(false));
 
         testChooser.addCmd(
             "SOTM Test",

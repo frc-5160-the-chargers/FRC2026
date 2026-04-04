@@ -24,7 +24,35 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj CloseFuelGrab = new ChoreoTraj(
+    public static final ChoreoTraj BumpMidlineGrab = new ChoreoTraj(
+	    "BumpMidlineGrab",
+	    OptionalInt.empty(),
+	    4.79599,
+	    new Pose2d(2.4, 5.2, Rotation2d.fromRadians(-0.465)),
+	    new Pose2d(10.5, 4.05, Rotation2d.fromRadians(3.142))
+	);
+	public static final ChoreoTraj BumpMidlineScore = new ChoreoTraj(
+	    "BumpMidlineScore",
+	    OptionalInt.empty(),
+	    3.32689,
+	    new Pose2d(10.5, 4.05, Rotation2d.fromRadians(3.142)),
+	    new Pose2d(2.1, 5.45, Rotation2d.fromRadians(-0.49))
+	);
+	public static final ChoreoTraj CenterLoopPart1 = new ChoreoTraj(
+	    "CenterLoopPart1",
+	    OptionalInt.empty(),
+	    6.60429,
+	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
+	);
+	public static final ChoreoTraj CenterLoopPart2 = new ChoreoTraj(
+	    "CenterLoopPart2",
+	    OptionalInt.empty(),
+	    6.45151,
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046)),
+	    new Pose2d(3.75, 0.85, Rotation2d.fromRadians(1.323))
+	);
+	public static final ChoreoTraj CloseFuelGrab = new ChoreoTraj(
 	    "CloseFuelGrab",
 	    OptionalInt.empty(),
 	    1.29793,
@@ -37,6 +65,48 @@ public record ChoreoTraj(
 	    0.78065,
 	    new Pose2d(0.74, 6.1, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.359, 6.443, Rotation2d.fromRadians(-0.616))
+	);
+	public static final ChoreoTraj DriveBackAndShoot = new ChoreoTraj(
+	    "DriveBackAndShoot",
+	    OptionalInt.empty(),
+	    1.16197,
+	    new Pose2d(3.55, 4.05, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.4, 5.2, Rotation2d.fromRadians(-0.461))
+	);
+	public static final ChoreoTraj mirrored_BumpMidlineGrab = new ChoreoTraj(
+	    "mirrored_BumpMidlineGrab",
+	    OptionalInt.empty(),
+	    4.796,
+	    new Pose2d(2.4, 2.843, Rotation2d.fromRadians(0.465)),
+	    new Pose2d(10.5, 3.993, Rotation2d.fromRadians(-3.142))
+	);
+	public static final ChoreoTraj mirrored_BumpMidlineScore = new ChoreoTraj(
+	    "mirrored_BumpMidlineScore",
+	    OptionalInt.empty(),
+	    3.31914,
+	    new Pose2d(10.5, 3.993, Rotation2d.fromRadians(-3.142)),
+	    new Pose2d(2.1, 2.593, Rotation2d.fromRadians(0.507))
+	);
+	public static final ChoreoTraj mirrored_CenterLoopPart1 = new ChoreoTraj(
+	    "mirrored_CenterLoopPart1",
+	    OptionalInt.empty(),
+	    6.60376,
+	    new Pose2d(4.45, 7.593, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(2.95, 6.993, Rotation2d.fromRadians(-1.037))
+	);
+	public static final ChoreoTraj mirrored_CenterLoopPart2 = new ChoreoTraj(
+	    "mirrored_CenterLoopPart2",
+	    OptionalInt.empty(),
+	    6.44633,
+	    new Pose2d(2.95, 6.993, Rotation2d.fromRadians(-1.046)),
+	    new Pose2d(3.75, 7.193, Rotation2d.fromRadians(-1.318))
+	);
+	public static final ChoreoTraj mirrored_DriveBackAndShoot = new ChoreoTraj(
+	    "mirrored_DriveBackAndShoot",
+	    OptionalInt.empty(),
+	    1.16167,
+	    new Pose2d(3.55, 3.993, Rotation2d.fromRadians(0)),
+	    new Pose2d(2.4, 2.843, Rotation2d.fromRadians(0.481))
 	);
 	public static final ChoreoTraj SubstationGrab = new ChoreoTraj(
 	    "SubstationGrab",
@@ -58,8 +128,18 @@ public record ChoreoTraj(
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-    	Map.entry("CloseFuelGrab", CloseFuelGrab),
+    	Map.entry("BumpMidlineGrab", BumpMidlineGrab),
+		Map.entry("BumpMidlineScore", BumpMidlineScore),
+		Map.entry("CenterLoopPart1", CenterLoopPart1),
+		Map.entry("CenterLoopPart2", CenterLoopPart2),
+		Map.entry("CloseFuelGrab", CloseFuelGrab),
 		Map.entry("CloseFuelScore", CloseFuelScore),
+		Map.entry("DriveBackAndShoot", DriveBackAndShoot),
+		Map.entry("mirrored_BumpMidlineGrab", mirrored_BumpMidlineGrab),
+		Map.entry("mirrored_BumpMidlineScore", mirrored_BumpMidlineScore),
+		Map.entry("mirrored_CenterLoopPart1", mirrored_CenterLoopPart1),
+		Map.entry("mirrored_CenterLoopPart2", mirrored_CenterLoopPart2),
+		Map.entry("mirrored_DriveBackAndShoot", mirrored_DriveBackAndShoot),
 		Map.entry("SubstationGrab", SubstationGrab),
 		Map.entry("SubstationScore", SubstationScore)
     );
