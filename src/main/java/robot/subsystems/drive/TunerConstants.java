@@ -69,8 +69,10 @@ public class TunerConstants {
     private static final Pigeon2Configuration pigeonConfigs = null;
 
     static {
-        steerInitialConfigs.CurrentLimits.StatorCurrentLimit = 60;
+        steerInitialConfigs.CurrentLimits.StatorCurrentLimit = 30.0;
         steerInitialConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
+        steerInitialConfigs.CurrentLimits.SupplyCurrentLimit = 40.0;
+        steerInitialConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
         driveInitialConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         steerInitialConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     }
