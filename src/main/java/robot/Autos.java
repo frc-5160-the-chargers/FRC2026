@@ -148,7 +148,7 @@ public class Autos {
         shootPreload.done()
             .onTrue(
                 superstructure.shootInAutoCmd(Target.HUB, 1000)
-                    .withTimeout(1.0)
+                    .withTimeout(3.0)
                     .andThen(midlineGrab.spawnCmd())
             );
 
