@@ -27,15 +27,15 @@ public record ChoreoTraj(
     public static final ChoreoTraj BumpMidlineGrab = new ChoreoTraj(
 	    "BumpMidlineGrab",
 	    OptionalInt.empty(),
-	    4.79599,
+	    4.57891,
 	    new Pose2d(2.4, 5.2, Rotation2d.fromRadians(-0.465)),
-	    new Pose2d(10.5, 4.05, Rotation2d.fromRadians(3.142))
+	    new Pose2d(9.595, 4.124, Rotation2d.fromRadians(3.142))
 	);
 	public static final ChoreoTraj BumpMidlineScore = new ChoreoTraj(
 	    "BumpMidlineScore",
 	    OptionalInt.empty(),
-	    3.32689,
-	    new Pose2d(10.5, 4.05, Rotation2d.fromRadians(3.142)),
+	    3.47844,
+	    new Pose2d(9.81, 4.124, Rotation2d.fromRadians(3.142)),
 	    new Pose2d(2.1, 5.45, Rotation2d.fromRadians(-0.49))
 	);
 	public static final ChoreoTraj CenterLoopPart1 = new ChoreoTraj(
