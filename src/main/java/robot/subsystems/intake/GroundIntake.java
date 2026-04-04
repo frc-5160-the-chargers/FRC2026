@@ -152,6 +152,14 @@ public class GroundIntake extends ChargerSubsystem {
         return logged(cmd, "Stow");
     }
 
+    public Command moveUpForBumpTravelCmd() {
+        var cmd = CmdSequence.of(
+            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
+            this.run(() -> setPivotPosition(Degrees.of(-30)))
+        );
+        return logged(cmd, "moveUpForBumpTravelCmd");
+    }
+
     /**
      * A command that runs the intake and deploys the pivot, with scaling based off the robot's speed.
      * @param robotSpeeds The robot-relative chassis speeds of the robot.

@@ -21,7 +21,7 @@ public class Serializer extends ChargerSubsystem {
 
     private final Tunable<Double>
         defaultVolts = Tunable.of(key("DefaultVolts"), 9.0),
-        pulseOffVolts = Tunable.of(key("PulseOffVolts"), -3.0);
+        pulseOffVolts = Tunable.of(key("PulseOffVolts"), 3.0);
     private final RollerHardware io = switch (RobotMode.get()) {
         case REAL -> new KrakenSerializerRollers();
         case SIM -> new SimRollerHardware(DCMotor.getKrakenX60(1), 1.0);
