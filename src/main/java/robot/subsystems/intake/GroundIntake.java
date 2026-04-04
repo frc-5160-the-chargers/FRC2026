@@ -44,7 +44,7 @@ public class GroundIntake extends ChargerSubsystem {
         rollerReverseVolts = Tunable.of(key("Rollers/ReverseVolts"), -6.0),
         agitateVolts = Tunable.of(key("Rollers/AgitateVolts"), 2.0),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
-        rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 180),
+        rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 110),
         rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.02);
     private final Tunable<Double>
         pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
