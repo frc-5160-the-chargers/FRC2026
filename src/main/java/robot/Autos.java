@@ -4,7 +4,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj2.command.Command;
-import lib.Tunable;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import lib.commands.CmdSequence;
 import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
@@ -36,9 +36,14 @@ public class Autos {
         this.intake = intake;
         this.shooter = shooter;
         this.drive = drive;
-//        CommandScheduler.getInstance().schedule(
-//            autoFactory.warmupCmd()
-//        );
+        // By Scheduling an invalid trajectory, we warm up java's runtime
+        // so that there isn't a 0.2 sec delay in auto.
+        CommandScheduler.getInstance().schedule(
+            autoFactory.trajectoryCmd("DummyWarmupTraj")
+                .withTimeout(0.2)
+                .ignoringDisable(true)
+                .withName("Dummy warmup command")
+        );
     }
 
     private AutoRoutine newAutoRoutine(String name) {
@@ -59,29 +64,11 @@ public class Autos {
         }
     }
 
-    /** An auto routine that grabs balls from the center and shoots them. */
-    public Command oneSwipe(boolean leftSide) {
-        var routine = newAutoRoutine("OneSwipe");
-        var grab1 = newAutoTraj(routine, ChoreoTraj.CenterGrab, leftSide);
-        var score1 = newAutoTraj(routine, ChoreoTraj.CenterScore, leftSide);
-
-        routine.active()
-            .onTrue(CmdSequence.of(grab1.resetOdometry(), grab1.spawnCmd()));
-        grab1.active()
-            .whileTrue(intake.deployCmd(1, drive::getRobotSpeeds));
-        grab1.doneDelayed(0.5)
-            .onTrue(score1.spawnCmd());
-        score1.doneDelayed(0.2)
-            .onTrue(superstructure.shootInAutoCmd(Target.HUB, 100.0));
-
-        return routine.cmd();
-    }
-
     /** An auto routine that grabs balls from the center and shoots them, repeating twice. */
-    public Command twoSwipeFar(boolean leftSide) {
+    public Command twoSwipe(boolean leftSide, boolean runInnerLoop) {
         var routine = newAutoRoutine("TwoSwipeFar");
-        var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
-        var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopClose, leftSide);
+        var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart1, leftSide);
+        var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart2, leftSide);
 
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
@@ -106,9 +93,9 @@ public class Autos {
      * An auto routine that grabs balls from the middle, then grabs them
      * from either the human player station or the batch of balls on the ground.
      */
-    public Command twoSwipeClose(boolean leftSide) {
+    public Command oneSwipeGrab(boolean leftSide) {
         var routine = newAutoRoutine("TwoSwipeClose");
-        var centerScoop = newAutoTraj(routine, ChoreoTraj.CenterLoopFar, leftSide);
+        var centerScoop = newAutoTraj(routine, ChoreoTraj.CenterLoopPart1, leftSide);
         var closeGrab = newAutoTraj(
             routine,
             leftSide ? ChoreoTraj.CloseFuelGrab : ChoreoTraj.SubstationGrab,
@@ -143,6 +130,37 @@ public class Autos {
             .onTrue(closeScore.spawnCmd());
         closeScore.atTime(shootTime)
             .onTrue(superstructure.shootInAutoCmd(Target.HUB, 1.5));
+
+        return routine.cmd();
+    }
+
+
+    public Command stealFuelOverBump(boolean leftSide) {
+        var routine = newAutoRoutine("StealFuelOverBump");
+        var shootPreload = newAutoTraj(routine, ChoreoTraj.DriveBackAndShoot, !leftSide);
+        var midlineGrab = newAutoTraj(routine, ChoreoTraj.BumpMidlineGrab, !leftSide);
+        var midlineScore = newAutoTraj(routine, ChoreoTraj.BumpMidlineScore, !leftSide);
+
+        routine.active()
+            .onTrue(shootPreload.resetOdometry().andThen(shootPreload.spawnCmd()));
+        shootPreload.active()
+            .whileTrue(superstructure.hubShotSpinupCmd(shootPreload));
+        shootPreload.done()
+            .onTrue(
+                superstructure.shootInAutoCmd(Target.HUB, 1000)
+                    .withTimeout(1.0)
+                    .andThen(midlineGrab.spawnCmd())
+            );
+
+        midlineGrab.atTime(1.7)
+            .onTrue(superstructure.intakeInAutoCmd(1.0));
+        midlineGrab.doneDelayed(2.0)
+            .onTrue(midlineScore.spawnCmd());
+
+        midlineScore.atTime(1.8)
+            .onTrue(intake.moveUpForBumpTravelCmd());
+        midlineScore.active().whileTrue(superstructure.hubShotSpinupCmd(midlineScore));
+        midlineScore.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 
         return routine.cmd();
     }

@@ -179,12 +179,10 @@ public class Robot extends LoggedRobot {
             "Reset Heading, shooter pointing towards DS",
             () -> Commands.runOnce(() -> drive.resetHeading(Rotation2d.k180deg))
         );
-        autoChooser.addCmd("One Swipe, Right", () -> autos.oneSwipe(false));
-        autoChooser.addCmd("One Swipe, Left", () -> autos.oneSwipe(true));
-        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipeFar(false));
-        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipeFar(true));
-        autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.twoSwipeClose(false));
-        autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
+        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipe(false, false));
+        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true, false));
+        autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.oneSwipeGrab(false));
+        autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.oneSwipeGrab(true));
 
         testChooser.addCmd(
             "SOTM Test",
@@ -201,7 +199,6 @@ public class Robot extends LoggedRobot {
                         .andThen(drive.driveCmd(driverPS5::getSwishingSwerveRequest))
                 )
         );
-        testChooser.addCmd("Test Reset Pose To Trench Left", () -> Commands.runOnce(() -> drive.resetPose(ChoreoTraj.mirrored_CenterLoopFar.initialPoseBlue())).ignoringDisable(true));
         testChooser.addCmd("Test Rumble", operatorXbox::notifySerializerReadyCmd);
         testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);
         testChooser.addCmd("Test Hub Shot", () -> superstructure.shootInAutoCmd(Shooter.Target.HUB, 2));

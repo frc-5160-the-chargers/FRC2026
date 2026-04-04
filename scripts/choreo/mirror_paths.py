@@ -59,12 +59,18 @@ def mirror_constraint(constraint):
 
 def main():
     choreo_files = os.listdir(choreo_dir)
+    traj_files = []
 
     # Find only .traj files that do not contain the word "mirrored"
-    traj_files = [file for file in choreo_files if file.endswith(".traj") and "mirrored" not in file]
-    traj_files = [file for file in traj_files if file not in ignore_mirrored]
-    for file in traj_files:
-        traj = load_traj(choreo_dir + "\\" + file)
+    for file in choreo_files:
+        if not file.endswith(".traj") or file in ignore_mirrored:
+            continue
+        full_path = os.path.join(choreo_dir, file)
+        if "mirrored_" in file:
+            os.remove(full_path)
+            continue
+        traj_files.append(full_path)
+        traj = load_traj(full_path)
         waypoints = traj["params"]["waypoints"]
         constraints = traj["params"]["constraints"]
 
@@ -80,7 +86,7 @@ def main():
         traj["trajectory"]["samples"] = []
 
         # save the mirrored traj
-        with open(choreo_dir + "\\" + "mirrored_" + file, 'w') as f:
+        with open(os.path.join(choreo_dir, "mirrored_" + file), 'w') as f:
             json.dump(traj, f, indent=2)
 
     # Uses Choreo CLI to generate trajectories
