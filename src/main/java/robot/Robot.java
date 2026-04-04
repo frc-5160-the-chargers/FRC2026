@@ -86,6 +86,7 @@ public class Robot extends LoggedRobot {
             cam.setPipeline(VisionConsts.AprilTagPipeline.HOME);
         }
         RobotController.setBrownoutVoltage(6.0);
+        if (RobotMode.isSim()) SimulatedArena.getInstance().placeGamePiecesOnField();
     }
 
     private void setCompButtonBindings() {
@@ -185,6 +186,11 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.twoSwipeClose(false));
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.twoSwipeClose(true));
 
+        testChooser.addCmd(
+            "SOTM Test",
+            () -> superstructure.spinupAndAimCmd(Shooter.Target.HUB)
+                .alongWith(drive.driveCmd(() -> driverPS5.debugDemoRequest(superstructure.rotationOverride)))
+        );
         testChooser.addCmd("Ground Intake Sim Test", () -> groundIntake.deployCmd(1.0, drive::getFieldSpeeds));
         testChooser.addCmd(
             "Hub Shot with Swish",

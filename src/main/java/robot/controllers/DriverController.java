@@ -35,7 +35,8 @@ public class DriverController extends CommandPS5Controller {
         AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.01),
         SWISHING_RATE_MULTIPLIER = Tunable.of("SwishingRateMultiplier", 13.0),
         MAX_LINEAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Linear", 0.07),
-        MAX_ANGULAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Angular", 0.03);
+        MAX_ANGULAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Angular", 0.03),
+        AIM_PID_REDUCED_SPEED_THRESH = Tunable.of("AimPidReducedSpeedThresh", 0.16);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -83,6 +84,19 @@ public class DriverController extends CommandPS5Controller {
         return Math.min(1.0, output * SPEED_REDUCTION.get());
     }
 
+    public SwerveRequest debugDemoRequest(Optional<Rotation2d> targetAngle) {
+        if (targetAngle.isEmpty()) return getSwerveRequest();
+        double deltaRad = MathUtil.angleModulus(targetAngle.get().getRadians() - prevTargetRad);
+        double radiansPerSec = rotationFilter.calculate(deltaRad / 0.02);
+        prevTargetRad = targetAngle.get().getRadians();
+        return new SwerveRequest.FieldCentricFacingAngle()
+            .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
+            .withHeadingPID(0.02, 0, 0.0)
+            .withTargetDirection(targetAngle.get())
+            .withTargetRateFeedforward(radiansPerSec)
+            .withVelocityY(0.3);
+    }
+
     public SwerveRequest getSwerveRequest() {
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar;
@@ -125,13 +139,18 @@ public class DriverController extends CommandPS5Controller {
         aimToTargetInit = true;
         rotation = radiansPerSec / maxVelRadPerSec;
 
-        return facingAngleSwerveReq
+        var req = facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec)
             .withVelocityY(strafe * maxVelMetersPerSec)
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
             .withTargetDirection(targetAngle.get())
-            .withTargetRateFeedforward(radiansPerSec)
-            .withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
+            .withTargetRateFeedforward(radiansPerSec);
+        if (Math.hypot(forward, strafe) < AIM_PID_REDUCED_SPEED_THRESH.get()) {
+            req = req.withHeadingPID(AIM_KP.get() / 4.0, 0, 0);
+        } else {
+            req = req.withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
+        }
+        return req;
     }
 
     public SwerveRequest getSwishingSwerveRequest() {
