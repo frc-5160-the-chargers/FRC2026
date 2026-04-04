@@ -145,7 +145,7 @@ public class DriverController extends CommandPS5Controller {
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
             .withTargetDirection(targetAngle.get())
             .withTargetRateFeedforward(radiansPerSec);
-        if (Math.hypot(forward, strafe) > 0.1 && Math.hypot(forward, strafe) < 0.2) {
+        if (Math.hypot(forward, strafe) > 0.1 && Math.hypot(forward, strafe) < 0.3) {
             req = req.withHeadingPID(AIM_KP.get() / 4.0, 0, 0);
         } else {
             req = req.withHeadingPID(AIM_KP.get(), 0, AIM_KD.get());
