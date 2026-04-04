@@ -71,8 +71,10 @@ public class TunerConstants {
     static {
         steerInitialConfigs.CurrentLimits.StatorCurrentLimit = 30.0;
         steerInitialConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
-        steerInitialConfigs.CurrentLimits.SupplyCurrentLimit = 40.0;
+        steerInitialConfigs.CurrentLimits.SupplyCurrentLimit = 45.0;
         steerInitialConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
+        driveInitialConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
+        driveInitialConfigs.CurrentLimits.SupplyCurrentLimit = 80.0;
         driveInitialConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         steerInitialConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     }
