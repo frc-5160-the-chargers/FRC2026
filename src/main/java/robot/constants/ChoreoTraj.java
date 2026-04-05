@@ -27,16 +27,16 @@ public record ChoreoTraj(
     public static final ChoreoTraj BumpMidlineGrab = new ChoreoTraj(
 	    "BumpMidlineGrab",
 	    OptionalInt.empty(),
-	    4.57891,
+	    4.97404,
 	    new Pose2d(2.4, 5.2, Rotation2d.fromRadians(-0.465)),
 	    new Pose2d(9.595, 4.124, Rotation2d.fromRadians(3.142))
 	);
 	public static final ChoreoTraj BumpMidlineScore = new ChoreoTraj(
 	    "BumpMidlineScore",
 	    OptionalInt.empty(),
-	    3.47844,
+	    4.37584,
 	    new Pose2d(9.81, 4.124, Rotation2d.fromRadians(3.142)),
-	    new Pose2d(2.1, 5.45, Rotation2d.fromRadians(-0.49))
+	    new Pose2d(2.1, 5.45, Rotation2d.fromRadians(-0.496))
 	);
 	public static final ChoreoTraj CenterLoopPart1 = new ChoreoTraj(
 	    "CenterLoopPart1",
@@ -45,10 +45,17 @@ public record ChoreoTraj(
 	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
+	public static final ChoreoTraj CenterLoopPart1Close = new ChoreoTraj(
+	    "CenterLoopPart1Close",
+	    OptionalInt.empty(),
+	    5.86056,
+	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
+	);
 	public static final ChoreoTraj CenterLoopPart2 = new ChoreoTraj(
 	    "CenterLoopPart2",
 	    OptionalInt.empty(),
-	    6.45151,
+	    6.46827,
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046)),
 	    new Pose2d(3.75, 0.85, Rotation2d.fromRadians(1.323))
 	);
@@ -131,6 +138,7 @@ public record ChoreoTraj(
     	Map.entry("BumpMidlineGrab", BumpMidlineGrab),
 		Map.entry("BumpMidlineScore", BumpMidlineScore),
 		Map.entry("CenterLoopPart1", CenterLoopPart1),
+		Map.entry("CenterLoopPart1Close", CenterLoopPart1Close),
 		Map.entry("CenterLoopPart2", CenterLoopPart2),
 		Map.entry("CloseFuelGrab", CloseFuelGrab),
 		Map.entry("CloseFuelScore", CloseFuelScore),

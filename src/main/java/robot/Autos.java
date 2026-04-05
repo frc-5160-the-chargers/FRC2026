@@ -73,7 +73,7 @@ public class Autos {
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj1));
-        traj1.atTime(0.5)
+        traj1.atTime(0.2)
             .onTrue(superstructure.intakeInAutoCmd(2.4));
         traj1.done().onTrue(
             CmdSequence.of(
@@ -160,7 +160,7 @@ public class Autos {
         midlineScore.atTime(1.8)
             .onTrue(intake.moveUpForBumpTravelCmd());
         midlineScore.active().whileTrue(superstructure.hubShotSpinupCmd(midlineScore));
-        midlineScore.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
+        midlineScore.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 1.0));
 
         return routine.cmd();
     }

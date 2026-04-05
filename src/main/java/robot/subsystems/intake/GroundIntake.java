@@ -187,7 +187,10 @@ public class GroundIntake extends ChargerSubsystem {
     /** Alternates between the deploy and stow positions to agitate fuel. */
     public Command lowAgitateCmd() {
         var cmd = CmdSequence.of(
-            this.runOnce(() -> setRollerVolts(agitateVolts.get())),
+            this.runOnce(() -> {
+                setRollerVolts(agitateVolts.get());
+                setpoint = pivotInputs.getMotionState();
+            }),
             this.run(() -> setPivotPosition(agitateLowPos.get())).withTimeout(0.5),
             this.run(() -> setPivotPosition(intakePos.get())).withTimeout(0.5)
         )
