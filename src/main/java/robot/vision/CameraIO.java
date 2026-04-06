@@ -36,6 +36,13 @@ public class CameraIO {
         inputs.connected = cam.isConnected();
         inputs.fps = camFps.get();
         inputs.results = cam.getAllUnreadResults();
+        if (inputs.results.size() > 4) {
+            var newResults = new ArrayList<PhotonPipelineResult>();
+            for (int i = 0; i < 4; i++) {
+                newResults.add(inputs.results.get(i));
+            }
+            inputs.results = newResults;
+        }
     }
 
     /** Represents raw camera data from a photon camera every 0.02 seconds. */

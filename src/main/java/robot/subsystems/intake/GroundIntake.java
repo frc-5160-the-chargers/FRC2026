@@ -54,6 +54,8 @@ public class GroundIntake extends ChargerSubsystem {
     private final Tunable<Double>
         pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 9.0),
         pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 8.5),
+        pivotFastMaxVel = Tunable.of(key("Pivot/FastMaxVel(rad per s)"), 7.0),
+        pivotFastMaxAccel = Tunable.of(key("Pivot/FastMaxAccel(rad per s^2)"), 20.0),
         pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.07),
         pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), -0.38),
         pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
@@ -72,7 +74,7 @@ public class GroundIntake extends ChargerSubsystem {
     private final Debouncer hardStopDebouncer = new Debouncer(0.2);
     private final Optional<IntakeSimulation> sim;
 
-    private TrapezoidProfile motionProfile;
+    private TrapezoidProfile motionProfile, fastMotionProfile;
     @AutoLogOutput private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
 
     public GroundIntake(Optional<IntakeSimulation> sim) {
@@ -103,6 +105,8 @@ public class GroundIntake extends ChargerSubsystem {
     private void applyConfigs() {
         var constraints = new TrapezoidProfile.Constraints(pivotMaxVel.get(), pivotMaxAccel.get());
         motionProfile = new TrapezoidProfile(constraints);
+        var fastConstraints = new TrapezoidProfile.Constraints(pivotFastMaxVel.get(), pivotFastMaxAccel.get());
+        fastMotionProfile = new TrapezoidProfile(fastConstraints);
         pivotIO.setPDGains(pivotKp.get(), 0.0);
         pivotIO.setCurrentLimit(pivotCurrentLimit.get());
         rollerIO.setCurrentLimit(rollerCurrentLimit.get());
@@ -128,8 +132,13 @@ public class GroundIntake extends ChargerSubsystem {
     }
 
     private void setPivotPosition(Angle angle) {
+        setPivotPosition(angle, false);
+    }
+
+    private void setPivotPosition(Angle angle, boolean isFast) {
         var goal = new TrapezoidProfile.State(angle.in(Radians), 0);
-        setpoint = motionProfile.calculate(0.02, setpoint, goal);
+        var profile = isFast ? fastMotionProfile : motionProfile;
+        setpoint = profile.calculate(0.02, setpoint, goal);
         double ff = PIVOT_KV * setpoint.velocity;
         if (!RobotMode.isSim()) {
             ff += Math.signum(setpoint.velocity) * pivotKs.get();
@@ -168,10 +177,27 @@ public class GroundIntake extends ChargerSubsystem {
      * @param intakeSpeedMultiplier A multiplier for intaking speed.
      */
     public Command deployCmd(double intakeSpeedMultiplier, Supplier<ChassisSpeeds> robotSpeeds) {
-        var cmd = CmdSequence.of(
+        var cmd = deployCmdImpl(false, intakeSpeedMultiplier, robotSpeeds);
+        return logged(cmd, "Deploy & Run (Velocity-Based)");
+    }
+
+    /**
+     * A version of {@link GroundIntake#deployCmd} that makes the pivot go down faster for auto.
+     */
+    public Command initialDeployCmd(double intakeSpeedMultiplier, Supplier<ChassisSpeeds> robotSpeeds) {
+        var cmd = deployCmdImpl(true, intakeSpeedMultiplier, robotSpeeds);
+        return logged(cmd, "Deploy & Run (Velocity-Based, INITIAL)");
+    }
+
+    private Command deployCmdImpl(
+        boolean isInitial,
+        double intakeSpeedMultiplier,
+        Supplier<ChassisSpeeds> robotSpeeds
+    ) {
+        return CmdSequence.of(
             this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
             this.run(() -> {
-                setPivotPosition(intakePos.get());
+                setPivotPosition(intakePos.get(), isInitial);
                 var vx = robotSpeeds.get().vxMetersPerSecond;
                 var targetVel = rollerTargetVel.get() + 0.8 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
                 targetVel *= intakeSpeedMultiplier;
@@ -179,7 +205,6 @@ public class GroundIntake extends ChargerSubsystem {
                 setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
             })
         );
-        return logged(cmd, "Deploy & Run (Velocity-Based)");
     }
 
     public Command outtakeCmd() {

@@ -56,6 +56,7 @@ public class KrakenFlywheels {
     public KrakenFlywheels() {
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         config.Feedback.SensorToMechanismRatio = Shooter.FLYWHEEL_REDUCTION;
+        config.Feedback.VelocityFilterTimeConstant = 0.1;
         var status = talon.getConfigurator().apply(config);
         configError.set(!status.isOK());
         SignalRefresh.register(100.0, talon.getNetwork(), velocity, accel);

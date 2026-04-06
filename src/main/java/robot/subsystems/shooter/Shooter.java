@@ -43,7 +43,7 @@ public class Shooter extends ChargerSubsystem {
     public static final ChassisSpeeds ZERO_VEL = new ChassisSpeeds();
 
     private final Tunable<Double>
-        flywheelKp = Tunable.of(key("Flywheels/KP"), 2.7),
+        flywheelKp = Tunable.of(key("Flywheels/KP"), 2.2),
         flywheelKd = Tunable.of(key("Flywheels/KD"), 0.0),
         flywheelKv = Tunable.of(key("Flywheels/KV"), 0.02),
         flywheelTolerance = Tunable.of(key("Flywheels/Tolerance (Rad per s)"), 15.0),

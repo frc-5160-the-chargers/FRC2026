@@ -7,6 +7,7 @@ import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -21,9 +22,9 @@ import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
-import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
 import robot.controllers.DriverController;
 import robot.controllers.OperatorController;
@@ -73,6 +74,8 @@ public class Robot extends LoggedRobot {
     private final CommandChooser
         testChooser = new CommandChooser("TestModeChoices"),
         autoChooser = new CommandChooser("AutoModeChoices");
+
+    @AutoLogOutput private boolean realTimeThreadPriority = true;
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -141,15 +144,15 @@ public class Robot extends LoggedRobot {
     }
 
     private void initDashboard() {
-        HubShiftUtil.initialize();
-        for (int i = 1; i <= 5; i++) {
-            double time = i;
-            // the driver controller rumble plugin we use (scripts/driverstation/ps5_controller_rumble.py)
-            // adds a bit of delay due to NetworkTables; so, we run the driver rumble commands a bit earlier.
-            RobotModeTriggers.teleop()
-                .and(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time + 0.3))
-                .onTrue(driverPS5.notifyHubShiftCmd());
-        }
+//        tUttUtil.initialize();
+//        for (int i = 1; i <= 5; i++) {
+//            double time = i;
+//            // the driver controller rumble plugin we use (scripts/driverstation/ps5_controller_rumble.py)
+//            // adds a bit of delay due to NetworkTables; so, we run the driver rumble commands a bit earlier.
+//            RobotModeTriggers.teleop()
+//                .and(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time + 0.3))
+//                .onTrue(driverPS5.notifyHubShiftCmd());
+//        }
     }
 
     private void setDefaultCommands() {
@@ -203,25 +206,35 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
-        // TODO Disable setCurrentThreadPriority() if loop times are consistently over 20 ms
-        Threads.setCurrentThreadPriority(true, 1);
+        enableRTThreadPriority();
         SignalRefresh.refreshAll();
         CommandScheduler.getInstance().run();
-        Logger.recordOutput(
-            "LoggedRobot/MemoryUsageMb",
-            (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6
-        );
-        if (RobotMode.isSim()) {
-            Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
-        }
-        canivoreLogger.periodic();
+        periodicLogging();
         for (var cam: cameras) {
             for (var update: cam.update()) {
                 drive.addVisionMeasurement(update);
             }
         }
+    }
+
+    // Real-time thread priority is a risky toggle; essentially, if the time it takes
+    // your robot code to run one loop is consistently under 20 ms, real-time thread priority
+    // can make timing more consistent. But if it's over 20 ms, it can cause many things
+    // (camera disconnects, CAN disconnects, etc).
+    private void enableRTThreadPriority() {
+        if (!realTimeThreadPriority) return;
+        realTimeThreadPriority = Timer.getTimestamp() <= 15 || cameras.stream().allMatch(AprilTagCam::isConnected);
+//        Threads.setCurrentThreadPriority(true, 1);
+    }
+
+    private void periodicLogging() {
+        if (RobotMode.isSim()) {
+            Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        }
+        double memoryMb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6;
+        Logger.recordOutput("LoggedRobot/MemoryUsageMb", memoryMb);
+        canivoreLogger.periodic();
         CmdLogger.periodic(true);
-        HubShiftUtil.logData();
-        Threads.setCurrentThreadPriority(false, 0);
+//        HubShiftUtil.logData();
     }
 }

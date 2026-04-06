@@ -61,8 +61,8 @@ public class Autos {
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj1));
-        traj1.atTime(0.4)
-            .onTrue(superstructure.intakeInAutoCmd(2.4));
+        traj1.atTime(0.3)
+            .onTrue(superstructure.intakeInAutoCmd(2.4, true));
         traj1.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
@@ -71,7 +71,7 @@ public class Autos {
         );
         traj2.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj2))
-            .whileTrue(superstructure.intakeInAutoCmd(3.3));
+            .whileTrue(superstructure.intakeInAutoCmd(3.3, false));
         traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
 
         return routine.cmd();
@@ -99,7 +99,7 @@ public class Autos {
         centerScoop.active()
             .whileTrue(superstructure.hubShotSpinupCmd(centerScoop));
         centerScoop.atTime(0.5)
-            .onTrue(superstructure.intakeInAutoCmd(2.4));
+            .onTrue(superstructure.intakeInAutoCmd(2.4, true));
         centerScoop.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 1.5).withTimeout(4),
@@ -141,7 +141,7 @@ public class Autos {
             );
 
         midlineGrab.atTime(1.7)
-            .onTrue(superstructure.intakeInAutoCmd(1.0));
+            .onTrue(superstructure.intakeInAutoCmd(1.0, true));
         midlineGrab.doneDelayed(2.0)
             .onTrue(midlineScore.spawnCmd());
 

@@ -1,8 +1,11 @@
 package lib.commands;
 
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
+import lib.RobotMode;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.HashSet;
@@ -63,6 +66,15 @@ public class CmdLogger {
             public void initialize() {
                 if (!isScheduled()) register(this);
                 super.initialize();
+            }
+
+            @Override
+            public void execute() {
+                double startTime = RobotController.getFPGATime() / 1000.0;
+                super.execute();
+                if (RobotMode.get() != RobotMode.REPLAY) {
+                    Logger.recordOutput("Commands/" + cmdName + "/PeriodicMs", RobotController.getFPGATime() / 1000.0 - startTime);
+                }
             }
 
             @Override

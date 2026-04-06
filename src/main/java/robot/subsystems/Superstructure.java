@@ -35,7 +35,7 @@ public class Superstructure {
     private static final Tunable<Double>
         YAW_TOLERANCE = Tunable.of("ShotCalcs/Aiming/Tolerance (rad)", 0.15),
         SOTM_TOLERANCE_MULTIPLIER = Tunable.of("ShotCalcs/SOTM tolerance multiplier (scalar)", 0.2),
-        SOTM_DESIRED_SPEEDS_WEIGHT = Tunable.of("ShotCalcs/SOTM Desired Speeds Weight", 0.7);
+        SOTM_DESIRED_SPEEDS_WEIGHT = Tunable.of("ShotCalcs/SOTM Desired Speeds Weight", 0.85);
 
     // Constructor Parameters
     private final DoubleSupplier speedAdjustment;
@@ -134,10 +134,12 @@ public class Superstructure {
         );
     }
 
-    public Command intakeInAutoCmd(double timeUntilSpeedIncrease) {
+    public Command intakeInAutoCmd(double timeUntilSpeedIncrease, boolean initial) {
+        var initialDeployCmd = initial
+            ? intake.initialDeployCmd(1.0, drive::getRobotSpeeds)
+            : intake.deployCmd(1.0, drive::getRobotSpeeds);
         return CmdSequence.of(
-            intake.deployCmd(1.0, drive::getRobotSpeeds)
-                .withTimeout(timeUntilSpeedIncrease),
+            initialDeployCmd.withTimeout(timeUntilSpeedIncrease),
             intake.deployCmd(1.25, drive::getRobotSpeeds)
         );
     }
@@ -177,7 +179,7 @@ public class Superstructure {
     public Command manualHubShotCmd() {
         return CmdSequence.of(
             Commands.runOnce(() -> {
-                var pose = new Pose2d(1.45, 4.05, Rotation2d.kZero);
+                var pose = new Pose2d(1.75, 4.05, Rotation2d.kZero);
                 drive.resetPose(AllianceColor.isRed() ? flip(pose) : pose);
             }),
             spinupAndAimCmd(Target.HUB)
