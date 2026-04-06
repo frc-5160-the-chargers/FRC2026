@@ -177,7 +177,7 @@ public class Superstructure {
     public Command manualHubShotCmd() {
         return CmdSequence.of(
             Commands.runOnce(() -> {
-                var pose = new Pose2d(1.45, 4.05, Rotation2d.kZero);
+                var pose = new Pose2d(1.75, 4.05, Rotation2d.kZero);
                 drive.resetPose(AllianceColor.isRed() ? flip(pose) : pose);
             }),
             spinupAndAimCmd(Target.HUB)
