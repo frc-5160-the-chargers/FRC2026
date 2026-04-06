@@ -35,7 +35,7 @@ public class Superstructure {
     private static final Tunable<Double>
         YAW_TOLERANCE = Tunable.of("ShotCalcs/Aiming/Tolerance (rad)", 0.15),
         SOTM_TOLERANCE_MULTIPLIER = Tunable.of("ShotCalcs/SOTM tolerance multiplier (scalar)", 0.2),
-        SOTM_DESIRED_SPEEDS_WEIGHT = Tunable.of("ShotCalcs/SOTM Desired Speeds Weight", 0.7);
+        SOTM_DESIRED_SPEEDS_WEIGHT = Tunable.of("ShotCalcs/SOTM Desired Speeds Weight", 0.85);
 
     // Constructor Parameters
     private final DoubleSupplier speedAdjustment;
