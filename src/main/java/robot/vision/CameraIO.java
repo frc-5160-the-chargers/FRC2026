@@ -57,17 +57,17 @@ public class CameraIO {
         /** Pushes data to a log file. */
         @Override
         public void toLog(LogTable table) {
-//            for (int i = 0; i < results.size(); i++) {
-//                // pushes data from the result into the serializer.
-//                PhotonPipelineResult.photonStruct.pack(serializer, results.get(i));
-//                // then, logs the serialized data as a byte array (for replay, not human-readable).
-//                table.put("RawData/" + i, serializer.getWrittenDataCopy());
-//                serializer.clear();
-//            }
-//            table.put("Connected", connected);
-//            table.put("FPS", fps);
-//            table.put("RawData/Total", results.size());
-//            table.put("SerializerSizeBytes", serializer.getSize()); // only for logging; not replayed
+            for (int i = 0; i < results.size(); i++) {
+                // pushes data from the result into the serializer.
+                PhotonPipelineResult.photonStruct.pack(serializer, results.get(i));
+                // then, logs the serialized data as a byte array (for replay, not human-readable).
+                table.put("RawData/" + i, serializer.getWrittenDataCopy());
+                serializer.clear();
+            }
+            table.put("Connected", connected);
+            table.put("FPS", fps);
+            table.put("RawData/Total", results.size());
+            table.put("SerializerSizeBytes", serializer.getSize()); // only for logging; not replayed
         }
 
         /** Overrides variables with data from a log file, effectively "replaying" the code. */
