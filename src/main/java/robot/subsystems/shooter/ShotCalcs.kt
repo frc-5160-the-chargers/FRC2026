@@ -70,7 +70,7 @@ fun getShotSetpoint(
         vy + omega * botToLaunchPointRotated.x
     )
     // The time it takes for a ball to reach the goal.
-    var airTime = distanceToAirTime.get(shooterToGoal.norm)
+    var airTime = 0.0
     repeat(NEWTONS_METHOD_ITERATIONS) { i ->
         // In this case, futureShooterToGoal is the x and y distance between the shooter and the goal
         // by the time the ball has already landed within the goal.

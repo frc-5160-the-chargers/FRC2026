@@ -185,32 +185,10 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.oneSwipeGrab(true));
         autoChooser.addCmd("Midline Bump Test", () -> autos.stealFuelOverBump(false));
 
-        testChooser.addCmd(
-            "SOTM Test",
-            () -> superstructure.spinupAndAimCmd(Shooter.Target.HUB)
-                .alongWith(drive.driveCmd(() -> driverPS5.debugDemoRequest(superstructure.rotationOverride)))
-        );
         testChooser.addCmd("Ground Intake Sim Test", () -> groundIntake.deployCmd(1.0, drive::getFieldSpeeds));
-        testChooser.addCmd(
-            "Hub Shot with Swish",
-            () -> superstructure.spinupAndAimCmd(Shooter.Target.HUB)
-                .alongWith(
-                    drive.driveCmd(() -> driverPS5.getSwerveRequest(superstructure.rotationOverride, superstructure.shootingAtHub))
-                        .withTimeout(4.0)
-                        .andThen(drive.driveCmd(driverPS5::getSwishingSwerveRequest))
-                )
-        );
-        testChooser.addCmd("Test Rumble", operatorXbox::notifySerializerReadyCmd);
         testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);
         testChooser.addCmd("Test Hub Shot", () -> superstructure.shootInAutoCmd(Shooter.Target.HUB, 2));
         testChooser.addCmd("Test Ferry", () -> superstructure.shootInAutoCmd(Shooter.Target.GROUND, 2));
-        testChooser.addCmd(
-            "Change heading to photonvision cam heading",
-            () -> Commands.runOnce(() -> {
-                var estimate = cameras.get(0).update().get(0);
-                drive.resetHeading(estimate.pose().getRotation());
-            })
-        );
         testChooser.addCmd("Test serializer", serializer::runCmd);
         testChooser.addCmd(
             "Test Pulsing",

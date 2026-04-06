@@ -20,6 +20,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import robot.constants.RobotConfig;
 import robot.subsystems.drive.SwerveConfig;
+import robot.subsystems.shooter.Shooter;
 
 import java.util.Optional;
 
@@ -32,12 +33,11 @@ public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
         AIM_KP = Tunable.of("ShotCalcs/Aiming/KP", 5.5),
-        SOTM_AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (SOTM)", 1.0),
+        SOTM_AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (SOTM, Slow)", 2.0),
         AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.03),
         SWISHING_RATE_MULTIPLIER = Tunable.of("SwishingRateMultiplier", 13.0),
         MAX_LINEAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Linear", 0.07),
-        MAX_ANGULAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Angular", 0.03),
-        AIM_PID_REDUCED_SPEED_THRESH = Tunable.of("AimPidReducedSpeedThresh", 0.16);
+        MAX_ANGULAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Angular", 0.03);
 
     // Linear Filter Equation: Y = C * X + (1 - C) * Y_previous
     // C = e^-(0.02/0.1) = e^(-0.2)
@@ -45,27 +45,29 @@ public class DriverController extends CommandPS5Controller {
     // Y = filtered angular velocity
     // Effectively, this filter prevents the robot's target angular velocity from changing too quickly.
     private final LinearFilter rotationFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
-
-    // A SlewRateLimiter limits the acceleration of the input.
+    // Limits robot acceleration when running shoot on the move.
     private final SlewRateLimiter
         forwardLimiter = new SlewRateLimiter(0.5),
         strafeLimiter = new SlewRateLimiter(0.5);
 
-    // The swerve request this controller calculates.
     private final FieldCentric swerveReq = new FieldCentric()
         .withDriveRequestType(DriveRequestType.Velocity);
     private final FieldCentricFacingAngle facingAngleSwerveReq = new FieldCentricFacingAngle()
         .withDriveRequestType(DriveRequestType.Velocity)
-        .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
+        .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
+        .withCenterOfRotation(Shooter.ROBOT_TO_LAUNCH_POINT.getTranslation());
     private final RobotCentric swishingSwerveReq = new RobotCentric()
         .withDriveRequestType(DriveRequestType.Velocity);
 
     private boolean aimToTargetInit = false;
     private double prevTargetRad = 0.0; // the previous target angle of the robot.
-    private final double maxVelMetersPerSec, maxVelRadPerSec;
-
-    // controller axis outputs; range from 0-1.
     @AutoLogOutput private double forward = 0, strafe = 0, rotation = 0;
+    // When the robot is driving slowly for shoot-on-the-move, there can be some instability/jitteriness
+    // introduced; thus, we use a debouncer to check if the requested speed is slow enough,
+    // and use a slower aim kP (SLOW_SOTM_AIM_KP) instead. TODO: Find a better solution for this
+    @AutoLogOutput private boolean isSotm = false;
+
+    private final double maxVelMetersPerSec, maxVelRadPerSec;
 
     public DriverController(int port, SwerveConfig config) {
         super(port);
@@ -85,19 +87,6 @@ public class DriverController extends CommandPS5Controller {
         return Math.min(1.0, output * SPEED_REDUCTION.get());
     }
 
-    public SwerveRequest debugDemoRequest(Optional<Rotation2d> targetAngle) {
-        if (targetAngle.isEmpty()) return getSwerveRequest();
-        double deltaRad = MathUtil.angleModulus(targetAngle.get().getRadians() - prevTargetRad);
-        double radiansPerSec = rotationFilter.calculate(deltaRad / 0.02);
-        prevTargetRad = targetAngle.get().getRadians();
-        return new SwerveRequest.FieldCentricFacingAngle()
-            .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
-            .withHeadingPID(0.02, 0, 0.0)
-            .withTargetDirection(targetAngle.get())
-            .withTargetRateFeedforward(radiansPerSec)
-            .withVelocityY(0.3);
-    }
-
     public SwerveRequest getSwerveRequest() {
         double scalar = swerveSpeedModifier();
         forward = -getLeftY() * scalar;
@@ -113,6 +102,7 @@ public class DriverController extends CommandPS5Controller {
         // don't use slew rate limits for normal drive requests
         forwardLimiter.reset(forward);
         strafeLimiter.reset(strafe);
+        rotationFilter.reset();
         aimToTargetInit = false;
         return swerveReq
             .withVelocityX(forward * maxVelMetersPerSec)
@@ -138,9 +128,8 @@ public class DriverController extends CommandPS5Controller {
         double radiansPerSec = aimToTargetInit ? rotationFilter.calculate(deltaRad / 0.02) : 0;
         prevTargetRad = targetAngle.get().getRadians();
         aimToTargetInit = true;
-        rotation = radiansPerSec / maxVelRadPerSec;
-        boolean isSlowSotm = Math.hypot(forward, strafe) > 0.15 && Math.hypot(forward, strafe) < 0.3;
-        double kP = isSlowSotm ? SOTM_AIM_KP.get() : AIM_KP.get();
+        isSotm = Math.hypot(forward, strafe) > 0.05;
+        double kP = isSotm ? SOTM_AIM_KP.get() : AIM_KP.get();
 
         return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec)

@@ -36,14 +36,7 @@ public class Autos {
         this.intake = intake;
         this.shooter = shooter;
         this.drive = drive;
-        // By Scheduling an invalid trajectory, we warm up java's runtime
-        // so that there isn't a 0.2 sec delay in auto.
-        CommandScheduler.getInstance().schedule(
-            autoFactory.trajectoryCmd("DummyWarmupTraj")
-                .withTimeout(0.2)
-                .ignoringDisable(true)
-                .withName("Dummy warmup command")
-        );
+        CommandScheduler.getInstance().schedule(autoFactory.warmupCmd());
     }
 
     private AutoRoutine newAutoRoutine(String name) {
@@ -54,14 +47,9 @@ public class Autos {
         return routine;
     }
 
-    private AutoTrajectory newAutoTraj(AutoRoutine routine, ChoreoTraj trajFile, boolean mirrorVertically) {
-        var name = (mirrorVertically ? "mirrored_" : "") + trajFile.name();
-        try {
-            return ChoreoTraj.ALL_TRAJECTORIES.get(name).asAutoTraj(routine);
-        } catch (Exception e) {
-            // return null-op trajectory if invalid
-            return routine.trajectory("");
-        }
+    private AutoTrajectory newAutoTraj(AutoRoutine routine, ChoreoTraj trajFile, boolean mirrorLeftToRight) {
+        var trajectory = trajFile.asAutoTraj(routine);
+        return mirrorLeftToRight ? trajectory.mirrorY() : trajectory;
     }
 
     /** An auto routine that grabs balls from the center and shoots them, repeating twice. */
