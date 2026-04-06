@@ -65,6 +65,7 @@ public class Robot extends LoggedRobot {
     private final Superstructure superstructure =
         new Superstructure(
             operatorXbox::getFlywheelSpeedAdjustment,
+            driverPS5::getDesiredSpeeds,
             drive, groundIntake, shooter, serializer
         );
     private final Autos autos = new Autos(drive, groundIntake, superstructure, shooter);
@@ -100,6 +101,7 @@ public class Robot extends LoggedRobot {
         operatorXbox.povUp().whileTrue(groundIntake.lowAgitateCmd());
         operatorXbox.povDown().whileTrue(groundIntake.outtakeCmd());
         operatorXbox.x().onTrue(shooter.setIdleBehaviorToSpinupCmd());
+        operatorXbox.y().whileTrue(groundIntake.passiveAgitateCmd());
 
         driverPS5.touchpad()
             .multiPress(2, 1.0)

@@ -10,6 +10,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,7 +34,6 @@ public class DriverController extends CommandPS5Controller {
     private static final Tunable<Double>
         SPEED_REDUCTION = Tunable.of("SpeedReduction", 1),
         AIM_KP = Tunable.of("ShotCalcs/Aiming/KP", 5.5),
-        SOTM_AIM_KP = Tunable.of("ShotCalcs/Aiming/KP (SOTM, Slow)", 2.0),
         AIM_KD = Tunable.of("ShotCalcs/Aiming/KD", 0.03),
         SWISHING_RATE_MULTIPLIER = Tunable.of("SwishingRateMultiplier", 13.0),
         MAX_LINEAR_SWISH_OUTPUT = Tunable.of("MaxSwishOutput/Linear", 0.07),
@@ -60,12 +60,8 @@ public class DriverController extends CommandPS5Controller {
         .withDriveRequestType(DriveRequestType.Velocity);
 
     private boolean aimToTargetInit = false;
-    private double prevTargetRad = 0.0; // the previous target angle of the robot.
+    @AutoLogOutput private double prevTargetRad = 0.0; // the previous target angle of the robot.
     @AutoLogOutput private double forward = 0, strafe = 0, rotation = 0;
-    // When the robot is driving slowly for shoot-on-the-move, there can be some instability/jitteriness
-    // introduced; thus, we use a debouncer to check if the requested speed is slow enough,
-    // and use a slower aim kP (SLOW_SOTM_AIM_KP) instead. TODO: Find a better solution for this
-    @AutoLogOutput private boolean isSotm = false;
 
     private final double maxVelMetersPerSec, maxVelRadPerSec;
 
@@ -128,8 +124,7 @@ public class DriverController extends CommandPS5Controller {
         double radiansPerSec = aimToTargetInit ? rotationFilter.calculate(deltaRad / 0.02) : 0;
         prevTargetRad = targetAngle.get().getRadians();
         aimToTargetInit = true;
-        isSotm = Math.hypot(forward, strafe) > 0.05;
-        double kP = isSotm ? SOTM_AIM_KP.get() : AIM_KP.get();
+        rotation = radiansPerSec / maxVelRadPerSec;
 
         return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec)
@@ -137,7 +132,7 @@ public class DriverController extends CommandPS5Controller {
             .withDeadband(0.05 * scalar * maxVelMetersPerSec)
             .withTargetDirection(targetAngle.get())
             .withTargetRateFeedforward(radiansPerSec)
-            .withHeadingPID(kP, 0.0, AIM_KD.get());
+            .withHeadingPID(AIM_KP.get(), 0.0, AIM_KD.get());
     }
 
     public SwerveRequest getSwishingSwerveRequest() {
@@ -153,6 +148,14 @@ public class DriverController extends CommandPS5Controller {
             .withTimeout(0.5)
             .finallyDo(() -> setRumble(kLeftRumble, 0.0))
             .withName("Driver#NotifySerializerReady");
+    }
+
+    public ChassisSpeeds getDesiredSpeeds() {
+        return new ChassisSpeeds(
+            forward * maxVelMetersPerSec,
+            strafe * maxVelMetersPerSec,
+            rotation * maxVelRadPerSec
+        );
     }
 
     // For Rumble to work on PS5 Controllers, we have to run a custom script on the driver station computer.

@@ -43,6 +43,7 @@ public class GroundIntake extends ChargerSubsystem {
     private final Tunable<Double>
         rollerReverseVolts = Tunable.of(key("Rollers/ReverseVolts"), -6.0),
         agitateVolts = Tunable.of(key("Rollers/AgitateVolts"), 2.0),
+        passiveAgitateVolts = Tunable.of(key("Rollers/PassiveAgitateVolts"), 1.5),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
         rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 110),
         rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.02);
@@ -58,7 +59,8 @@ public class GroundIntake extends ChargerSubsystem {
         pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
     private final Tunable<Angle>
         intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-7)),
-        stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-120)),
+        outtakePos = Tunable.of(key("Positions/Outtake"), Degrees.of(-20)),
+        stowPos = Tunable.of(key("Positions/Stow"), Degrees.of(-100)),
         agitateHighPos = Tunable.of(key("Positions/AgitateHigh"), Degrees.of(-70)),
         agitateLowPos = Tunable.of(key("Positions/AgitateLow"), Degrees.of(-30));
 
@@ -181,7 +183,14 @@ public class GroundIntake extends ChargerSubsystem {
     }
 
     public Command outtakeCmd() {
-        return logged(this.run(() -> rollerIO.setVolts(rollerReverseVolts.get())), "Outtake");
+        var cmd = CmdSequence.of(
+            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
+            this.run(() -> {
+                setRollerVolts(rollerReverseVolts.get());
+                setPivotPosition(outtakePos.get());
+            })
+        );
+        return logged(cmd, "Outtake");
     }
 
     /** Alternates between the deploy and stow positions to agitate fuel. */
@@ -207,6 +216,12 @@ public class GroundIntake extends ChargerSubsystem {
         )
             .repeatedly();
         return logged(cmd, "Agitate (High)");
+    }
+
+    /** Agitates the balls by just running outtake with a very low voltage. */
+    public Command passiveAgitateCmd() {
+        var cmd = this.run(() -> setRollerVolts(passiveAgitateVolts.get()));
+        return logged(cmd, "Agitate (Passive)");
     }
 
     /** Runs manual control on the pivot and the intake. */

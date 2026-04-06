@@ -33,10 +33,12 @@ public class Superstructure {
     // Constants
     private static final Tunable<Double>
         YAW_TOLERANCE = Tunable.of("ShotCalcs/Aiming/Tolerance (rad)", 0.15),
-        SOTM_TOLERANCE_MULTIPLIER = Tunable.of("ShotCalcs/SOTM tolerance multiplier (scalar)", 0.2);
+        SOTM_TOLERANCE_MULTIPLIER = Tunable.of("ShotCalcs/SOTM tolerance multiplier (scalar)", 0.2),
+        SOTM_DESIRED_SPEEDS_WEIGHT = Tunable.of("ShotCalcs/SOTM Desired Speeds Weight", 0.8);
 
     // Constructor Parameters
     private final DoubleSupplier speedAdjustment;
+    private final Supplier<ChassisSpeeds> desiredSpeedsSupplier;
     private final SwerveSubsystem drive;
     private final GroundIntake intake;
     private final Shooter shooter;
@@ -77,12 +79,26 @@ public class Superstructure {
         yawError = 0.0;
     }
 
+    private ChassisSpeeds getChassisSpeeds() {
+        var desiredSpeeds = desiredSpeedsSupplier.get();
+        var currentSpeeds = drive.getFieldSpeeds();
+        double weight = SOTM_DESIRED_SPEEDS_WEIGHT.get();
+        // For calculating shoot-on-the-move, we need to know vx, vy, and omega in the future.
+        // We estimate this as a weighted average between the desired speeds that the driver controller
+        // is commanding, and the current robot speeds. This also fixes stability issues.
+        return new ChassisSpeeds(
+            desiredSpeeds.vxMetersPerSecond * weight + currentSpeeds.vxMetersPerSecond * (1 - weight),
+            desiredSpeeds.vyMetersPerSecond * weight + currentSpeeds.vyMetersPerSecond * (1 - weight),
+            desiredSpeeds.omegaRadiansPerSecond * weight + currentSpeeds.omegaRadiansPerSecond * (1 - weight)
+        );
+    }
+
     // Commands
     /** Spins up the shooter and aims the robot to the specified target. */
     public Command spinupAndAimCmd(Target target) {
         var cmd = shooter.setVelocityCmd(() -> {
             shotSetpoint = ShotCalcsKt.getShotSetpoint(
-                drive.getPose(), drive.getFieldSpeeds(), shooter, true, target
+                drive.getPose(), getChassisSpeeds(), shooter, true, target
             );
             shootingAtHub = target == Target.HUB;
             rotationOverride = Optional.of(shotSetpoint.yaw());
