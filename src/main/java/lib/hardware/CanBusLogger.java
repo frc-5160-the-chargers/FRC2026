@@ -31,18 +31,18 @@ public class CanBusLogger {
     /** Should be run in robotPeriodic(). */
     public void periodic() {
         if (RobotMode.get() == RobotMode.REPLAY) return;
-        CANBus.CANBusStatus current;
-        synchronized (this) {
-            if (status == null) return;
-            current = status;
-        }
-        canivoreAlert.set(!current.Status.isOK());
-        var stats = new CanivoreStats(
-            current.BusUtilization, current.BusOffCount,
-            current.TxFullCount, current.REC, current.TEC
-        );
-        Logger.recordOutput(key + "/Statistics", stats);
-        Logger.recordOutput(key + "/Status", current.Status);
+//        CANBus.CANBusStatus current;
+//        synchronized (this) {
+//            if (status == null) return;
+//            current = status;
+//        }
+//        canivoreAlert.set(!current.Status.isOK());
+//        var stats = new CanivoreStats(
+//            current.BusUtilization, current.BusOffCount,
+//            current.TxFullCount, current.REC, current.TEC
+//        );
+//        Logger.recordOutput(key + "/Statistics", stats);
+//        Logger.recordOutput(key + "/Status", current.Status);
         logMainBusData();
     }
 
