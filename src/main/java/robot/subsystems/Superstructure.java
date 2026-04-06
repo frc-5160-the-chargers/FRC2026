@@ -5,6 +5,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lib.AllianceColor;
@@ -34,7 +35,7 @@ public class Superstructure {
     private static final Tunable<Double>
         YAW_TOLERANCE = Tunable.of("ShotCalcs/Aiming/Tolerance (rad)", 0.15),
         SOTM_TOLERANCE_MULTIPLIER = Tunable.of("ShotCalcs/SOTM tolerance multiplier (scalar)", 0.2),
-        SOTM_DESIRED_SPEEDS_WEIGHT = Tunable.of("ShotCalcs/SOTM Desired Speeds Weight", 0.8);
+        SOTM_DESIRED_SPEEDS_WEIGHT = Tunable.of("ShotCalcs/SOTM Desired Speeds Weight", 0.7);
 
     // Constructor Parameters
     private final DoubleSupplier speedAdjustment;
@@ -80,10 +81,12 @@ public class Superstructure {
     }
 
     private ChassisSpeeds getChassisSpeeds() {
-        var desiredSpeeds = desiredSpeedsSupplier.get();
         var currentSpeeds = drive.getFieldSpeeds();
+        // In case we are doing shoot-on-the-move in auto
+        if (DriverStation.isAutonomous()) return currentSpeeds;
+        var desiredSpeeds = desiredSpeedsSupplier.get();
         double weight = SOTM_DESIRED_SPEEDS_WEIGHT.get();
-        // For calculating shoot-on-the-move, we need to know vx, vy, and omega in the future.
+        // For calculating shoot-on-the-move in teleop, we need to know vx, vy, and omega in the future.
         // We estimate this as a weighted average between the desired speeds that the driver controller
         // is commanding, and the current robot speeds. This also fixes stability issues.
         return new ChassisSpeeds(
