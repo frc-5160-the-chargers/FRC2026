@@ -79,7 +79,7 @@ public class Robot extends LoggedRobot {
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
-        Tunable.setEnabled(true);
+        Tunable.setEnabled(false);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
         setCompButtonBindings();
         setDefaultCommands();
