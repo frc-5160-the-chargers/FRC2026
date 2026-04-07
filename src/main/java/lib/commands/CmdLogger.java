@@ -70,10 +70,10 @@ public class CmdLogger {
 
             @Override
             public void execute() {
-                double startTime = RobotController.getFPGATime() * 1000;
+                double startTime = RobotController.getFPGATime() / 1000.0;
                 super.execute();
                 if (RobotMode.get() != RobotMode.REPLAY) {
-                    Logger.recordOutput("Commands/" + cmdName + "/PeriodicMs", RobotController.getFPGATime() * 1000 - startTime);
+                    Logger.recordOutput("Commands/" + cmdName + "/PeriodicMs", RobotController.getFPGATime() / 1000.0 - startTime);
                 }
             }
 
