@@ -1,5 +1,6 @@
 package lib.commands;
 
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -69,10 +70,10 @@ public class CmdLogger {
 
             @Override
             public void execute() {
-                double startTime = Timer.getFPGATimestamp();
+                double startTime = RobotController.getFPGATime() * 1000;
                 super.execute();
                 if (RobotMode.get() != RobotMode.REPLAY) {
-                    Logger.recordOutput("Commands/" + cmdName + "/PeriodicMs", Timer.getFPGATimestamp() - startTime);
+                    Logger.recordOutput("Commands/" + cmdName + "/PeriodicMs", RobotController.getFPGATime() * 1000 - startTime);
                 }
             }
 
