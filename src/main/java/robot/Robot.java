@@ -206,7 +206,7 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         enableRTThreadPriority();
         SignalRefresh.refreshAll();
-        CommandScheduler.getInstance().run();
+//        CommandScheduler.getInstance().run();
         periodicLogging();
         for (var cam: cameras) {
             for (var update: cam.update()) {
