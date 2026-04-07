@@ -224,8 +224,7 @@ public class Robot extends LoggedRobot {
     // (camera disconnects, CAN disconnects, etc).
     private void enableRTThreadPriority() {
         if (!realTimeThreadPriority) return;
-        Logger.recordOutput("Robot/Time", Timer.getTimestamp());
-        realTimeThreadPriority = Timer.getTimestamp() > 15 && cameras.stream().allMatch(AprilTagCam::isConnected);
+        realTimeThreadPriority = Timer.getTimestamp() <= 15 || cameras.stream().allMatch(AprilTagCam::isConnected);
         Threads.setCurrentThreadPriority(true, 1);
     }
 
