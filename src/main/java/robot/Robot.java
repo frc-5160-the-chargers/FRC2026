@@ -144,15 +144,15 @@ public class Robot extends LoggedRobot {
     }
 
     private void initDashboard() {
-        HubShiftUtil.initialize();
-        for (int i = 1; i <= 5; i++) {
-            double time = i;
-            // the driver controller rumble plugin we use (scripts/driverstation/ps5_controller_rumble.py)
-            // adds a bit of delay due to NetworkTables; so, we run the driver rumble commands a bit earlier.
-            RobotModeTriggers.teleop()
-                .and(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time + 0.3))
-                .onTrue(driverPS5.notifyHubShiftCmd());
-        }
+//        tUttUtil.initialize();
+//        for (int i = 1; i <= 5; i++) {
+//            double time = i;
+//            // the driver controller rumble plugin we use (scripts/driverstation/ps5_controller_rumble.py)
+//            // adds a bit of delay due to NetworkTables; so, we run the driver rumble commands a bit earlier.
+//            RobotModeTriggers.teleop()
+//                .and(() -> (HubShiftUtil.getShiftedShiftInfo().remainingTime() < time + 0.3))
+//                .onTrue(driverPS5.notifyHubShiftCmd());
+//        }
     }
 
     private void setDefaultCommands() {
@@ -235,6 +235,6 @@ public class Robot extends LoggedRobot {
         Logger.recordOutput("LoggedRobot/MemoryUsageMb", memoryMb);
         canivoreLogger.periodic();
         CmdLogger.periodic(true);
-        HubShiftUtil.logData();
+//        HubShiftUtil.logData();
     }
 }
