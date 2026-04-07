@@ -147,7 +147,7 @@ public class DriverController extends CommandPS5Controller {
         return Commands.run(() -> setRumble(kLeftRumble, 0.2))
             .withTimeout(0.5)
             .finallyDo(() -> setRumble(kLeftRumble, 0.0))
-            .withName("Driver#NotifySerializerReady");
+            .withName("Driver#NotifyHubShift");
     }
 
     public ChassisSpeeds getDesiredSpeeds() {
