@@ -106,7 +106,7 @@ public class SwerveSubsystem extends ChargerSubsystem {
         var cmd = this.run(() -> {
             var request = requestSupplier.get();
             io.setControl(request);
-            Logger.recordOutput(key("Request"), request.getClass().getSimpleName());
+//            Logger.recordOutput(key("Request"), request.getClass().getSimpleName());
         });
         return logged(cmd, "Drive");
     }
