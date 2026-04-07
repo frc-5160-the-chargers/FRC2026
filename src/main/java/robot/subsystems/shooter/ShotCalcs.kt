@@ -63,52 +63,57 @@ fun getShotSetpoint(
     iterations[0] = Pose2d(fieldOriginToShooter, shooterToGoal.angle)
     // The "norm" is basically sqrt(x^2 + y^2) (or the pythagorean theorem)
     Logger.recordOutput("ShotCalcs/InitialTargetDist(m)", shooterToGoal.norm)
+//
+//    val botToLaunchPointRotated = fieldOriginToShooter - robotPose.translation
+//    val shooterVelocity = Translation2d(
+//        vx - omega * botToLaunchPointRotated.y,
+//        vy + omega * botToLaunchPointRotated.x
+//    )
+//    // The time it takes for a ball to reach the goal.
+//    var airTime = 0.0
+//    repeat(NEWTONS_METHOD_ITERATIONS) { i ->
+//        // In this case, futureShooterToGoal is the x and y distance between the shooter and the goal
+//        // by the time the ball has already landed within the goal.
+//        val futureFieldOriginToShooter = fieldOriginToShooter + shooterVelocity * airTime
+//        val futureShooterToGoal = goalPosition - futureFieldOriginToShooter
+//        val distanceToGoal = futureShooterToGoal.norm
+//        iterations[i + 1] = Pose2d(futureFieldOriginToShooter, futureShooterToGoal.angle)
+//
+//        // Newton's method: see https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html
+//        val error = airTime - distanceToAirTime.get(distanceToGoal)
+//        val dt_dD = 1 / distanceToSpeed.get(distanceToGoal) // just an estimate
+//        val dD_dt = -futureShooterToGoal.dot(shooterVelocity) / distanceToGoal
+//        val dError_dt = 1 - dt_dD * dD_dt
+//        airTime -= error / dError_dt
+//    }
+//    val futureShooterToGoal = shooterToGoal - shooterVelocity * airTime
+//    val targetDist = futureShooterToGoal.norm
+//    val ballSpeed = distanceToSpeed.get(targetDist)
+//    val targetYaw = futureShooterToGoal.angle
+//    Logger.recordOutput("ShotCalcs/BallSpeed", ballSpeed)
+//    Logger.recordOutput("ShotCalcs/FutureShooterToGoal", Translation2d.struct, futureShooterToGoal)
+//    Logger.recordOutput("ShotCalcs/TargetDistance(m)", targetDist)
+//    Logger.recordOutput("ShotCalcs/Iterations", *iterations)
+//
+//    if (simulateShot && RobotMode.isSim()) {
+//        val launchAngle = Rotation3d(0.0, -Shooter.LAUNCH_ANGLE.radians, robotPose.rotation.radians)
+//        val angularVel = BALL_TO_FLYWHEEL_SPEED.getKey(shooter.velocity().`in`(RadiansPerSecond))
+//        simulateShot(
+//            pose = Translation3d(
+//                fieldOriginToShooter.x,
+//                fieldOriginToShooter.y,
+//                Shooter.FUEL_LAUNCH_HEIGHT.`in`(Meters)
+//            ),
+//            velocity = Translation3d(angularVel, launchAngle) +
+//                Translation3d(shooterVelocity.x, shooterVelocity.y, 0.0),
+//            dt = 0.05
+//        )
+//    }
+//
 
-    val botToLaunchPointRotated = fieldOriginToShooter - robotPose.translation
-    val shooterVelocity = Translation2d(
-        vx - omega * botToLaunchPointRotated.y,
-        vy + omega * botToLaunchPointRotated.x
-    )
-    // The time it takes for a ball to reach the goal.
-    var airTime = 0.0
-    repeat(NEWTONS_METHOD_ITERATIONS) { i ->
-        // In this case, futureShooterToGoal is the x and y distance between the shooter and the goal
-        // by the time the ball has already landed within the goal.
-        val futureFieldOriginToShooter = fieldOriginToShooter + shooterVelocity * airTime
-        val futureShooterToGoal = goalPosition - futureFieldOriginToShooter
-        val distanceToGoal = futureShooterToGoal.norm
-        iterations[i + 1] = Pose2d(futureFieldOriginToShooter, futureShooterToGoal.angle)
-
-        // Newton's method: see https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/newton-shooting.html
-        val error = airTime - distanceToAirTime.get(distanceToGoal)
-        val dt_dD = 1 / distanceToSpeed.get(distanceToGoal) // just an estimate
-        val dD_dt = -futureShooterToGoal.dot(shooterVelocity) / distanceToGoal
-        val dError_dt = 1 - dt_dD * dD_dt
-        airTime -= error / dError_dt
-    }
-    val futureShooterToGoal = shooterToGoal - shooterVelocity * airTime
-    val targetDist = futureShooterToGoal.norm
-    val ballSpeed = distanceToSpeed.get(targetDist)
-    val targetYaw = futureShooterToGoal.angle
-    Logger.recordOutput("ShotCalcs/BallSpeed", ballSpeed)
-    Logger.recordOutput("ShotCalcs/FutureShooterToGoal", Translation2d.struct, futureShooterToGoal)
-    Logger.recordOutput("ShotCalcs/TargetDistance(m)", targetDist)
-    Logger.recordOutput("ShotCalcs/Iterations", *iterations)
-
-    if (simulateShot && RobotMode.isSim()) {
-        val launchAngle = Rotation3d(0.0, -Shooter.LAUNCH_ANGLE.radians, robotPose.rotation.radians)
-        val angularVel = BALL_TO_FLYWHEEL_SPEED.getKey(shooter.velocity().`in`(RadiansPerSecond))
-        simulateShot(
-            pose = Translation3d(
-                fieldOriginToShooter.x,
-                fieldOriginToShooter.y,
-                Shooter.FUEL_LAUNCH_HEIGHT.`in`(Meters)
-            ),
-            velocity = Translation3d(angularVel, launchAngle) +
-                Translation3d(shooterVelocity.x, shooterVelocity.y, 0.0),
-            dt = 0.05
-        )
-    }
+    val targetYaw = shooterToGoal.angle
+    val ballSpeed = distanceToSpeed.get(shooterToGoal.norm)
+    val targetDist = shooterToGoal.norm
 
     return Shooter.Setpoint(
         targetYaw,
