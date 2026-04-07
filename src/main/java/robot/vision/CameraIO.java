@@ -35,7 +35,7 @@ public class CameraIO {
     public void refreshData(RawData inputs) {
         inputs.connected = cam.isConnected();
         inputs.fps = camFps.get();
-        inputs.results = cam.getAllUnreadResults();
+        inputs.results = cam.getAllUnreadResults().subList(0, 3);
     }
 
     /** Represents raw camera data from a photon camera every 0.02 seconds. */
