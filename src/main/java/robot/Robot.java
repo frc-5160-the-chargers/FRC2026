@@ -7,6 +7,7 @@ import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -21,6 +22,7 @@ import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import robot.constants.RobotConfig;
@@ -73,7 +75,7 @@ public class Robot extends LoggedRobot {
         testChooser = new CommandChooser("TestModeChoices"),
         autoChooser = new CommandChooser("AutoModeChoices");
 
-    private boolean realTimeThreadPriority = true;
+    @AutoLogOutput private boolean realTimeThreadPriority = true;
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -222,7 +224,7 @@ public class Robot extends LoggedRobot {
     // (camera disconnects, CAN disconnects, etc).
     private void enableRTThreadPriority() {
         if (!realTimeThreadPriority) return;
-        realTimeThreadPriority = cameras.stream().allMatch(AprilTagCam::isConnected);
+        realTimeThreadPriority = Timer.getTimestamp() > 15 && cameras.stream().allMatch(AprilTagCam::isConnected);
         Threads.setCurrentThreadPriority(true, 1);
     }
 
