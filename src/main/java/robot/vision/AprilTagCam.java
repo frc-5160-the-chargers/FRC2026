@@ -49,6 +49,10 @@ public class AprilTagCam {
         return "Cameras/" + consts.name() + "/" + path;
     }
 
+    public boolean isConnected() {
+        return inputs.connected;
+    }
+
     /** Fetches the latest pose estimates from this camera. */
     @SuppressWarnings("StringConcatenationInLoop")
     public List<CamPoseEstimate> update() {

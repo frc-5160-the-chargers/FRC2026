@@ -23,7 +23,6 @@ import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
-import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
 import robot.controllers.DriverController;
 import robot.controllers.OperatorController;
@@ -73,6 +72,8 @@ public class Robot extends LoggedRobot {
     private final CommandChooser
         testChooser = new CommandChooser("TestModeChoices"),
         autoChooser = new CommandChooser("AutoModeChoices");
+
+    private boolean realTimeThreadPriority = true;
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
@@ -203,22 +204,35 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
-        // TODO Disable setCurrentThreadPriority() if loop times are consistently over 20 ms
+        enableRTThreadPriority();
         SignalRefresh.refreshAll();
         CommandScheduler.getInstance().run();
-        Logger.recordOutput(
-            "LoggedRobot/MemoryUsageMb",
-            (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6
-        );
-        if (RobotMode.isSim()) {
-            Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
-        }
-        canivoreLogger.periodic();
+        periodicLogging();
         for (var cam: cameras) {
             for (var update: cam.update()) {
                 drive.addVisionMeasurement(update);
             }
         }
+        Threads.setCurrentThreadPriority(false, 1);
+    }
+
+    // Real-time thread priority is a risky toggle; essentially, if the time it takes
+    // your robot code to run one loop is consistently under 20 ms, real-time thread priority
+    // can make timing more consistent. But if it's over 20 ms, it can cause many things
+    // (camera disconnects, CAN disconnects, etc).
+    private void enableRTThreadPriority() {
+        if (!realTimeThreadPriority) return;
+        realTimeThreadPriority = cameras.stream().allMatch(AprilTagCam::isConnected);
+        Threads.setCurrentThreadPriority(true, 1);
+    }
+
+    private void periodicLogging() {
+        if (RobotMode.isSim()) {
+            Logger.recordOutput("Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+        }
+        double memoryMb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6;
+        Logger.recordOutput("LoggedRobot/MemoryUsageMb", memoryMb);
+        canivoreLogger.periodic();
         CmdLogger.periodic(true);
         HubShiftUtil.logData();
     }
