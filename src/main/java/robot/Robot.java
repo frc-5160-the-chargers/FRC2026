@@ -215,7 +215,6 @@ public class Robot extends LoggedRobot {
                 drive.addVisionMeasurement(update);
             }
         }
-        Threads.setCurrentThreadPriority(false, 1);
     }
 
     // Real-time thread priority is a risky toggle; essentially, if the time it takes
