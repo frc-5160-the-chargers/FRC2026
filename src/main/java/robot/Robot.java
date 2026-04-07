@@ -233,7 +233,7 @@ public class Robot extends LoggedRobot {
         double memoryMb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6;
         Logger.recordOutput("LoggedRobot/MemoryUsageMb", memoryMb);
         canivoreLogger.periodic();
-//        CmdLogger.periodic(true);
+        CmdLogger.periodic(true);
         HubShiftUtil.logData();
     }
 }
