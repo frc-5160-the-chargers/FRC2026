@@ -58,7 +58,7 @@ public class SwerveHardware {
         SignalRefresh.register(100.0, drivetrain.getPigeon2().getNetwork(), pitchDeg, accelX, accelY);
         // Makes the addPoseEstFrame() method execute every 0.004 secs(or 250hz).
         dataLogger.JNI_RegisterTelemetry(cachedDrivetrainId, this::addPoseEstFrame);
-        drivetrain.getOdometryThread().setThreadPriority(2);
+//        drivetrain.getOdometryThread().setThreadPriority(2);
         initDashboardTuning(config);
         initDebugSignals();
     }
