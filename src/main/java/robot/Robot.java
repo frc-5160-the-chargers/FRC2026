@@ -225,7 +225,7 @@ public class Robot extends LoggedRobot {
     private void enableRTThreadPriority() {
         if (!realTimeThreadPriority) return;
         realTimeThreadPriority = Timer.getTimestamp() <= 15 || cameras.stream().allMatch(AprilTagCam::isConnected);
-        Threads.setCurrentThreadPriority(true, 1);
+//        Threads.setCurrentThreadPriority(true, 1);
     }
 
     private void periodicLogging() {
