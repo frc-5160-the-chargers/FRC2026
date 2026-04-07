@@ -206,7 +206,7 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         enableRTThreadPriority();
         SignalRefresh.refreshAll();
-//        CommandScheduler.getInstance().run();
+        CommandScheduler.getInstance().run();
         periodicLogging();
         for (var cam: cameras) {
             for (var update: cam.update()) {
@@ -233,7 +233,7 @@ public class Robot extends LoggedRobot {
         double memoryMb = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1e6;
         Logger.recordOutput("LoggedRobot/MemoryUsageMb", memoryMb);
         canivoreLogger.periodic();
-        CmdLogger.periodic(true);
+//        CmdLogger.periodic(true);
         HubShiftUtil.logData();
     }
 }
