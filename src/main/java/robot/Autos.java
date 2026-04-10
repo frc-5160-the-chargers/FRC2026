@@ -91,7 +91,7 @@ public class Autos {
             .onTrue(
                 drive.driveCmd(() -> brakeReq)
                     .alongWith(intake.deployCmd(1.0, drive::getRobotSpeeds))
-                    .withTimeout(1.0)
+                    .withTimeout(1.5)
                     .andThen(traj1.spawnCmd())
             );
         traj1.active()
