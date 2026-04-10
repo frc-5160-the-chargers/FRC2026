@@ -3,6 +3,7 @@ package robot;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import lib.commands.CmdSequence;
@@ -49,6 +50,7 @@ public class Autos {
 
     private AutoTrajectory newAutoTraj(AutoRoutine routine, ChoreoTraj trajFile, boolean mirrorLeftToRight) {
         var trajectory = trajFile.asAutoTraj(routine);
+
         return mirrorLeftToRight ? trajectory.mirrorY() : trajectory;
     }
 
@@ -61,8 +63,40 @@ public class Autos {
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj1));
-        traj1.atTime(0.3)
+        traj1.atTime(0.1)
             .onTrue(superstructure.intakeInAutoCmd(2.4, true));
+        traj1.done().onTrue(
+            CmdSequence.of(
+                superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),
+                traj2.spawnCmd()
+            )
+        );
+        traj2.active()
+            .whileTrue(superstructure.hubShotSpinupCmd(traj2))
+            .whileTrue(superstructure.intakeInAutoCmd(3.3, false));
+        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
+
+        return routine.cmd();
+    }
+
+    public Command twoSwipeDerail(boolean leftSide) {
+        var routine = newAutoRoutine("TwoSwipeRush");
+        var rushToCenter = newAutoTraj(routine, ChoreoTraj.CenterRush, leftSide);
+        var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart1_PostCenterRush, leftSide);
+        var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart2, leftSide);
+        var brakeReq = new SwerveDriveBrake();
+
+        routine.active().onTrue(superstructure.autoStartCmd(rushToCenter));
+        rushToCenter.atTime(1.33)
+            .onTrue(
+                drive.driveCmd(() -> brakeReq)
+                    .alongWith(intake.deployCmd(1.0, drive::getRobotSpeeds))
+                    .withTimeout(1.0)
+                    .andThen(traj1.spawnCmd())
+            );
+        traj1.active()
+            .whileTrue(superstructure.hubShotSpinupCmd(traj1))
+            .whileTrue(superstructure.intakeInAutoCmd(2.4, true));
         traj1.done().onTrue(
             CmdSequence.of(
                 superstructure.shootInAutoCmd(Target.HUB, 2).withTimeout(4),

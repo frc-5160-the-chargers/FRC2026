@@ -69,6 +69,20 @@
      "val":0.0
     }
    },
+   "DemoPoseVariable":{
+    "x":{
+     "exp":"2 m",
+     "val":2.0
+    },
+    "y":{
+     "exp":"2 m",
+     "val":2.0
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
    "HubPos":{
     "x":{
      "exp":"4.62 m",

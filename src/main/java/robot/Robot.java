@@ -1,12 +1,12 @@
 package robot;
 
+import com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -75,8 +75,6 @@ public class Robot extends LoggedRobot {
         testChooser = new CommandChooser("TestModeChoices"),
         autoChooser = new CommandChooser("AutoModeChoices");
 
-    @AutoLogOutput private boolean realTimeThreadPriority = true;
-
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
         Tunable.setEnabled(true);
@@ -105,6 +103,7 @@ public class Robot extends LoggedRobot {
         operatorXbox.povDown().whileTrue(groundIntake.outtakeCmd());
         operatorXbox.x().onTrue(shooter.setIdleBehaviorToSpinupCmd());
         operatorXbox.y().whileTrue(groundIntake.passiveAgitateCmd());
+        operatorXbox.a().whileTrue(shooter.shortFerryCmd());
 
         driverPS5.touchpad()
             .multiPress(2, 1.0)
@@ -116,9 +115,8 @@ public class Robot extends LoggedRobot {
         driverPS5.povUp().whileTrue(
             drive.driveCmd(driverPS5::getSwishingSwerveRequest)
         );
-        driverPS5.R1().whileTrue(
-            drive.driveCmd(() -> driverPS5.getSwerveRequest(RobotConfig.getBumpTravelingAngle(), false))
-        );
+        var brakeReq = new SwerveDriveBrake();
+        driverPS5.povDown().whileTrue(drive.driveCmd(() -> brakeReq));
         driverPS5.R2().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.GROUND));
         driverPS5.circle().whileTrue(superstructure.spinupAndAimCmd(Shooter.Target.HUB));
         driverPS5.square().whileTrue(superstructure.manualHubShotCmd());
@@ -188,7 +186,9 @@ public class Robot extends LoggedRobot {
         autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true, false));
         autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.oneSwipeGrab(false));
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.oneSwipeGrab(true));
-        autoChooser.addCmd("Midline Bump Test", () -> autos.stealFuelOverBump(false));
+        autoChooser.addCmd("Midline Bump", () -> autos.stealFuelOverBump(false));
+        autoChooser.addCmd("Two Swipe Derail, Right", () -> autos.twoSwipeDerail(false));
+        autoChooser.addCmd("Two Swipe Derail, Left", () -> autos.twoSwipeDerail(true));
 
         testChooser.addCmd("Ground Intake Sim Test", () -> groundIntake.deployCmd(1.0, drive::getFieldSpeeds));
         testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);
@@ -206,7 +206,6 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
-        enableRTThreadPriority();
         SignalRefresh.refreshAll();
         CommandScheduler.getInstance().run();
         periodicLogging();
@@ -215,16 +214,6 @@ public class Robot extends LoggedRobot {
                 drive.addVisionMeasurement(update);
             }
         }
-    }
-
-    // Real-time thread priority is a risky toggle; essentially, if the time it takes
-    // your robot code to run one loop is consistently under 20 ms, real-time thread priority
-    // can make timing more consistent. But if it's over 20 ms, it can cause many things
-    // (camera disconnects, CAN disconnects, etc).
-    private void enableRTThreadPriority() {
-        if (!realTimeThreadPriority) return;
-        realTimeThreadPriority = Timer.getTimestamp() <= 15 || cameras.stream().allMatch(AprilTagCam::isConnected);
-//        Threads.setCurrentThreadPriority(true, 1);
     }
 
     private void periodicLogging() {

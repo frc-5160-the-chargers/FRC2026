@@ -41,21 +41,21 @@ public record ChoreoTraj(
 	public static final ChoreoTraj CenterLoopPart1 = new ChoreoTraj(
 	    "CenterLoopPart1",
 	    OptionalInt.empty(),
-	    6.81247,
+	    6.6756,
 	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
 	public static final ChoreoTraj CenterLoopPart1Close = new ChoreoTraj(
 	    "CenterLoopPart1Close",
 	    OptionalInt.empty(),
-	    5.86056,
+	    5.82051,
 	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
 	public static final ChoreoTraj CenterLoopPart2 = new ChoreoTraj(
 	    "CenterLoopPart2",
 	    OptionalInt.empty(),
-	    6.46827,
+	    6.46826,
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046)),
 	    new Pose2d(3.75, 0.85, Rotation2d.fromRadians(1.323))
 	);
@@ -94,12 +94,19 @@ public record ChoreoTraj(
 	    new Pose2d(0.72, 0.65, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.236, 2.119, Rotation2d.fromRadians(0.502))
 	);
-	public static final ChoreoTraj CenterLoopPart1_copy1 = new ChoreoTraj(
-	    "CenterLoopPart1_copy1",
+	public static final ChoreoTraj CenterRush = new ChoreoTraj(
+	    "CenterRush",
 	    OptionalInt.empty(),
-	    1.53316,
+	    1.42949,
 	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(8.951, 0.974, Rotation2d.fromRadians(-1.571))
+	    new Pose2d(8.45, 0.9, Rotation2d.fromRadians(-1.571))
+	);
+	public static final ChoreoTraj CenterLoopPart1_PostCenterRush = new ChoreoTraj(
+	    "CenterLoopPart1_PostCenterRush",
+	    OptionalInt.empty(),
+	    4.90722,
+	    new Pose2d(8.45, 0.9, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
 
     /**
@@ -117,7 +124,8 @@ public record ChoreoTraj(
 		Map.entry("DriveBackAndShoot", DriveBackAndShoot),
 		Map.entry("SubstationGrab", SubstationGrab),
 		Map.entry("SubstationScore", SubstationScore),
-		Map.entry("CenterLoopPart1_copy1", CenterLoopPart1_copy1)
+		Map.entry("CenterRush", CenterRush),
+		Map.entry("CenterLoopPart1_PostCenterRush", CenterLoopPart1_PostCenterRush)
     );
 
     /**

@@ -54,7 +54,7 @@ public class GroundIntake extends ChargerSubsystem {
     private final Tunable<Double>
         pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 9.0),
         pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 8.5),
-        pivotFastMaxVel = Tunable.of(key("Pivot/FastMaxVel(rad per s)"), 7.0),
+        pivotFastMaxVel = Tunable.of(key("Pivot/FastMaxVel(rad per s)"), 8.0),
         pivotFastMaxAccel = Tunable.of(key("Pivot/FastMaxAccel(rad per s^2)"), 20.0),
         pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.07),
         pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), -0.38),
