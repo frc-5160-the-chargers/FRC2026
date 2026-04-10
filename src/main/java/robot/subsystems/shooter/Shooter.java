@@ -50,8 +50,7 @@ public class Shooter extends ChargerSubsystem {
         shotLimit = Tunable.of(key("Flywheels/ShootingCurrentLimit"), 60.0),
         spinupLimit = Tunable.of(key("Flywheels/SpinupCurrentLimit"), 20.0);
     private final Tunable<AngularVelocity>
-        defaultSpinupVel = Tunable.of(key("Flywheels/DefaultSpinupVel"), RadiansPerSecond.of(200)),
-        shortFerryVel = Tunable.of(key("Flwyheels/ShortFerryVel"), RadiansPerSecond.of(80));
+        defaultSpinupVel = Tunable.of(key("Flywheels/DefaultSpinupVel"), RadiansPerSecond.of(200));
     private final KrakenFlywheels flywheelIO = new KrakenFlywheels();
     private final FlywheelDataAutoLogged flywheelInputs = new FlywheelDataAutoLogged();
 
@@ -139,11 +138,6 @@ public class Shooter extends ChargerSubsystem {
     /** Runs the shooter at the commanded setpoint. */
     public Command setVelocityCmd(Supplier<AngularVelocity> velocity) {
         return logged(setVelocityCmdImpl(velocity), "SetVelocity");
-    }
-
-    public Command shortFerryCmd() {
-        var cmd = setVelocityCmdImpl(shortFerryVel::get);
-        return logged(cmd, "ShortFerry");
     }
 
     public AngularVelocity velocity() {

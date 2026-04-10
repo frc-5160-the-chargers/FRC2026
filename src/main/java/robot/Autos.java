@@ -63,7 +63,7 @@ public class Autos {
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj1));
-        traj1.atTime(0.1)
+        traj1.atTime(0.3)
             .onTrue(superstructure.intakeInAutoCmd(2.4, true));
         traj1.done().onTrue(
             CmdSequence.of(

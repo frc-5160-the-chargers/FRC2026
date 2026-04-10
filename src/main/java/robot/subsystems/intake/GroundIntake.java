@@ -37,7 +37,7 @@ public class GroundIntake extends ChargerSubsystem {
 
     static final DCMotor ROLLER_MOTOR_KIND = DCMotor.getNeoVortex(1);
     static final double ROLLER_REDUCTION = 1.0;
-    static final double ROLLER_KV = 1 / ROLLER_MOTOR_KIND.withReduction(ROLLER_REDUCTION).KvRadPerSecPerVolt;
+    static final double ROLLER_KV = 1 / ROLLER_MOTOR_KIND.withReduction(ROLLER_REDUCTION).KvRadPerSecPerVolt * 1.05;
     static final Distance ROLLER_WHEEL_RADIUS = Inches.of(2);
 
     private final Tunable<Double>
@@ -46,7 +46,7 @@ public class GroundIntake extends ChargerSubsystem {
         passiveAgitateVolts = Tunable.of(key("Rollers/PassiveAgitateVolts"), 1.5),
         rollerCurrentLimit = Tunable.of(key("Rollers/CurrentLimit"), 55),
         rollerTargetVel = Tunable.of(key("Rollers/ClosedLoopRadPerSec"), 110),
-        rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.02);
+        rollerKp = Tunable.of(key("Rollers/ClosedLoopKp"), 0.005);
     private final Tunable<Double>
         pivotCurrentLimit = Tunable.of(key("Pivot/CurrentLimit(Amps)"), 40),
         pivotCurrentZeroVolts = Tunable.of(key("Pivot/CurrentZeroing/Volts"), 2.5),
@@ -54,11 +54,11 @@ public class GroundIntake extends ChargerSubsystem {
     private final Tunable<Double>
         pivotMaxVel = Tunable.of(key("Pivot/MaxVel(rad per s)"), 9.0),
         pivotMaxAccel = Tunable.of(key("Pivot/MaxAccel(rad per s^2)"), 8.5),
-        pivotFastMaxVel = Tunable.of(key("Pivot/FastMaxVel(rad per s)"), 8.0),
-        pivotFastMaxAccel = Tunable.of(key("Pivot/FastMaxAccel(rad per s^2)"), 20.0),
+        pivotFastMaxVel = Tunable.of(key("Pivot/FastMaxVel(rad per s)"), 7.0),
+        pivotFastMaxAccel = Tunable.of(key("Pivot/FastMaxAccel(rad per s^2)"), 17.0),
         pivotKs = Tunable.of(key("Pivot/Gains/KS(Volts)"), 0.07),
         pivotKg = Tunable.of(key("Pivot/Gains/KG(Volts)"), -0.38),
-        pivotKp = Tunable.of(key("Pivot/Gains/KP"), 5.0);
+        pivotKp = Tunable.of(key("Pivot/Gains/KP"), 7.0);
     private final Tunable<Angle>
         intakePos = Tunable.of(key("Positions/Intake"), Degrees.of(-7)),
         outtakePos = Tunable.of(key("Positions/Outtake"), Degrees.of(-20)),
@@ -123,6 +123,7 @@ public class GroundIntake extends ChargerSubsystem {
 
     private void setRollerVolts(double volts) {
         rollerIO.setVolts(volts);
+        Logger.recordOutput(key("Rollers/DesiredVolts"), volts);
         if (sim.isEmpty()) return;
         if (volts > 0.05) {
             sim.get().startIntake();
@@ -177,7 +178,10 @@ public class GroundIntake extends ChargerSubsystem {
      * @param intakeSpeedMultiplier A multiplier for intaking speed.
      */
     public Command deployCmd(double intakeSpeedMultiplier, Supplier<ChassisSpeeds> robotSpeeds) {
-        var cmd = deployCmdImpl(false, intakeSpeedMultiplier, robotSpeeds);
+        var cmd = CmdSequence.of(
+            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
+            deployCmdImpl(false, intakeSpeedMultiplier, robotSpeeds)
+        );
         return logged(cmd, "Deploy & Run (Velocity-Based)");
     }
 
@@ -185,26 +189,24 @@ public class GroundIntake extends ChargerSubsystem {
      * A version of {@link GroundIntake#deployCmd} that makes the pivot go down faster for auto.
      */
     public Command initialDeployCmd(double intakeSpeedMultiplier, Supplier<ChassisSpeeds> robotSpeeds) {
-        var cmd = deployCmdImpl(true, intakeSpeedMultiplier, robotSpeeds);
+        var cmd = CmdSequence.of(
+            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
+            this.run(() -> setPivotPosition(intakePos.get(), true))
+                .until(() -> pivotInputs.positionRad > -0.13),
+            deployCmdImpl(true, intakeSpeedMultiplier, robotSpeeds)
+        );
         return logged(cmd, "Deploy & Run (Velocity-Based, INITIAL)");
     }
 
-    private Command deployCmdImpl(
-        boolean isInitial,
-        double intakeSpeedMultiplier,
-        Supplier<ChassisSpeeds> robotSpeeds
-    ) {
-        return CmdSequence.of(
-            this.runOnce(() -> setpoint = pivotInputs.getMotionState()),
-            this.run(() -> {
-                setPivotPosition(intakePos.get(), isInitial);
-                var vx = robotSpeeds.get().vxMetersPerSecond;
-                var targetVel = rollerTargetVel.get() + 0.8 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
-                targetVel *= intakeSpeedMultiplier;
-                var velocityErr = targetVel - rollerInputs.velocityRadPerSec;
-                setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
-            })
-        );
+    private Command deployCmdImpl(boolean isFast, double intakeSpeedMultiplier, Supplier<ChassisSpeeds> robotSpeeds) {
+        return this.run(() -> {
+            setPivotPosition(intakePos.get(), isFast);
+            var vx = robotSpeeds.get().vxMetersPerSecond;
+            var targetVel = rollerTargetVel.get() + 0.8 * Math.abs(vx) / ROLLER_WHEEL_RADIUS.in(Meters);
+            targetVel *= intakeSpeedMultiplier;
+            var velocityErr = targetVel - rollerInputs.velocityRadPerSec;
+            setRollerVolts(atHardStop() ? 0 : (rollerKp.get() * velocityErr + ROLLER_KV * targetVel));
+        });
     }
 
     public Command outtakeCmd() {

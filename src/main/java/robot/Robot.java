@@ -4,6 +4,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
@@ -77,7 +78,8 @@ public class Robot extends LoggedRobot {
 
     public Robot() {
         setUseTiming(RobotMode.get() != RobotMode.REPLAY); // Run at max speed during replay mode
-        Tunable.setEnabled(true);
+        // TODO check Tunable.java, for loop time reasons we totally disabled tuning so setEnabled() does nothing!
+        Tunable.setEnabled(false);
         Tunable.of("DemoPose", Pose2d.kZero).onChange(drive::resetPose);
         setCompButtonBindings();
         setDefaultCommands();
@@ -103,7 +105,6 @@ public class Robot extends LoggedRobot {
         operatorXbox.povDown().whileTrue(groundIntake.outtakeCmd());
         operatorXbox.x().onTrue(shooter.setIdleBehaviorToSpinupCmd());
         operatorXbox.y().whileTrue(groundIntake.passiveAgitateCmd());
-        operatorXbox.a().whileTrue(shooter.shortFerryCmd());
 
         driverPS5.touchpad()
             .multiPress(2, 1.0)
@@ -195,13 +196,7 @@ public class Robot extends LoggedRobot {
         testChooser.addCmd("Test Hub Shot", () -> superstructure.shootInAutoCmd(Shooter.Target.HUB, 2));
         testChooser.addCmd("Test Ferry", () -> superstructure.shootInAutoCmd(Shooter.Target.GROUND, 2));
         testChooser.addCmd("Test serializer", serializer::runCmd);
-        testChooser.addCmd(
-            "Test Pulsing",
-            () -> Commands.parallel(
-                serializer.pulseCmd(),
-                shooter.setVelocityCmd(() -> RadiansPerSecond.of(20))
-            )
-        );
+        testChooser.addCmd("Test Initial Deploy", () -> groundIntake.initialDeployCmd(1.0, ChassisSpeeds::new));
     }
 
     @Override

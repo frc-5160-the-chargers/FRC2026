@@ -19,17 +19,21 @@ import java.util.function.Supplier;
  * Is disabled by default unless ```Tunable.setEnabled(true)``` is called.
  */
 public class Tunable<T> extends LoggedNetworkInput {
+    private static final boolean PERMANENTLY_OFF = true;
+
     /** When Tunable.setEnabled(true) is called, dashboard tuning will be enabled. */
     @Setter private static boolean enabled = false;
 
     /** Creates a tunable double. */
     public static Tunable<Double> of(String key, double value) {
+        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
         var ntHandle = new LoggedNetworkNumber("/Tuning/" + key, value);
         return new Tunable<>(ntHandle::get, value);
     }
 
     /** Creates a tunable boolean. */
     public static Tunable<Boolean> of(String key, boolean value) {
+        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
         var ntHandle = new LoggedNetworkBoolean("/Tuning/" + key, value);
         return new Tunable<>(ntHandle::get, value);
     }
@@ -37,6 +41,7 @@ public class Tunable<T> extends LoggedNetworkInput {
     /** Creates a tunable measure. */
     @SuppressWarnings("unchecked")
     public static <M extends Measure<?>> Tunable<M> of(String key, M value) {
+        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
         String fullKey = "/Tuning/" + key + "(" + value.unit().name() + ")";
         var ntHandle = new LoggedNetworkNumber(fullKey, value.magnitude());
         return new Tunable<>(() -> (M) value.unit().of(ntHandle.get()), value);
@@ -44,6 +49,7 @@ public class Tunable<T> extends LoggedNetworkInput {
 
     /** Creates a tunable {@link Pose2d}. */
     public static Tunable<Pose2d> of(String key, Pose2d value) {
+        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
         var x = new LoggedNetworkNumber("/Tuning/" + key + "/xMeters", value.getX());
         var y = new LoggedNetworkNumber("/Tuning/" + key + "/yMeters", value.getY());
         var rot = new LoggedNetworkNumber(
