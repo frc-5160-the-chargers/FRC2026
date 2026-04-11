@@ -55,9 +55,9 @@ public class Autos {
     }
 
     /** An auto routine that grabs balls from the center and shoots them, repeating twice. */
-    public Command twoSwipe(boolean leftSide, boolean runInnerLoop) {
+    public Command twoSwipe(boolean leftSide, boolean isV2) {
         var routine = newAutoRoutine("TwoSwipeFar");
-        var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart1, leftSide);
+        var traj1 = newAutoTraj(routine, isV2 ? ChoreoTraj.CenterLoopPart1_V2 : ChoreoTraj.CenterLoopPart1, leftSide);
         var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart2, leftSide);
 
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
@@ -74,7 +74,7 @@ public class Autos {
         traj2.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj2))
             .whileTrue(superstructure.intakeInAutoCmd(3.3, false));
-        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 2));
+        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, isV2 ? 1.5 : 2.0));
 
         return routine.cmd();
     }

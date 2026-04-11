@@ -52,12 +52,33 @@ public record ChoreoTraj(
 	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
+	public static final ChoreoTraj CenterLoopPart1_PostCenterRush = new ChoreoTraj(
+	    "CenterLoopPart1_PostCenterRush",
+	    OptionalInt.empty(),
+	    4.90722,
+	    new Pose2d(8.45, 0.9, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
+	);
+	public static final ChoreoTraj CenterLoopPart1_V2 = new ChoreoTraj(
+	    "CenterLoopPart1_V2",
+	    OptionalInt.empty(),
+	    6.07817,
+	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
+	);
 	public static final ChoreoTraj CenterLoopPart2 = new ChoreoTraj(
 	    "CenterLoopPart2",
 	    OptionalInt.empty(),
-	    6.46826,
+	    6.46827,
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046)),
 	    new Pose2d(3.75, 0.85, Rotation2d.fromRadians(1.323))
+	);
+	public static final ChoreoTraj CenterRush = new ChoreoTraj(
+	    "CenterRush",
+	    OptionalInt.empty(),
+	    1.39349,
+	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(8.953, 0.956, Rotation2d.fromRadians(-1.571))
 	);
 	public static final ChoreoTraj CloseFuelGrab = new ChoreoTraj(
 	    "CloseFuelGrab",
@@ -94,20 +115,6 @@ public record ChoreoTraj(
 	    new Pose2d(0.72, 0.65, Rotation2d.fromRadians(0)),
 	    new Pose2d(1.236, 2.119, Rotation2d.fromRadians(0.502))
 	);
-	public static final ChoreoTraj CenterRush = new ChoreoTraj(
-	    "CenterRush",
-	    OptionalInt.empty(),
-	    1.42949,
-	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(8.45, 0.9, Rotation2d.fromRadians(-1.571))
-	);
-	public static final ChoreoTraj CenterLoopPart1_PostCenterRush = new ChoreoTraj(
-	    "CenterLoopPart1_PostCenterRush",
-	    OptionalInt.empty(),
-	    4.90722,
-	    new Pose2d(8.45, 0.9, Rotation2d.fromRadians(-1.571)),
-	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
-	);
 
     /**
      * A map between trajectory names and their corresponding data.
@@ -118,14 +125,15 @@ public record ChoreoTraj(
 		Map.entry("BumpMidlineScore", BumpMidlineScore),
 		Map.entry("CenterLoopPart1", CenterLoopPart1),
 		Map.entry("CenterLoopPart1Close", CenterLoopPart1Close),
+		Map.entry("CenterLoopPart1_PostCenterRush", CenterLoopPart1_PostCenterRush),
+		Map.entry("CenterLoopPart1_V2", CenterLoopPart1_V2),
 		Map.entry("CenterLoopPart2", CenterLoopPart2),
+		Map.entry("CenterRush", CenterRush),
 		Map.entry("CloseFuelGrab", CloseFuelGrab),
 		Map.entry("CloseFuelScore", CloseFuelScore),
 		Map.entry("DriveBackAndShoot", DriveBackAndShoot),
 		Map.entry("SubstationGrab", SubstationGrab),
-		Map.entry("SubstationScore", SubstationScore),
-		Map.entry("CenterRush", CenterRush),
-		Map.entry("CenterLoopPart1_PostCenterRush", CenterLoopPart1_PostCenterRush)
+		Map.entry("SubstationScore", SubstationScore)
     );
 
     /**

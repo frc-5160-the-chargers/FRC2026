@@ -185,6 +185,8 @@ public class Robot extends LoggedRobot {
         );
         autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipe(false, false));
         autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true, false));
+        autoChooser.addCmd("(V2) Two Swipe, Right", () -> autos.twoSwipe(false, true));
+        autoChooser.addCmd("(V2) Two Swipe, Left", () -> autos.twoSwipe(true, true));
         autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.oneSwipeGrab(false));
         autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.oneSwipeGrab(true));
         autoChooser.addCmd("Midline Bump", () -> autos.stealFuelOverBump(false));
