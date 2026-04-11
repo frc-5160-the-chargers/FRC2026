@@ -3,12 +3,13 @@ package robot;
 import com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -23,7 +24,6 @@ import lib.hardware.CanBusLogger;
 import lib.hardware.SignalRefresh;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import robot.constants.RobotConfig;
@@ -40,14 +40,17 @@ import robot.vision.VisionConsts;
 import java.util.List;
 import java.util.Optional;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-
 @SuppressWarnings("FieldCanBeLocal")
 public class Robot extends LoggedRobot {
     static { // This is run before subsystems are created
         RobotConfig.initLoggingForMainBot();
     }
 
+
+    private final Rectangle2d FIELD_BOUNDARIES = new Rectangle2d(
+        Translation2d.kZero,
+        new Translation2d(16.5, 8.0)
+    );
     private final CanBusLogger canivoreLogger = new CanBusLogger(RobotConfig.CANIVORE);
 
     private final SwerveSubsystem drive = new SwerveSubsystem(RobotConfig.swerveCfg);
@@ -128,6 +131,9 @@ public class Robot extends LoggedRobot {
         new Trigger(superstructure::canSerialize)
             .debounce(0.2, Debouncer.DebounceType.kFalling)
             .whileTrue(operatorXbox.notifySerializerReadyCmd());
+
+        new Trigger(() -> FIELD_BOUNDARIES.contains(drive.getPose().getTranslation()))
+            .whileFalse(operatorXbox.notifyOutOfBoundsCmd());
 
         initDashboard();
         if (RobotMode.isSim()) {

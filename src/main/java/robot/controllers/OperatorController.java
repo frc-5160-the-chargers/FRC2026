@@ -2,13 +2,14 @@ package robot.controllers;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import lib.commands.CmdSequence;
 import org.littletonrobotics.junction.AutoLogOutput;
 
-import static edu.wpi.first.wpilibj.GenericHID.RumbleType.kRightRumble;
+import static edu.wpi.first.wpilibj.GenericHID.RumbleType.*;
 
-public class OperatorController extends CommandXboxController {
+public class OperatorController extends CommandXboxController implements Subsystem {
     public OperatorController(int port) {
         super(port);
     }
@@ -24,9 +25,20 @@ public class OperatorController extends CommandXboxController {
     }
 
     public Command notifySerializerReadyCmd() {
-        return Commands.run(() -> setRumble(kRightRumble, 0.35))
+        return this.run(() -> setRumble(kRightRumble, 0.35))
             .withTimeout(1.0)
             .finallyDo(() -> setRumble(kRightRumble, 0.0))
             .withName("Operator#NotifySerializerReady");
+    }
+
+    public Command notifyOutOfBoundsCmd() {
+        return CmdSequence.of(
+            this.run(() -> setRumble(kLeftRumble, 1.0))
+                .withTimeout(0.5),
+            this.run(() -> setRumble(kBothRumble, 0.0))
+                .withTimeout(0.2)
+        )
+            .repeatedly()
+            .withName("Operator#NotifyOutOfBounds");
     }
 }
