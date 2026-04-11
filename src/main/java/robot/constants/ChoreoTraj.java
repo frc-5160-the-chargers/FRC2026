@@ -62,7 +62,7 @@ public record ChoreoTraj(
 	public static final ChoreoTraj CenterLoopPart1_V2 = new ChoreoTraj(
 	    "CenterLoopPart1_V2",
 	    OptionalInt.empty(),
-	    6.07817,
+	    6.26222,
 	    new Pose2d(4.45, 0.45, Rotation2d.fromRadians(-1.571)),
 	    new Pose2d(2.95, 1.05, Rotation2d.fromRadians(1.046))
 	);
