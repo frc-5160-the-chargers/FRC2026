@@ -16,6 +16,10 @@ import robot.subsystems.shooter.Shooter;
 import robot.subsystems.shooter.Shooter.Target;
 
 public class Autos {
+    public enum TwoSwipeVersion {
+        ONE, TWO, THREE
+    }
+
     private final AutoFactory autoFactory;
     private final SwerveSubsystem drive;
     private final Superstructure superstructure;
@@ -55,9 +59,15 @@ public class Autos {
     }
 
     /** An auto routine that grabs balls from the center and shoots them, repeating twice. */
-    public Command twoSwipe(boolean leftSide, boolean isV2) {
+    public Command twoSwipe(boolean leftSide, TwoSwipeVersion version) {
+        var traj1File = switch (version) {
+            case ONE -> ChoreoTraj.CenterLoopPart1;
+            case TWO -> ChoreoTraj.CenterLoopPart1_V2;
+            case THREE -> ChoreoTraj.CenterLoopPart1_V3;
+        };
+        var isV1 = version == TwoSwipeVersion.ONE;
         var routine = newAutoRoutine("TwoSwipeFar");
-        var traj1 = newAutoTraj(routine, isV2 ? ChoreoTraj.CenterLoopPart1_V2 : ChoreoTraj.CenterLoopPart1, leftSide);
+        var traj1 = newAutoTraj(routine, traj1File, leftSide);
         var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart2, leftSide);
 
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
@@ -74,7 +84,7 @@ public class Autos {
         traj2.active()
             .whileTrue(superstructure.hubShotSpinupCmd(traj2))
             .whileTrue(superstructure.intakeInAutoCmd(3.3, false));
-        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, isV2 ? 1.5 : 2.0));
+        traj2.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, isV1 ? 2.0 : 1.5));
 
         return routine.cmd();
     }
@@ -183,6 +193,21 @@ public class Autos {
             .onTrue(intake.moveUpForBumpTravelCmd());
         midlineScore.active().whileTrue(superstructure.hubShotSpinupCmd(midlineScore));
         midlineScore.done().onTrue(superstructure.shootInAutoCmd(Target.HUB, 1.0));
+
+        return routine.cmd();
+    }
+
+    public Command midlineAuto() {
+        var routine = newAutoRoutine("MidlineAuto");
+        var driveBack = ChoreoTraj.DriveBackAndShoot.asAutoTraj(routine);
+
+        routine.active().onTrue(
+            driveBack.resetOdometry().andThen(driveBack.spawnCmd())
+        );
+        driveBack.active().whileTrue(intake.deployCmd(1.0, drive::getRobotSpeeds));
+        driveBack.done().onTrue(
+            superstructure.shootInAutoCmd(Target.HUB, 100)
+        );
 
         return routine.cmd();
     }

@@ -131,7 +131,7 @@ private val BALL_TO_FLYWHEEL_SPEED =
         .put(6.0, 245.0)
         .put(7.8, 315.0)
         .put(8.5, 328.0)
-        .put(12.0, 460.0)
+        .put(12.0, 475.0)
 private val DISTANCE_TO_BALL_SPEED_HUB =
     TunableLerpTable("ShotCalcs/(Hub) Distance(m) -> Ball Velocity(mps)")
         .put(1.7, 6.2)

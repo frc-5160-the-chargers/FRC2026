@@ -8,8 +8,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -108,6 +110,8 @@ public class Robot extends LoggedRobot {
         operatorXbox.povDown().whileTrue(groundIntake.outtakeCmd());
         operatorXbox.x().onTrue(shooter.setIdleBehaviorToSpinupCmd());
         operatorXbox.y().whileTrue(groundIntake.passiveAgitateCmd());
+        var shortFerryVel = Units.RadiansPerSecond.of(380);
+        operatorXbox.a().whileTrue(shooter.setVelocityCmd(() -> shortFerryVel));
 
         driverPS5.touchpad()
             .multiPress(2, 1.0)
@@ -189,15 +193,14 @@ public class Robot extends LoggedRobot {
             "Reset Heading, shooter pointing towards DS",
             () -> Commands.runOnce(() -> drive.resetHeading(Rotation2d.k180deg))
         );
-        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipe(false, false));
-        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true, false));
-        autoChooser.addCmd("(V2) Two Swipe, Right", () -> autos.twoSwipe(false, true));
-        autoChooser.addCmd("(V2) Two Swipe, Left", () -> autos.twoSwipe(true, true));
-        autoChooser.addCmd("One Swipe + Substation, Right", () -> autos.oneSwipeGrab(false));
-        autoChooser.addCmd("One Swipe + Ground Fuel, Left", () -> autos.oneSwipeGrab(true));
-        autoChooser.addCmd("Midline Bump", () -> autos.stealFuelOverBump(false));
-        autoChooser.addCmd("Two Swipe Derail, Right", () -> autos.twoSwipeDerail(false));
-        autoChooser.addCmd("Two Swipe Derail, Left", () -> autos.twoSwipeDerail(true));
+        autoChooser.addCmd("Two Swipe, Right", () -> autos.twoSwipe(false, Autos.TwoSwipeVersion.ONE));
+        autoChooser.addCmd("Two Swipe, Left", () -> autos.twoSwipe(true, Autos.TwoSwipeVersion.ONE));
+        autoChooser.addCmd("(V2) Two Swipe, Right", () -> autos.twoSwipe(false, Autos.TwoSwipeVersion.TWO));
+        autoChooser.addCmd("(V2) Two Swipe, Left", () -> autos.twoSwipe(true, Autos.TwoSwipeVersion.TWO));
+        autoChooser.addCmd("(V3) Two Swipe, Right", () -> autos.twoSwipe(false, Autos.TwoSwipeVersion.THREE));
+        autoChooser.addCmd("(V3) Two Swipe, Left", () -> autos.twoSwipe(true, Autos.TwoSwipeVersion.THREE));
+
+        autoChooser.addCmd("States Midline Auto", autos::midlineAuto);
 
         testChooser.addCmd("Ground Intake Sim Test", () -> groundIntake.deployCmd(1.0, drive::getFieldSpeeds));
         testChooser.addCmd("Characterize Wheel Radius", drive::characterizeWheelRadiusCmd);

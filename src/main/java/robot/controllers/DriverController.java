@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import lib.AllianceColor;
 import lib.Tunable;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -96,8 +97,8 @@ public class DriverController extends CommandPS5Controller {
             forward = 0;
         }
         // don't use slew rate limits for normal drive requests
-        forwardLimiter.reset(forward);
-        strafeLimiter.reset(strafe);
+        forwardLimiter.reset(0);
+        strafeLimiter.reset(0);
         rotationFilter.reset();
         aimToTargetInit = false;
         return swerveReq
@@ -114,6 +115,7 @@ public class DriverController extends CommandPS5Controller {
         Logger.recordOutput("DriverController/Connected", isConnected());
         if (targetAngle.isEmpty()) return getSwerveRequest();
         double scalar = swerveSpeedModifier();
+        if (AllianceColor.isRed()) scalar *= -1;
         forward = -getLeftY() * scalar / 3.0;
         strafe = -getLeftX() * scalar / 3.0;
         if (limitAccel) {
@@ -129,7 +131,7 @@ public class DriverController extends CommandPS5Controller {
         return facingAngleSwerveReq
             .withVelocityX(forward * maxVelMetersPerSec)
             .withVelocityY(strafe * maxVelMetersPerSec)
-            .withDeadband(0.05 * scalar * maxVelMetersPerSec)
+            .withDeadband(0.1 * scalar * maxVelMetersPerSec)
             .withTargetDirection(targetAngle.get())
             .withTargetRateFeedforward(radiansPerSec)
             .withHeadingPID(AIM_KP.get(), 0.0, AIM_KD.get());

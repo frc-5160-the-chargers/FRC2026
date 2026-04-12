@@ -61,7 +61,7 @@ public class VisionConsts {
         MAX_AMBIGUITY = Tunable.of("Vision/MaxAmbiguity", 0.2),
         Z_ERROR_SCALAR = Tunable.of("Vision/ZErrorScalar", 30.0),
         SINGLE_TAG_SCALAR = Tunable.of("Vision/SingleTagScalar", 2.0),
-        LINEAR_STD_DEV_BASELINE = Tunable.of("Vision/StdDevBaseline/Linear", 0.22),
+        LINEAR_STD_DEV_BASELINE = Tunable.of("Vision/StdDevBaseline/Linear", 0.13),
         ANGULAR_STD_DEV_BASELINE = Tunable.of("Vision/StdDevBaseline/Angular", 2.5);
     static final Tunable<Distance> MAX_Z_ERROR = Tunable.of("Vision/MaxZErr", Meters.of(0.25));
     static final Tunable<Boolean> DEBUG_MODE = Tunable.of("Vision/DebugMode", false);
