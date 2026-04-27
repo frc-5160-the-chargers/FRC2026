@@ -220,6 +220,7 @@ public class Robot extends LoggedRobot {
                 drive.addVisionMeasurement(update);
             }
         }
+        autos.periodic();
     }
 
     private void periodicLogging() {

@@ -6,6 +6,7 @@ import choreo.auto.AutoTrajectory;
 import com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import lib.AutoVisualizer;
 import lib.commands.CmdSequence;
 import robot.constants.ChoreoTraj;
 import robot.constants.RobotConfig;
@@ -25,6 +26,7 @@ public class Autos {
     private final Superstructure superstructure;
     private final GroundIntake intake;
     private final Shooter shooter;
+    private final AutoVisualizer autoViz;
 
     public Autos(
         SwerveSubsystem drive,
@@ -41,6 +43,7 @@ public class Autos {
         this.intake = intake;
         this.shooter = shooter;
         this.drive = drive;
+        this.autoViz = new AutoVisualizer("SelectedAuto", 1.0);
         CommandScheduler.getInstance().schedule(autoFactory.warmupCmd());
     }
 
@@ -69,6 +72,7 @@ public class Autos {
         var routine = newAutoRoutine("TwoSwipeFar");
         var traj1 = newAutoTraj(routine, traj1File, leftSide);
         var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart2, leftSide);
+        autoViz.setAutoSequence(traj1, traj2);
 
         routine.active().onTrue(superstructure.autoStartCmd(traj1));
         traj1.active()
@@ -95,6 +99,7 @@ public class Autos {
         var traj1 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart1_PostCenterRush, leftSide);
         var traj2 = newAutoTraj(routine, ChoreoTraj.CenterLoopPart2, leftSide);
         var brakeReq = new SwerveDriveBrake();
+        autoViz.setAutoSequence(traj1, traj2);
 
         routine.active().onTrue(superstructure.autoStartCmd(rushToCenter));
         rushToCenter.atTime(1.33)
@@ -138,6 +143,7 @@ public class Autos {
             leftSide ? ChoreoTraj.CloseFuelScore : ChoreoTraj.SubstationScore,
             false
         );
+        autoViz.setAutoSequence(centerScoop, closeGrab, closeScore);
 
         routine.active().onTrue(superstructure.autoStartCmd(centerScoop));
         centerScoop.active()
@@ -172,6 +178,7 @@ public class Autos {
         var shootPreload = newAutoTraj(routine, ChoreoTraj.DriveBackAndShoot, !leftSide);
         var midlineGrab = newAutoTraj(routine, ChoreoTraj.BumpMidlineGrab, !leftSide);
         var midlineScore = newAutoTraj(routine, ChoreoTraj.BumpMidlineScore, !leftSide);
+        autoViz.setAutoSequence(shootPreload, midlineGrab, midlineScore);
 
         routine.active()
             .onTrue(shootPreload.resetOdometry().andThen(shootPreload.spawnCmd()));
@@ -200,6 +207,7 @@ public class Autos {
     public Command midlineAuto() {
         var routine = newAutoRoutine("MidlineAuto");
         var driveBack = ChoreoTraj.DriveBackAndShoot.asAutoTraj(routine);
+        autoViz.setAutoSequence(driveBack);
 
         routine.active().onTrue(
             driveBack.resetOdometry().andThen(driveBack.spawnCmd())
@@ -210,5 +218,9 @@ public class Autos {
         );
 
         return routine.cmd();
+    }
+
+    public void periodic() {
+        autoViz.periodic();
     }
 }
