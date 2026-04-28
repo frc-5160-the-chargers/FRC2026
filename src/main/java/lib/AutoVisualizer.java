@@ -3,8 +3,10 @@ package lib;
 import choreo.auto.AutoTrajectory;
 import choreo.trajectory.Trajectory;
 import choreo.trajectory.TrajectorySample;
+import choreo.util.ChoreoAllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -35,8 +37,6 @@ public class AutoVisualizer {
 
     public void setAutoSequence(List<AutoTrajectory> trajectories) {
         if (trajectories.isEmpty()) return;
-        var startPoseViz = this.field.getObject("StartingPose");
-        trajectories.get(0).getInitialPose().ifPresent(startPoseViz::setPose);
         for (var previousTraj: this.trajectories) {
             this.field.getObject("Trajectory_" + previousTraj.name()).setPoses(List.of());
         }
@@ -46,9 +46,11 @@ public class AutoVisualizer {
         for (var traj: trajectories) {
             var rawTraj = traj.getRawTrajectory();
             var poses = rawTraj.samples().stream().map(TrajectorySample::getPose).toList();
+            var flippedPoses = poses.stream().map(ChoreoAllianceFlipUtil::flip).toList();
             this.trajectories.add(rawTraj);
             this.totalTimeOfAuto += rawTraj.getTotalTime();
             this.field.getObject("Trajectory_" + rawTraj.name()).setPoses(poses);
+            this.field.getObject("FlippedTrajectory_" + rawTraj.name()).setPoses(flippedPoses);
         }
     }
 
@@ -58,12 +60,13 @@ public class AutoVisualizer {
             return;
         }
         double timeIntoNextTraj = Math.max(currentTime, 0);
+        boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Red);
         for (var traj: trajectories) {
             if (timeIntoNextTraj > traj.getTotalTime()) {
                 timeIntoNextTraj -= traj.getTotalTime();
                 continue;
             }
-            var sample = traj.sampleAt(timeIntoNextTraj, false);
+            var sample = traj.sampleAt(timeIntoNextTraj, isRed);
             field.setRobotPose(sample.isPresent() ? sample.get().getPose() : Pose2d.kZero);
             break;
         }
