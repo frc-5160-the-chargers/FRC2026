@@ -4,8 +4,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.wpilibj.DriverStation;
-import lombok.Setter;
+import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkInput;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -16,24 +17,21 @@ import java.util.function.Supplier;
 
 /**
  * A tunable value. Can be found in the "Tuning" section of AdvantageScope.
- * Is disabled by default unless ```Tunable.setEnabled(true)``` is called.
  */
 public class Tunable<T> extends LoggedNetworkInput {
-    private static final boolean PERMANENTLY_OFF = true;
-
-    /** When Tunable.setEnabled(true) is called, dashboard tuning will be enabled. */
-    @Setter private static boolean enabled = false;
+    // Turn this on/off to enable or disable tuning mode. It should be turned off at competitions.
+    private static final boolean DISABLED = true;
 
     /** Creates a tunable double. */
     public static Tunable<Double> of(String key, double value) {
-        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
+        if (DISABLED) return new Tunable<>(() -> value, value);
         var ntHandle = new LoggedNetworkNumber("/Tuning/" + key, value);
         return new Tunable<>(ntHandle::get, value);
     }
 
     /** Creates a tunable boolean. */
     public static Tunable<Boolean> of(String key, boolean value) {
-        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
+        if (DISABLED) return new Tunable<>(() -> value, value);
         var ntHandle = new LoggedNetworkBoolean("/Tuning/" + key, value);
         return new Tunable<>(ntHandle::get, value);
     }
@@ -41,7 +39,7 @@ public class Tunable<T> extends LoggedNetworkInput {
     /** Creates a tunable measure. */
     @SuppressWarnings("unchecked")
     public static <M extends Measure<?>> Tunable<M> of(String key, M value) {
-        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
+        if (DISABLED) return new Tunable<>(() -> value, value);
         String fullKey = "/Tuning/" + key + "(" + value.unit().name() + ")";
         var ntHandle = new LoggedNetworkNumber(fullKey, value.magnitude());
         return new Tunable<>(() -> (M) value.unit().of(ntHandle.get()), value);
@@ -49,7 +47,7 @@ public class Tunable<T> extends LoggedNetworkInput {
 
     /** Creates a tunable {@link Pose2d}. */
     public static Tunable<Pose2d> of(String key, Pose2d value) {
-        if (PERMANENTLY_OFF) return new Tunable<>(() -> value, value);
+        if (DISABLED) return new Tunable<>(() -> value, value);
         var x = new LoggedNetworkNumber("/Tuning/" + key + "/xMeters", value.getX());
         var y = new LoggedNetworkNumber("/Tuning/" + key + "/yMeters", value.getY());
         var rot = new LoggedNetworkNumber(
@@ -88,7 +86,7 @@ public class Tunable<T> extends LoggedNetworkInput {
 
     @Override
     public void periodic() {
-        if (!enabled || DriverStation.isFMSAttached()) return;
+        if (DriverStation.isFMSAttached()) return;
         T latest = supplier.get();
         if (!value.equals(latest)) {
             value = latest;
